@@ -4,12 +4,17 @@ struct RootView: View {
     @EnvironmentObject var auth: AuthService
 
     var body: some View {
-        if auth.isSignedIn {
-            MainTabView()
-        } else {
+        if !auth.isSignedIn {
             OnboardingView()
+        } else if auth.trialExpired && auth.plan == "trial" {
+            PaywallView()
+        } else {
+            MainTabView()
+                .task { await store.reload() }
         }
     }
+
+    @EnvironmentObject var store: ExpenseStore
 }
 
 struct MainTabView: View {

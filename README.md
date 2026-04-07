@@ -1,61 +1,84 @@
-# FacturaAI — iOS App
+# FacturaAI
 
-Native SwiftUI app for the FacturaAI MVP. AI-powered expense autopilot for Spanish autónomos.
+AI-powered financial autopilot for Spanish autónomos. Monorepo containing all components.
 
-## Requirements
+> **Status**: MVP in progress. See PRD for full product spec.
 
-- Xcode 16+ (uses `PBXFileSystemSynchronizedRootGroup`, Xcode 16 feature)
-- iOS 17+ deployment target
-- Swift 5
+## Monorepo layout
 
-## Run
+```
+facturaai/
+├── apps/
+│   ├── ios/            # Native SwiftUI iOS app (Xcode 16+, iOS 17+)
+│   └── backend/        # Bun + Hono API server (Postgres, Claude, Gmail)
+├── package.json        # Workspace root
+└── README.md
+```
+
+## Architecture overview
+
+```
+┌────────────┐   facturaai://auth   ┌───────────────────┐   Gmail API    ┌────────┐
+│  iOS app   │◀────────────────────▶│  Bun/Hono backend │◀──────────────▶│ Google │
+│ (SwiftUI)  │   JWT Bearer         │                   │                └────────┘
+│            │◀────────────────────▶│  - OAuth/JWT      │
+│  Keychain  │   REST /api/*        │  - Gmail sync     │   Claude API   ┌────────┐
+│            │                      │  - PDF extraction │◀──────────────▶│ Claude │
+└────────────┘                      │  - CSV export     │                └────────┘
+                                    │                   │   S3/R2        ┌────────┐
+                                    │  Postgres + S3    │◀──────────────▶│Storage │
+                                    └───────────────────┘                └────────┘
+```
+
+### Auth flow
+
+1. iOS opens `ASWebAuthenticationSession` → `GET {BACKEND}/auth/google/start`
+2. Backend redirects to Google consent with Gmail `readonly` scope
+3. Google → `GET {BACKEND}/auth/google/callback?code=...`
+4. Backend exchanges code, stores `refresh_token`, mints JWT
+5. Backend redirects to `facturaai://auth?token=<jwt>`
+6. iOS captures token from the custom URL scheme, stores in Keychain
+7. All subsequent API calls: `Authorization: Bearer <jwt>`
+
+### Gmail sync flow
+
+1. iOS: `POST /api/gmail/sync` → returns job id
+2. Backend worker lists Gmail messages with PDF attachments matching invoice patterns
+3. For each new attachment: download → store in S3 → extract via Claude → insert expense
+4. iOS polls `GET /api/expenses?since=<timestamp>` or `GET /api/gmail/sync/:id`
+
+### Receipt scan flow
+
+1. iOS: VisionKit camera → image
+2. `POST /api/expenses/upload` (multipart image)
+3. Backend: S3 upload → Claude vision extraction → returns Expense JSON
+4. iOS inserts into local store
+
+## Getting started
+
+### Backend
 
 ```bash
+cd apps/backend
+cp .env.example .env    # fill in GOOGLE_CLIENT_ID, ANTHROPIC_API_KEY, DATABASE_URL
+bun install
+bun run db:migrate
+bun run dev
+```
+
+### iOS
+
+```bash
+cd apps/ios
 open FacturaAI.xcodeproj
 ```
 
-Then hit ⌘R. The app runs standalone with in-memory mock data — no backend required.
+Update `APIClient.baseURL` in `apps/ios/FacturaAI/Services/APIClient.swift` to point to your backend (default: `http://localhost:3000`).
 
-## Architecture
+## PRD
 
-```
-FacturaAI/
-├── FacturaAIApp.swift          # @main, injects stores
-├── Models/
-│   └── Expense.swift           # Core domain types
-├── Services/
-│   ├── AuthService.swift       # Google sign-in stub
-│   ├── ExpenseStore.swift      # ObservableObject, CRUD + aggregates
-│   ├── MockData.swift          # Sample Spanish invoices
-│   └── CSVExporter.swift       # Gestoría-ready CSV export
-├── Views/
-│   ├── RootView.swift          # Auth gate + TabView
-│   ├── OnboardingView.swift    # Google sign-in landing
-│   ├── DashboardView.swift     # Quarterly summary + IVA totals
-│   ├── ExpensesListView.swift  # Searchable list + swipe actions
-│   ├── ExpenseDetailView.swift # Edit/confirm flow
-│   ├── ScanView.swift          # VisionKit camera + manual entry
-│   ├── ExportView.swift        # CSV share sheet
-│   └── SettingsView.swift      # Account, integrations, pricing
-├── Utilities/
-│   └── Formatters.swift        # es_ES currency/date formatters
-└── Resources/
-    └── Info.plist              # Camera usage, Spanish locale
-```
+FacturaAI is an AI financial assistant for Spanish autónomos. See the full PRD in the project notes. Targets: 5,000 free users and 150 paid subscribers (€1,050 MRR) within 6 months.
 
-## What's mocked
+## License
 
-- **Google Sign-In**: `AuthService.signInWithGoogle()` returns a fake user. Swap for `GoogleSignIn` SDK + Gmail read-only scope in production.
-- **Gmail sync**: `ExpenseStore.syncGmail()` simulates pulling new invoices. Wire to the Rust backend's `/api/gmail/sync` endpoint.
-- **AI extraction**: Camera scans are not OCR'd; a hardcoded expense is inserted. Wire to backend `/api/expenses/upload` which calls Claude.
-- **Persistence**: In-memory only. Add SwiftData / backend API for real storage.
-
-## Next steps to productionize
-
-1. Replace `AuthService` with `GoogleSignIn-iOS` + backend token exchange
-2. Add `APIClient` targeting the Rust Axum backend (JWT auth)
-3. Replace `ExpenseStore` in-memory state with SwiftData + API sync
-4. Wire `DocumentScanner` result → upload → backend Claude extraction
-5. Add Spanish `Localizable.strings` for App Store submission
-6. Add App Icon (currently empty slot)
-7. StoreKit 2 for Pro/Business subscriptions
+© 2026 Kung Fu Software SL

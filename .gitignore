@@ -1,0 +1,20 @@
+# Node / Bun
+node_modules/
+bun.lockb
+.env
+.env.local
+.env.*.local
+
+# Build
+dist/
+build/
+.DS_Store
+
+# Xcode
+apps/ios/**/xcuserdata/
+apps/ios/**/*.xcworkspace/xcuserdata/
+apps/ios/**/DerivedData/
+apps/ios/**/*.xcuserstate
+
+# Logs
+*.log

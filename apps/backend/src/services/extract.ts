@@ -1,0 +1,159 @@
+import Anthropic from "@anthropic-ai/sdk";
+import pdfParse from "pdf-parse";
+import { config } from "../config";
+
+const client = new Anthropic({ apiKey: config.ANTHROPIC_API_KEY });
+
+export type ExtractedExpense = {
+  vendor: string;
+  cif: string | null;
+  date: string; // YYYY-MM-DD
+  invoiceNumber: string | null;
+  subtotal: number;
+  ivaRate: number;
+  ivaAmount: number;
+  irpfRate: number;
+  irpfAmount: number;
+  total: number;
+  currency: string;
+  category:
+    | "software"
+    | "suministros"
+    | "materialOficina"
+    | "serviciosProfesionales"
+    | "formacion"
+    | "vehiculo"
+    | "representacion"
+    | "hosting"
+    | "telefonia"
+    | "otros";
+  confidence: number; // 0..1
+  isValidInvoice: boolean;
+};
+
+const SYSTEM_PROMPT = `You are an expert Spanish tax accountant extracting structured data from invoices and receipts for autónomos in Spain.
+
+You will receive either the text of a PDF invoice or an image of a receipt. Extract the fields exactly as they appear on the document. Never invent data.
+
+Rules:
+- All amounts are in the document's currency (usually EUR).
+- IVA rates in Spain are typically 21%, 10%, 4%, or 0% (exempt).
+- IRPF retention applies to professional services (usually 15% or 7%).
+- Verify that subtotal + iva - irpf ≈ total (tolerance 0.02).
+- "category" must be one of: software, suministros, materialOficina, serviciosProfesionales, formacion, vehiculo, representacion, hosting, telefonia, otros.
+  - hosting: AWS, Google Cloud, Azure, OVH, Hetzner, DigitalOcean
+  - software: SaaS subscriptions (Figma, Notion, Slack, Adobe, GitHub, Stripe fees)
+  - telefonia: Vodafone, Movistar, Orange, Masmovil, internet providers
+  - vehiculo: fuel, parking, tolls, car rental
+  - representacion: business meals, client entertainment
+  - serviciosProfesionales: lawyers, accountants, consultants, freelancers
+  - formacion: courses, books, conferences
+  - materialOficina: office supplies, equipment, furniture
+  - suministros: electricity, water, gas (home office)
+  - otros: anything else
+- "confidence" is your overall confidence (0.0 to 1.0).
+- "isValidInvoice": false if this is NOT an invoice/receipt (e.g., marketing email, bank statement, shipping notification).
+- Return null for fields you cannot find with reasonable confidence. Never guess invoice numbers or CIFs.
+
+Return ONLY a valid JSON object matching the schema. No markdown, no explanation.`;
+
+const JSON_SCHEMA_HINT = `{
+  "vendor": "string",
+  "cif": "string or null",
+  "date": "YYYY-MM-DD",
+  "invoiceNumber": "string or null",
+  "subtotal": number,
+  "ivaRate": number,
+  "ivaAmount": number,
+  "irpfRate": number,
+  "irpfAmount": number,
+  "total": number,
+  "currency": "EUR",
+  "category": "one of the allowed categories",
+  "confidence": 0.0-1.0,
+  "isValidInvoice": boolean
+}`;
+
+function parseJsonResponse(text: string): ExtractedExpense {
+  // Strip markdown fences if present
+  const cleaned = text.replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
+  const jsonStart = cleaned.indexOf("{");
+  const jsonEnd = cleaned.lastIndexOf("}");
+  if (jsonStart === -1 || jsonEnd === -1) {
+    throw new Error("No JSON found in Claude response");
+  }
+  return JSON.parse(cleaned.slice(jsonStart, jsonEnd + 1));
+}
+
+export async function extractFromPdfText(pdfBuffer: Buffer): Promise<ExtractedExpense> {
+  const parsed = await pdfParse(pdfBuffer);
+  const text = parsed.text.slice(0, 8000); // bound for safety
+
+  const response = await client.messages.create({
+    model: config.ANTHROPIC_MODEL,
+    max_tokens: 1024,
+    system: SYSTEM_PROMPT,
+    messages: [
+      {
+        role: "user",
+        content: `Extract the invoice data. Return JSON matching this schema:\n${JSON_SCHEMA_HINT}\n\n---\n\nInvoice text:\n\n${text}`,
+      },
+    ],
+  });
+
+  const block = response.content[0];
+  if (block.type !== "text") throw new Error("Unexpected response block type");
+  return parseJsonResponse(block.text);
+}
+
+export async function extractFromImage(
+  imageBuffer: Buffer,
+  mediaType: "image/png" | "image/jpeg" | "image/webp"
+): Promise<ExtractedExpense> {
+  const base64 = imageBuffer.toString("base64");
+
+  const response = await client.messages.create({
+    model: config.ANTHROPIC_MODEL,
+    max_tokens: 1024,
+    system: SYSTEM_PROMPT,
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "image",
+            source: { type: "base64", media_type: mediaType, data: base64 },
+          },
+          {
+            type: "text",
+            text: `Extract the receipt data from this image. Return JSON matching this schema:\n${JSON_SCHEMA_HINT}`,
+          },
+        ],
+      },
+    ],
+  });
+
+  const block = response.content[0];
+  if (block.type !== "text") throw new Error("Unexpected response block type");
+  return parseJsonResponse(block.text);
+}
+
+export async function extractAuto(
+  buffer: Buffer,
+  mimeType: string
+): Promise<ExtractedExpense> {
+  if (mimeType === "application/pdf") {
+    try {
+      return await extractFromPdfText(buffer);
+    } catch (err) {
+      console.warn("PDF text extraction failed, falling back to vision:", err);
+      // TODO: render first page to PNG and call extractFromImage
+      throw err;
+    }
+  }
+  if (mimeType.startsWith("image/")) {
+    const mt = mimeType as "image/png" | "image/jpeg" | "image/webp";
+    return extractFromImage(buffer, mt);
+  }
+  throw new Error(`Unsupported mime type: ${mimeType}`);
+}

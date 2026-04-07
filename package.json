@@ -1,0 +1,12 @@
+{
+  "name": "facturaai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FacturaAI monorepo — AI-powered financial autopilot for Spanish autónomos",
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev": "bun --cwd apps/backend run dev",
+    "backend:dev": "bun --cwd apps/backend run dev",
+    "backend:migrate": "bun --cwd apps/backend run db:migrate"
+  }
+}

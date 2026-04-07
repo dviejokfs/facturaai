@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: facturaai-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: facturaai
+      POSTGRES_PASSWORD: facturaai
+      POSTGRES_DB: facturaai
+    ports:
+      - "5432:5432"
+    volumes:
+      - facturaai_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U facturaai"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: facturaai-rustfs
+    restart: unless-stopped
+    environment:
+      RUSTFS_ACCESS_KEY: facturaai
+      RUSTFS_SECRET_KEY: facturaai-secret
+      RUSTFS_VOLUMES: /data
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web console
+    volumes:
+      - facturaai_rustfs:/data
+
+volumes:
+  facturaai_pg:
+  facturaai_rustfs:
