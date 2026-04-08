@@ -9,20 +9,12 @@ final class ExpenseStore: ObservableObject {
     @Published var lastSyncDate: Date?
     @Published var lastError: String?
 
-    /// When true, backend is unreachable or user not signed in → use in-memory mock data.
-    var useMockFallback = true
-
-    init() {
-        self.expenses = MockData.sampleExpenses()
-    }
+    init() {}
 
     // MARK: - Remote sync
 
     func reload() async {
-        guard Keychain.loadToken() != nil else {
-            if useMockFallback { expenses = MockData.sampleExpenses() }
-            return
-        }
+        guard Keychain.loadToken() != nil else { return }
         isLoading = true
         defer { isLoading = false }
         do {
@@ -31,9 +23,6 @@ final class ExpenseStore: ObservableObject {
             self.lastError = nil
         } catch {
             self.lastError = error.localizedDescription
-            if useMockFallback && expenses.isEmpty {
-                expenses = MockData.sampleExpenses()
-            }
         }
     }
 
@@ -42,7 +31,6 @@ final class ExpenseStore: ObservableObject {
         defer { isSyncing = false }
         do {
             let sync = try await APIClient.shared.triggerGmailSync()
-            // Poll a few times for completion
             for _ in 0..<10 {
                 try? await Task.sleep(nanoseconds: 1_500_000_000)
                 let status = try await APIClient.shared.getGmailSync(id: sync.id)
@@ -52,16 +40,6 @@ final class ExpenseStore: ObservableObject {
             lastSyncDate = Date()
         } catch {
             lastError = error.localizedDescription
-            // Fallback: simulate one new mock item so the UI demos something
-            if useMockFallback {
-                var copy = MockData.sampleExpenses()[0]
-                copy.id = UUID()
-                copy.date = Date()
-                copy.status = .pending
-                copy.invoiceNumber = "NEW-\(Int.random(in: 1000...9999))"
-                expenses.insert(copy, at: 0)
-                lastSyncDate = Date()
-            }
         }
     }
 
@@ -96,6 +74,30 @@ final class ExpenseStore: ObservableObject {
         expenses.insert(expense, at: 0)
     }
 
+    /// Upload a receipt (image or PDF) and get back the AI-extracted expense.
+    func uploadReceipt(data: Data, filename: String) async throws -> Expense {
+        let lower = filename.lowercased()
+        let mime: String
+        if lower.hasSuffix(".pdf") { mime = "application/pdf" }
+        else if lower.hasSuffix(".png") { mime = "image/png" }
+        else if lower.hasSuffix(".heic") { mime = "image/heic" }
+        else { mime = "image/jpeg" }
+        let remote = try await APIClient.shared.uploadReceipt(imageData: data, filename: filename, mimeType: mime)
+        let expense = remote.toDomain()
+        expenses.insert(expense, at: 0)
+        return expense
+    }
+
+    /// Upload a file received via the iOS Share Sheet.
+    func uploadSharedFile(data: Data, filename: String) async {
+        guard Keychain.loadToken() != nil else { return }
+        do {
+            _ = try await uploadReceipt(data: data, filename: filename)
+        } catch {
+            lastError = error.localizedDescription
+        }
+    }
+
     // MARK: - Filtering & aggregates
 
     func expenses(in quarter: String) -> [Expense] {
@@ -125,5 +127,30 @@ final class ExpenseStore: ObservableObject {
         return grouped
             .map { ($0.key, $0.value.reduce(Decimal(0)) { $0 + $1.total }) }
             .sorted { $0.1 > $1.1 }
+    }
+
+    // MARK: - Multi-currency aggregates (NEVER converted)
+
+    struct CurrencyTotals: Identifiable {
+        let currency: String
+        let count: Int
+        let subtotal: Decimal
+        let tax: Decimal
+        let total: Decimal
+        var id: String { currency }
+    }
+
+    func totalsByCurrency(for quarter: String) -> [CurrencyTotals] {
+        let grouped = Dictionary(grouping: expenses(in: quarter), by: { $0.currency })
+        return grouped.map { ccy, list in
+            CurrencyTotals(
+                currency: ccy,
+                count: list.count,
+                subtotal: list.reduce(0) { $0 + $1.subtotal },
+                tax: list.reduce(0) { $0 + $1.ivaAmount },
+                total: list.reduce(0) { $0 + $1.total }
+            )
+        }
+        .sorted { $0.total > $1.total }
     }
 }

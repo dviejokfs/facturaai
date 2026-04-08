@@ -31,10 +31,12 @@
     <string>1</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
+    <key>RC_PUBLIC_SDK_KEY_IOS</key>
+    <string></string>
     <key>NSCameraUsageDescription</key>
-    <string>FacturaAI usa la cámara para escanear tickets y facturas en papel.</string>
+    <string>FacturaAI uses the camera to scan paper receipts and invoices.</string>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>FacturaAI accede a tus fotos para importar facturas guardadas.</string>
+    <string>FacturaAI accesses your photos to import saved invoices.</string>
     <key>UILaunchScreen</key>
     <dict/>
     <key>UIRequiredDeviceCapabilities</key>

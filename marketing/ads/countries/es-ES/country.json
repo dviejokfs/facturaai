@@ -1,0 +1,96 @@
+{
+  "id": "es-ES",
+  "country": "ES",
+  "language": "es",
+  "currency": "EUR",
+  "currencySymbol": "€",
+  "pricingDisplay": "€7/mes",
+  "taxAuthority": "Hacienda",
+  "accountantTerm": "gestor",
+  "selfEmployedTerm": "autónomo",
+  "taxPeriodTerm": "trimestre",
+  "appLocale": "es-ES",
+  "appStoreUrl": "https://apps.apple.com/es/app/facturaai",
+  "landingUrl": "https://facturaai.com/es",
+  "voices": {
+    "carlos": {
+      "provider": "elevenlabs",
+      "voiceId": "REPLACE_WITH_ELEVENLABS_VOICE_ID",
+      "name": "Carlos",
+      "gender": "male",
+      "age": "middle",
+      "persona": "autónomo fontanero, 40s, acento castellano",
+      "modelId": "eleven_multilingual_v2"
+    },
+    "maria": {
+      "provider": "elevenlabs",
+      "voiceId": "REPLACE_WITH_ELEVENLABS_VOICE_ID",
+      "name": "María",
+      "gender": "female",
+      "age": "middle",
+      "persona": "diseñadora gráfica, 30s, acento neutro",
+      "modelId": "eleven_multilingual_v2"
+    },
+    "lucia": {
+      "provider": "elevenlabs",
+      "voiceId": "REPLACE_WITH_ELEVENLABS_VOICE_ID",
+      "name": "Lucía",
+      "gender": "female",
+      "age": "middle",
+      "persona": "gestora, 40s, profesional",
+      "modelId": "eleven_multilingual_v2"
+    }
+  },
+  "avatars": {
+    "carlos": {
+      "provider": "hedra",
+      "characterId": "REPLACE_WITH_HEDRA_CHARACTER_ID",
+      "name": "Carlos",
+      "persona": "autónomo fontanero",
+      "referenceImage": "countries/es-ES/avatars/carlos.jpg"
+    },
+    "maria": {
+      "provider": "hedra",
+      "characterId": "REPLACE_WITH_HEDRA_CHARACTER_ID",
+      "name": "María",
+      "persona": "diseñadora gráfica",
+      "referenceImage": "countries/es-ES/avatars/maria.jpg"
+    },
+    "lucia": {
+      "provider": "hedra",
+      "characterId": "REPLACE_WITH_HEDRA_CHARACTER_ID",
+      "name": "Lucía",
+      "persona": "gestora",
+      "referenceImage": "countries/es-ES/avatars/lucia.jpg"
+    }
+  },
+  "brollLibrary": [
+    {
+      "id": "messy-desk",
+      "path": "countries/es-ES/broll/messy-desk.mp4",
+      "tags": ["pain", "desk", "papers"],
+      "durationSec": 6,
+      "source": "veo"
+    },
+    {
+      "id": "hacienda-letter",
+      "path": "countries/es-ES/broll/hacienda-letter.mp4",
+      "tags": ["pain", "tax", "fear"],
+      "durationSec": 5,
+      "source": "veo"
+    },
+    {
+      "id": "gmail-search-chaos",
+      "path": "countries/es-ES/broll/gmail-search-chaos.mp4",
+      "tags": ["pain", "search", "chaos"],
+      "durationSec": 5,
+      "source": "screen-recording"
+    }
+  ],
+  "appDemoClip": "countries/es-ES/broll/app-demo-export-es.mp4",
+  "fonts": {
+    "captions": "Inter",
+    "captionSize": 64
+  },
+  "captionStyle": "tiktok-yellow"
+}

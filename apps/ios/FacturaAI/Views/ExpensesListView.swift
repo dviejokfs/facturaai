@@ -15,10 +15,10 @@ struct ExpensesListView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                Picker("Filtro", selection: $filter) {
-                    Text("Todos").tag(ExpenseStatus?.none)
-                    Text("Pendientes").tag(ExpenseStatus?.some(.pending))
-                    Text("Confirmados").tag(ExpenseStatus?.some(.confirmed))
+                Picker("Filter", selection: $filter) {
+                    Text("All").tag(ExpenseStatus?.none)
+                    Text("Pending").tag(ExpenseStatus?.some(.pending))
+                    Text("Confirmed").tag(ExpenseStatus?.some(.confirmed))
                 }
                 .pickerStyle(.segmented)
                 .padding()
@@ -31,20 +31,20 @@ struct ExpensesListView: View {
                         .swipeActions(edge: .trailing) {
                             Button(role: .destructive) {
                                 store.reject(e)
-                            } label: { Label("Rechazar", systemImage: "xmark") }
+                            } label: { Label("Reject", systemImage: "xmark") }
                         }
                         .swipeActions(edge: .leading) {
                             Button {
                                 store.confirm(e)
-                            } label: { Label("Confirmar", systemImage: "checkmark") }
+                            } label: { Label("Confirm", systemImage: "checkmark") }
                             .tint(.green)
                         }
                     }
                 }
                 .listStyle(.plain)
             }
-            .searchable(text: $searchText, prompt: "Buscar proveedor")
-            .navigationTitle("Gastos")
+            .searchable(text: $searchText, prompt: "Search vendor")
+            .navigationTitle("Expenses")
             .navigationDestination(for: Expense.self) { ExpenseDetailView(expense: $0) }
         }
     }
@@ -74,7 +74,7 @@ struct ExpenseRow: View {
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 3) {
-                Text(Formatters.euro(expense.total)).fontWeight(.semibold)
+                Text(Formatters.money(expense.total, currency: expense.currency)).fontWeight(.semibold)
                 statusBadge
             }
         }
@@ -84,7 +84,7 @@ struct ExpenseRow: View {
     @ViewBuilder var statusBadge: some View {
         switch expense.status {
         case .pending:
-            Text("Pendiente").font(.caption2).fontWeight(.semibold)
+            Text("Pending").font(.caption2).fontWeight(.semibold)
                 .padding(.horizontal, 6).padding(.vertical, 2)
                 .background(Color.orange.opacity(0.18))
                 .foregroundStyle(.orange).clipShape(Capsule())
@@ -94,7 +94,7 @@ struct ExpenseRow: View {
                 .background(Color.green.opacity(0.18))
                 .foregroundStyle(.green).clipShape(Capsule())
         case .rejected:
-            Text("Rechazado").font(.caption2).fontWeight(.semibold)
+            Text("Rejected").font(.caption2).fontWeight(.semibold)
                 .padding(.horizontal, 6).padding(.vertical, 2)
                 .background(Color.red.opacity(0.18))
                 .foregroundStyle(.red).clipShape(Capsule())

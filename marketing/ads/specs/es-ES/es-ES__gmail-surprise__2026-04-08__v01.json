@@ -1,0 +1,27 @@
+{
+  "id": "es-ES__gmail-surprise__2026-04-08__v01",
+  "countryId": "es-ES",
+  "createdAt": "2026-04-08T10:00:00.000Z",
+  "angle": "gmail-surprise",
+  "platform": ["meta", "tiktok"],
+  "durationSec": 30,
+  "aspectRatio": "9:16",
+  "avatarId": "carlos",
+  "voiceId": "carlos",
+  "script": {
+    "hook": "Conecté mi Gmail a esta app y me llevé un susto.",
+    "problem": "Resulta que tenía veintitrés facturas olvidadas. De Endesa, Movistar, Amazon, del taller. Todas deducibles. Todas perdidas en mi correo.",
+    "solution": "FacturaAI rastrea tu Gmail, encuentra las facturas y las ordena por trimestre. Automático. No tocas nada.",
+    "proof": "Veintitrés facturas que mi gestora iba a no ver nunca. Eso son cientos de euros de IVA que me habría comido yo.",
+    "cta": "Conecta tu Gmail gratis. A ver cuánto dinero te encuentras."
+  },
+  "scenes": [
+    { "type": "avatar", "startSec": 0, "endSec": 2 },
+    { "type": "broll", "startSec": 2, "endSec": 8, "brollId": "gmail-search-chaos" },
+    { "type": "app-demo", "startSec": 8, "endSec": 22 },
+    { "type": "text-card", "startSec": 22, "endSec": 30, "textOverlay": "¿Cuánto tienes tú?" }
+  ],
+  "captions": { "enabled": true },
+  "cta": { "text": "Conecta tu Gmail gratis", "urlKey": "appStore" },
+  "tags": ["gmail-surprise", "ES", "found-money", "male"]
+}

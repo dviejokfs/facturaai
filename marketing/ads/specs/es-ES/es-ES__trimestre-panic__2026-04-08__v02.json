@@ -1,0 +1,28 @@
+{
+  "id": "es-ES__trimestre-panic__2026-04-08__v02",
+  "countryId": "es-ES",
+  "createdAt": "2026-04-08T10:00:00.000Z",
+  "angle": "trimestre-panic",
+  "platform": ["meta", "tiktok"],
+  "durationSec": 30,
+  "aspectRatio": "9:16",
+  "avatarId": "maria",
+  "voiceId": "maria",
+  "script": {
+    "hook": "Si eres autónoma, esto te va a sonar.",
+    "problem": "Llega el día 18 del trimestre y empiezo a sudar. Facturas por aquí, tickets por allá, capturas de pantalla, un caos. Y mi gestora esperando.",
+    "solution": "FacturaAI se conecta a mi Gmail y cada vez que llega una factura, la guarda ordenada. Ya no busco nada.",
+    "proof": "Este trimestre he tardado dos minutos en mandárselo todo a mi gestora. Dos. Antes eran tres tardes.",
+    "cta": "Gratis en el App Store. Siete euros al mes. Tu trimestre, tranquilo."
+  },
+  "scenes": [
+    { "type": "avatar", "startSec": 0, "endSec": 2 },
+    { "type": "broll", "startSec": 2, "endSec": 8, "brollId": "gmail-search-chaos" },
+    { "type": "app-demo", "startSec": 8, "endSec": 18 },
+    { "type": "avatar", "startSec": 18, "endSec": 25 },
+    { "type": "text-card", "startSec": 25, "endSec": 30, "textOverlay": "€7/mes" }
+  ],
+  "captions": { "enabled": true },
+  "cta": { "text": "Pruébala gratis", "urlKey": "appStore" },
+  "tags": ["trimestre-panic", "ES", "autonoma", "female"]
+}

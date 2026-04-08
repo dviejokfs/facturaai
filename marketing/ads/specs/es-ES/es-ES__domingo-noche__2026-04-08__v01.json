@@ -1,0 +1,27 @@
+{
+  "id": "es-ES__domingo-noche__2026-04-08__v01",
+  "countryId": "es-ES",
+  "createdAt": "2026-04-08T10:00:00.000Z",
+  "angle": "domingo-noche",
+  "platform": ["meta", "tiktok"],
+  "durationSec": 30,
+  "aspectRatio": "9:16",
+  "avatarId": "carlos",
+  "voiceId": "carlos",
+  "script": {
+    "hook": "Domingo noche. Nueve de la noche. Mañana empieza el trimestre. Y tú:",
+    "problem": "Abriendo Gmail. Buscando Endesa. Buscando Movistar. Buscando ese cliente que te pagó en enero. Bajando PDFs uno a uno a una carpeta que se llama nueva carpeta cuatro.",
+    "solution": "O podrías abrir FacturaAI, darle a exportar trimestre, y mandárselo a tu gestora. Treinta segundos.",
+    "proof": "Y el domingo por la noche, cenar tranquilo. Como las personas normales.",
+    "cta": "FacturaAI. Gratis. Siete euros al mes. Tu domingo, tuyo."
+  },
+  "scenes": [
+    { "type": "avatar", "startSec": 0, "endSec": 2 },
+    { "type": "broll", "startSec": 2, "endSec": 10, "brollId": "gmail-search-chaos" },
+    { "type": "app-demo", "startSec": 10, "endSec": 22 },
+    { "type": "avatar", "startSec": 22, "endSec": 30 }
+  ],
+  "captions": { "enabled": true },
+  "cta": { "text": "Tu domingo, tuyo", "urlKey": "appStore" },
+  "tags": ["domingo-noche", "ES", "relatable", "male"]
+}

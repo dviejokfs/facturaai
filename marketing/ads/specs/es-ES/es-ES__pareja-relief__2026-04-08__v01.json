@@ -1,0 +1,27 @@
+{
+  "id": "es-ES__pareja-relief__2026-04-08__v01",
+  "countryId": "es-ES",
+  "createdAt": "2026-04-08T10:00:00.000Z",
+  "angle": "pareja-relief",
+  "platform": ["meta", "tiktok"],
+  "durationSec": 30,
+  "aspectRatio": "9:16",
+  "avatarId": "carlos",
+  "voiceId": "carlos",
+  "script": {
+    "hook": "Este trimestre mi pareja no me ha echado la bronca. Y te cuento por qué.",
+    "problem": "Cada trimestre era lo mismo. Yo de los nervios, ella aguantándome, fines de semana enteros buscando facturas por el ordenador. Un horror doméstico.",
+    "solution": "Descargué FacturaAI hace dos meses. Conectó mi Gmail. Y desde entonces cada factura se guarda sola, ordenada.",
+    "proof": "Este domingo, en vez de gritarle al Excel, fui a tomar un vermut. Mi pareja flipando.",
+    "cta": "Si quieres que tu pareja deje de sufrir, pruébala. Gratis."
+  },
+  "scenes": [
+    { "type": "avatar", "startSec": 0, "endSec": 3 },
+    { "type": "broll", "startSec": 3, "endSec": 10, "brollId": "messy-desk" },
+    { "type": "app-demo", "startSec": 10, "endSec": 22 },
+    { "type": "avatar", "startSec": 22, "endSec": 30 }
+  ],
+  "captions": { "enabled": true },
+  "cta": { "text": "Pruébala gratis", "urlKey": "appStore" },
+  "tags": ["pareja-relief", "ES", "emotional", "male"]
+}

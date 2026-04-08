@@ -8,7 +8,7 @@ enum APIError: Error, LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .notAuthenticated: return "No autenticado"
+        case .notAuthenticated: return "Not authenticated"
         case .http(let code, let body): return "HTTP \(code): \(body)"
         case .decoding(let e): return "Decoding: \(e.localizedDescription)"
         case .transport(let e): return "Network: \(e.localizedDescription)"
@@ -20,7 +20,7 @@ final class APIClient {
     static let shared = APIClient()
 
     /// Override for production / TestFlight.
-    var baseURL = URL(string: "http://localhost:3000")!
+    var baseURL = URL(string: "http://192.168.1.133:3005")!
 
     private let session: URLSession = {
         let cfg = URLSessionConfiguration.default
@@ -114,12 +114,67 @@ final class APIClient {
 
     // MARK: - Export
 
-    func exportCSV(quarter: String) async throws -> Data {
-        var req = try authorizedRequest("GET", path: "api/export/csv?quarter=\(quarter)")
+    func exportCSV(quarter: String, locale: String = LocaleService.current) async throws -> Data {
+        var req = try authorizedRequest("GET", path: "api/export/csv?quarter=\(quarter)&locale=\(locale)")
         req.setValue("text/csv", forHTTPHeaderField: "Accept")
         let (data, resp) = try await session.data(for: req)
         try validate(resp, data: data)
         return data
+    }
+
+    /// Downloads the quarterly ZIP bundle (locale-aware CSV + dual-sheet XLSX + originals).
+    func exportZip(quarter: String, locale: String = LocaleService.current) async throws -> URL {
+        var req = try authorizedRequest("GET", path: "api/export/zip?quarter=\(quarter)&locale=\(locale)")
+        req.setValue("application/zip", forHTTPHeaderField: "Accept")
+        let (data, resp) = try await session.data(for: req)
+        try validate(resp, data: data)
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("FacturaAI_Export_\(quarter).zip")
+        try data.write(to: url, options: .atomic)
+        return url
+    }
+
+    // MARK: - Async Export Jobs
+
+    /// Create an export job (returns immediately with stats + warnings, builds ZIP in background).
+    func createExportJob(quarter: String, locale: String = LocaleService.current) async throws -> ExportJob {
+        try await request("POST", path: "api/export/jobs", jsonBody: [
+            "quarter": quarter,
+            "locale": locale,
+        ])
+    }
+
+    /// Poll export job status.
+    func getExportJob(id: String) async throws -> ExportJob {
+        try await request("GET", path: "api/export/jobs/\(id)")
+    }
+
+    /// Download the ZIP from a completed export job.
+    func downloadExportJob(id: String) async throws -> URL {
+        var req = try authorizedRequest("GET", path: "api/export/jobs/\(id)/download")
+        req.setValue("application/zip", forHTTPHeaderField: "Accept")
+        let (data, resp) = try await session.data(for: req)
+        try validate(resp, data: data)
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("FacturaAI_Export_\(id.prefix(8)).zip")
+        try data.write(to: url, options: .atomic)
+        return url
+    }
+
+    /// Create a public share link for a completed export.
+    func createShareLink(exportId: String) async throws -> ExportShareResponse {
+        try await request("POST", path: "api/export/jobs/\(exportId)/share", jsonBody: [:])
+    }
+
+    // MARK: - Profile
+
+    /// Persist locale (and other profile fields) to backend.
+    func updateProfile(_ fields: [String: Any]) async throws {
+        var req = try authorizedRequest("PATCH", path: "auth/me")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try JSONSerialization.data(withJSONObject: fields)
+        let (data, resp) = try await session.data(for: req)
+        try validate(resp, data: data)
     }
 
     // MARK: - Core
@@ -183,12 +238,23 @@ struct MeResponse: Decodable {
     let trialEndsAt: Date?
     let trialDaysLeft: Int?
     let trialExpired: Bool?
+    let locale: String?
+    let baseCurrency: String?
+    let taxId: String?
+    let taxIdType: String?
+    let accountantEmail: String?
+    let accountantName: String?
 
     enum CodingKeys: String, CodingKey {
-        case id, email, name, plan
+        case id, email, name, plan, locale
         case trialEndsAt = "trial_ends_at"
         case trialDaysLeft = "trial_days_left"
         case trialExpired = "trial_expired"
+        case baseCurrency = "base_currency"
+        case taxId = "tax_id"
+        case taxIdType = "tax_id_type"
+        case accountantEmail = "accountant_email"
+        case accountantName = "accountant_name"
     }
 }
 
@@ -260,6 +326,48 @@ extension RemoteExpense {
             attachmentName: nil
         )
     }
+}
+
+// MARK: - Export Job Models
+
+struct ExportJobStats: Decodable {
+    let byCurrency: [String: ExportCurrencyStats]?
+}
+
+struct ExportCurrencyStats: Decodable {
+    let count: Int
+    let subtotal: Double
+    let tax: Double
+    let total: Double
+}
+
+struct ExportWarning: Decodable, Identifiable {
+    let type: String
+    let count: Int
+    let message: String
+    var id: String { type }
+}
+
+struct ExportJob: Decodable, Identifiable {
+    let id: String
+    let status: String
+    let progress: Int?
+    let stats: ExportJobStats?
+    let warnings: [ExportWarning]?
+    let expenseCount: Int?
+    let storageKey: String?
+    let createdAt: String?
+    let expiresAt: String?
+
+    var isReady: Bool { status == "ready" }
+    var isFailed: Bool { status == "failed" }
+    var isProcessing: Bool { status == "pending" || status == "running" }
+}
+
+struct ExportShareResponse: Decodable {
+    let token: String
+    let url: String
+    let expiresAt: String
 }
 
 private func mapCategoryLabel(_ key: String) -> String {

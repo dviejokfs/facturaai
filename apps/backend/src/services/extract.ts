@@ -31,15 +31,17 @@ export type ExtractedExpense = {
   isValidInvoice: boolean;
 };
 
-const SYSTEM_PROMPT = `You are an expert Spanish tax accountant extracting structured data from invoices and receipts for autónomos in Spain.
+const SYSTEM_PROMPT = `You are an expert accountant extracting structured data from business invoices and receipts worldwide.
 
 You will receive either the text of a PDF invoice or an image of a receipt. Extract the fields exactly as they appear on the document. Never invent data.
 
 Rules:
-- All amounts are in the document's currency (usually EUR).
-- IVA rates in Spain are typically 21%, 10%, 4%, or 0% (exempt).
-- IRPF retention applies to professional services (usually 15% or 7%).
-- Verify that subtotal + iva - irpf ≈ total (tolerance 0.02).
+- All amounts MUST be in the original invoice currency. NEVER convert.
+- "currency" MUST be a valid ISO-4217 three-letter code (EUR, USD, GBP, JPY, MXN, BRL, CAD, AUD, CHF, SEK, etc.).
+- If you cannot determine the currency with high confidence, set isValidInvoice to false.
+- "ivaRate" / "ivaAmount" represent the document's tax (VAT, IVA, GST, sales tax, TVA, etc.) — use 0 if no tax line.
+- "irpfRate" / "irpfAmount" represent withholding (Spain IRPF, US 1099 backup withholding, etc.) — use 0 if none.
+- Verify that subtotal + tax - withholding ≈ total (tolerance 0.02).
 - "category" must be one of: software, suministros, materialOficina, serviciosProfesionales, formacion, vehiculo, representacion, hosting, telefonia, otros.
   - hosting: AWS, Google Cloud, Azure, OVH, Hetzner, DigitalOcean
   - software: SaaS subscriptions (Figma, Notion, Slack, Adobe, GitHub, Stripe fees)
@@ -68,7 +70,7 @@ const JSON_SCHEMA_HINT = `{
   "irpfRate": number,
   "irpfAmount": number,
   "total": number,
-  "currency": "EUR",
+  "currency": "ISO-4217 code (EUR, USD, GBP, ...)",
   "category": "one of the allowed categories",
   "confidence": 0.0-1.0,
   "isValidInvoice": boolean

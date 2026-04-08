@@ -1,0 +1,27 @@
+{
+  "id": "es-ES__gestora-pov__2026-04-08__v01",
+  "countryId": "es-ES",
+  "createdAt": "2026-04-08T10:00:00.000Z",
+  "angle": "gestora-pov",
+  "platform": ["meta", "tiktok"],
+  "durationSec": 30,
+  "aspectRatio": "9:16",
+  "avatarId": "lucia",
+  "voiceId": "lucia",
+  "script": {
+    "hook": "Soy gestora. Y voy a contarte algo que ningún autónomo quiere oír.",
+    "problem": "Cada trimestre recibo zips con cuarenta PDFs desordenados, fotos borrosas de tickets por WhatsApp y Excels de hace diez años. Y luego me preguntan por qué tardo tanto.",
+    "solution": "A los clientes que usan FacturaAI les hago el trimestre en la mitad de tiempo. Me llega todo ordenado, con fecha, proveedor y base imponible. Un PDF limpio.",
+    "proof": "Ojalá todos mis clientes la usaran. En serio. Les saldría más barato y yo dormiría mejor.",
+    "cta": "FacturaAI. Gratis en el App Store. Hazle un favor a tu gestora."
+  },
+  "scenes": [
+    { "type": "avatar", "startSec": 0, "endSec": 8 },
+    { "type": "app-demo", "startSec": 8, "endSec": 18 },
+    { "type": "avatar", "startSec": 18, "endSec": 25 },
+    { "type": "text-card", "startSec": 25, "endSec": 30, "textOverlay": "Hazle un favor a tu gestora" }
+  ],
+  "captions": { "enabled": true },
+  "cta": { "text": "Hazle un favor a tu gestora", "urlKey": "appStore" },
+  "tags": ["gestora-pov", "ES", "testimonial", "female"]
+}

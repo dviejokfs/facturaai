@@ -7,7 +7,8 @@ import { authRoutes } from "./routes/auth";
 import { expenseRoutes } from "./routes/expenses";
 import { uploadRoutes } from "./routes/upload";
 import { gmailRoutes } from "./routes/gmail";
-import { exportRoutes } from "./routes/export";
+import { exportRoutes, shareDownloadRoute } from "./routes/export";
+import { revenuecatRoutes } from "./routes/revenuecat";
 
 const app = new Hono();
 
@@ -19,6 +20,12 @@ app.get("/health", (c) => c.json({ ok: true }));
 
 // Public auth routes
 app.route("/auth", authRoutes);
+
+// Public webhooks (auth via shared secret in the route handler itself)
+app.route("/webhooks/revenuecat", revenuecatRoutes);
+
+// Public share download (no auth)
+app.route("/e", shareDownloadRoute);
 
 // Protected API
 const api = new Hono();

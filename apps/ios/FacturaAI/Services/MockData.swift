@@ -47,6 +47,24 @@ enum MockData {
                     invoiceNumber: "GM-2026-0089", subtotal: 120.00, ivaRate: 21, ivaAmount: 25.20,
                     irpfRate: 15, irpfAmount: 18.00, total: 127.20, category: .serviciosProfesionales,
                     status: .confirmed, confidence: 0.99, source: .gmail),
+
+            // ── Multi-currency showcase ─────────────────────────────────────
+            Expense(vendor: "GitHub Inc", cif: nil, date: daysAgo(4),
+                    invoiceNumber: "GH-2026-77213", subtotal: 21.00, ivaRate: 0, ivaAmount: 0,
+                    irpfRate: 0, irpfAmount: 0, total: 21.00, currency: "USD",
+                    category: .software, status: .confirmed, confidence: 0.98, source: .gmail),
+            Expense(vendor: "Cloudflare", cif: nil, date: daysAgo(11),
+                    invoiceNumber: "CF-INV-998812", subtotal: 20.00, ivaRate: 0, ivaAmount: 0,
+                    irpfRate: 0, irpfAmount: 0, total: 20.00, currency: "USD",
+                    category: .hosting, status: .confirmed, confidence: 0.97, source: .gmail),
+            Expense(vendor: "Linear", cif: nil, date: daysAgo(19),
+                    invoiceNumber: "LIN-0042981", subtotal: 8.00, ivaRate: 0, ivaAmount: 0,
+                    irpfRate: 0, irpfAmount: 0, total: 8.00, currency: "USD",
+                    category: .software, status: .confirmed, confidence: 0.99, source: .gmail),
+            Expense(vendor: "Monzo Business", cif: nil, date: daysAgo(14),
+                    invoiceNumber: "MB-2026-881", subtotal: 5.00, ivaRate: 20, ivaAmount: 1.00,
+                    irpfRate: 0, irpfAmount: 0, total: 6.00, currency: "GBP",
+                    category: .serviciosProfesionales, status: .confirmed, confidence: 0.96, source: .gmail),
         ]
     }
 }

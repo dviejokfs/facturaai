@@ -22,6 +22,14 @@ const schema = z.object({
   S3_BUCKET: z.string(),
   S3_ACCESS_KEY_ID: z.string().optional(),
   S3_SECRET_ACCESS_KEY: z.string().optional(),
+
+  // RevenueCat — populated AFTER you sign up and create the FacturaAI project.
+  // Public SDK key is consumed by the iOS app via APIClient.config.
+  // Secret API key + webhook secret are server-only.
+  REVENUECAT_PUBLIC_SDK_KEY_IOS: z.string().default(""),
+  REVENUECAT_SECRET_API_KEY: z.string().default(""),
+  REVENUECAT_WEBHOOK_SECRET: z.string().default(""),
+  REVENUECAT_PROJECT_ID: z.string().default(""),
 });
 
 // Bun loads .env automatically

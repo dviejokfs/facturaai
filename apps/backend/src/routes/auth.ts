@@ -55,9 +55,41 @@ authRoutes.get("/me", async (c) => {
   if (!user) return c.json({ error: "unauthenticated" }, 401);
   const [row] = await sql`
     SELECT id, email, name, plan, trial_ends_at,
+           locale, base_currency, tax_id, tax_id_type,
+           accountant_email, accountant_name,
            GREATEST(0, EXTRACT(EPOCH FROM (trial_ends_at - NOW()))::int / 86400) AS trial_days_left,
            (plan = 'trial' AND trial_ends_at < NOW()) AS trial_expired
     FROM users WHERE id = ${user.sub}
   `;
   return c.json(row ?? null);
+});
+
+authRoutes.patch("/me", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: "unauthenticated" }, 401);
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+
+  const allowed = [
+    "locale", "base_currency", "tax_id", "tax_id_type",
+    "accountant_email", "accountant_name",
+  ] as const;
+
+  // Build a single dynamic UPDATE — only set fields the client actually sent.
+  const sets: string[] = [];
+  const values: unknown[] = [];
+  for (const key of allowed) {
+    if (key in body) {
+      sets.push(`${key} = $${sets.length + 1}`);
+      values.push(body[key]);
+    }
+  }
+  if (sets.length === 0) return c.json({ ok: true, updated: 0 });
+
+  // Bun.sql tagged-template doesn't support raw fragments cleanly here, so
+  // we use sql.unsafe with bound params.
+  await sql.unsafe(
+    `UPDATE users SET ${sets.join(", ")}, updated_at = NOW() WHERE id = $${sets.length + 1}`,
+    [...values, user.sub],
+  );
+  return c.json({ ok: true });
 });

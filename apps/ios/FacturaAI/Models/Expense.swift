@@ -5,9 +5,9 @@ enum ExpenseStatus: String, Codable, CaseIterable {
 
     var label: String {
         switch self {
-        case .pending: return "Pendiente"
-        case .confirmed: return "Confirmado"
-        case .rejected: return "Rechazado"
+        case .pending: return "Pending"
+        case .confirmed: return "Confirmed"
+        case .rejected: return "Rejected"
         }
     }
 }
@@ -25,16 +25,16 @@ enum ExpenseSource: String, Codable {
 }
 
 enum TaxCategory: String, Codable, CaseIterable {
-    case software = "Software y herramientas"
-    case suministros = "Suministros"
-    case materialOficina = "Material oficina"
-    case serviciosProfesionales = "Servicios profesionales"
-    case formacion = "Formación"
-    case vehiculo = "Vehículo"
-    case representacion = "Representación"
-    case hosting = "Hosting y cloud"
-    case telefonia = "Telefonía e internet"
-    case otros = "Otros"
+    case software = "Software & tools"
+    case suministros = "Utilities"
+    case materialOficina = "Office supplies"
+    case serviciosProfesionales = "Professional services"
+    case formacion = "Training"
+    case vehiculo = "Vehicle"
+    case representacion = "Business meals"
+    case hosting = "Hosting & cloud"
+    case telefonia = "Phone & internet"
+    case otros = "Other"
 }
 
 struct Expense: Identifiable, Codable, Hashable {

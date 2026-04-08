@@ -1,0 +1,25 @@
+{
+  "device_frame_version": "latest",
+  "default": {
+    "keyword": {
+      "font": "./fonts/SF-Pro-Display-Bold.otf",
+      "color": "#FFFFFF"
+    },
+    "title": {
+      "font": "./fonts/SF-Pro-Display-Bold.otf",
+      "color": "#FFFFFF"
+    },
+    "background": "./background.png",
+    "padding": 40,
+    "title_below_image": false,
+    "show_complete_frame": true
+  },
+  "data": [
+    { "filter": "01_dashboard",  "title": { "text": "Receipts to deductions.\nIn seconds." } },
+    { "filter": "02_scan",       "title": { "text": "Snap it.\nWe handle the rest." } },
+    { "filter": "03_gmail",      "title": { "text": "Gmail invoices,\nauto-imported." } },
+    { "filter": "04_export",     "title": { "text": "One ZIP your\naccountant loves." } },
+    { "filter": "05_multiccy",   "title": { "text": "Every currency.\nNever converted." } },
+    { "filter": "06_trial",      "title": { "text": "14-day free trial.\nNo card." } }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "es-ES__trimestre-panic__2026-04-08__v01",
+  "countryId": "es-ES",
+  "createdAt": "2026-04-08T10:00:00.000Z",
+  "angle": "trimestre-panic",
+  "platform": ["meta", "tiktok"],
+  "durationSec": 30,
+  "aspectRatio": "9:16",
+  "avatarId": "carlos",
+  "voiceId": "carlos",
+  "script": {
+    "hook": "POV: es día 15 del trimestre y mi gestora me acaba de escribir.",
+    "problem": "Y yo aquí, buscando facturas en Gmail, en WhatsApp, en el cajón. Como cada trimestre. Un drama.",
+    "solution": "Hasta que descubrí FacturaAI. Conecto mi Gmail y me ordena cada factura según llega. Sin tocar nada.",
+    "proof": "El día 15 ya no es un drama. Le mando a mi gestora un solo archivo, limpio, en un clic. Y me dijo: por fin.",
+    "cta": "Descárgala gratis. Siete euros al mes. Tu gestora te lo va a agradecer."
+  },
+  "scenes": [
+    { "type": "avatar", "startSec": 0, "endSec": 2 },
+    { "type": "broll", "startSec": 2, "endSec": 8, "brollId": "messy-desk" },
+    { "type": "app-demo", "startSec": 8, "endSec": 18 },
+    { "type": "avatar", "startSec": 18, "endSec": 25 },
+    { "type": "text-card", "startSec": 25, "endSec": 30, "textOverlay": "€7/mes" }
+  ],
+  "captions": { "enabled": true },
+  "cta": { "text": "Descárgala gratis", "urlKey": "appStore" },
+  "tags": ["trimestre-panic", "ES", "autonomo", "male"]
+}

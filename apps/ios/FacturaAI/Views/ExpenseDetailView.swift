@@ -18,40 +18,40 @@ struct ExpenseDetailView: View {
                 }
             }
 
-            Section("Datos fiscales") {
+            Section("Tax details") {
                 if editing {
-                    TextField("Proveedor", text: $expense.vendor)
-                    TextField("CIF/NIF", text: Binding(
+                    TextField("Vendor", text: $expense.vendor)
+                    TextField("Tax ID", text: Binding(
                         get: { expense.cif ?? "" },
                         set: { expense.cif = $0.isEmpty ? nil : $0 }))
-                    TextField("Nº factura", text: Binding(
+                    TextField("Invoice #", text: Binding(
                         get: { expense.invoiceNumber ?? "" },
                         set: { expense.invoiceNumber = $0.isEmpty ? nil : $0 }))
-                    DatePicker("Fecha", selection: $expense.date, displayedComponents: .date)
-                    Picker("Categoría", selection: $expense.category) {
+                    DatePicker("Date", selection: $expense.date, displayedComponents: .date)
+                    Picker("Category", selection: $expense.category) {
                         ForEach(TaxCategory.allCases, id: \.self) { c in
                             Text(c.rawValue).tag(c)
                         }
                     }
                 } else {
-                    row("CIF/NIF", expense.cif ?? "—")
-                    row("Nº factura", expense.invoiceNumber ?? "—")
-                    row("Fecha", Formatters.shortDate.string(from: expense.date))
-                    row("Categoría", expense.category.rawValue)
+                    row("Tax ID", expense.cif ?? "—")
+                    row("Invoice #", expense.invoiceNumber ?? "—")
+                    row("Date", Formatters.shortDate.string(from: expense.date))
+                    row("Category", expense.category.rawValue)
                 }
             }
 
-            Section("Importes") {
-                row("Base imponible", Formatters.euro(expense.subtotal))
-                row("IVA (\(expense.ivaRate)%)", Formatters.euro(expense.ivaAmount))
+            Section("Amounts") {
+                row("Subtotal", Formatters.money(expense.subtotal, currency: expense.currency))
+                row("Tax (\(expense.ivaRate)%)", Formatters.money(expense.ivaAmount, currency: expense.currency))
                 if expense.irpfAmount > 0 {
-                    row("IRPF (\(expense.irpfRate)%)", "-" + Formatters.euro(expense.irpfAmount))
+                    row("Withholding (\(expense.irpfRate)%)", "-" + Formatters.money(expense.irpfAmount, currency: expense.currency))
                 }
-                row("Total", Formatters.euro(expense.total)).fontWeight(.semibold)
+                row("Total", Formatters.money(expense.total, currency: expense.currency)).fontWeight(.semibold)
             }
 
             if let name = expense.attachmentName {
-                Section("Archivo adjunto") {
+                Section("Attachment") {
                     HStack {
                         Image(systemName: "doc.fill").foregroundStyle(.indigo)
                         Text(name)
@@ -65,7 +65,7 @@ struct ExpenseDetailView: View {
                         store.confirm(expense)
                         dismiss()
                     } label: {
-                        Label("Confirmar gasto", systemImage: "checkmark.circle.fill")
+                        Label("Confirm expense", systemImage: "checkmark.circle.fill")
                     }
                     .tint(.green)
                 }
@@ -73,15 +73,15 @@ struct ExpenseDetailView: View {
                     store.delete(expense)
                     dismiss()
                 } label: {
-                    Label("Eliminar", systemImage: "trash")
+                    Label("Delete", systemImage: "trash")
                 }
             }
         }
-        .navigationTitle("Detalle")
+        .navigationTitle("Details")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button(editing ? "Guardar" : "Editar") {
+                Button(editing ? "Save" : "Edit") {
                     if editing { store.update(expense) }
                     editing.toggle()
                 }

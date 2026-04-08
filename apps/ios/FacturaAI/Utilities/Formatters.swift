@@ -1,21 +1,23 @@
 import Foundation
 
 enum Formatters {
-    static let euro: NumberFormatter = {
+    /// Currency-aware formatter. Uses the expense's own ISO-4217 code — NEVER converts.
+    static func money(_ value: Decimal, currency: String) -> String {
         let f = NumberFormatter()
         f.numberStyle = .currency
-        f.currencyCode = "EUR"
-        f.locale = Locale(identifier: "es_ES")
-        return f
-    }()
+        f.currencyCode = currency
+        f.locale = Locale.autoupdatingCurrent
+        return f.string(from: value as NSDecimalNumber) ?? "\(value) \(currency)"
+    }
 
+    /// Convenience for single-currency contexts (defaults to EUR).
     static func euro(_ value: Decimal) -> String {
-        euro.string(from: value as NSDecimalNumber) ?? "€0,00"
+        money(value, currency: "EUR")
     }
 
     static let shortDate: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "es_ES")
+        f.locale = Locale.autoupdatingCurrent
         f.dateFormat = "d MMM yyyy"
         return f
     }()

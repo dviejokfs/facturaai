@@ -1,0 +1,145 @@
+{
+  "identifier" : "FACTURAAI_STOREKIT_CONFIG",
+  "nonRenewingSubscriptions" : [],
+  "products" : [],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : []
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "facturaai_main",
+      "localizations" : [
+        {
+          "description" : "FacturaAI subscription tiers",
+          "displayName" : "FacturaAI",
+          "locale" : "en_US"
+        },
+        {
+          "description" : "Niveles de suscripción de FacturaAI",
+          "displayName" : "FacturaAI",
+          "locale" : "es_ES"
+        }
+      ],
+      "name" : "FacturaAI Main",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "12.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "FACTURAAI_PRO_MONTHLY",
+          "introductoryOffer" : {
+            "internalID" : "PRO_MONTHLY_TRIAL",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P2W"
+          },
+          "localizations" : [
+            {
+              "description" : "Unlimited invoices, recurring billing, payment links, multi-currency, all templates.",
+              "displayName" : "Pro Monthly",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "Facturas ilimitadas, facturación recurrente, enlaces de pago, multimoneda, todas las plantillas.",
+              "displayName" : "Pro Mensual",
+              "locale" : "es_ES"
+            }
+          ],
+          "productID" : "facturaai_pro_monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Pro Monthly",
+          "subscriptionGroupID" : "facturaai_main",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "99.00",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "FACTURAAI_PRO_YEARLY",
+          "introductoryOffer" : {
+            "internalID" : "PRO_YEARLY_TRIAL",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P2W"
+          },
+          "localizations" : [
+            {
+              "description" : "Pro plan, billed yearly. Save €57.",
+              "displayName" : "Pro Yearly",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "Plan Pro, facturación anual. Ahorra 57 €.",
+              "displayName" : "Pro Anual",
+              "locale" : "es_ES"
+            }
+          ],
+          "productID" : "facturaai_pro_yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Pro Yearly",
+          "subscriptionGroupID" : "facturaai_main",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "24.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "FACTURAAI_BUSINESS_MONTHLY",
+          "introductoryOffer" : {
+            "internalID" : "BUSINESS_MONTHLY_TRIAL",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P2W"
+          },
+          "localizations" : [
+            {
+              "description" : "Everything in Pro, plus multi-entity (up to 3 businesses) and priority support.",
+              "displayName" : "Business Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "facturaai_business_monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Business Monthly",
+          "subscriptionGroupID" : "facturaai_main",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "199.00",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "FACTURAAI_BUSINESS_YEARLY",
+          "introductoryOffer" : {
+            "internalID" : "BUSINESS_YEARLY_TRIAL",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P2W"
+          },
+          "localizations" : [
+            {
+              "description" : "Business plan, billed yearly. Save €100.",
+              "displayName" : "Business Yearly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "facturaai_business_yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Business Yearly",
+          "subscriptionGroupID" : "facturaai_main",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

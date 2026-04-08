@@ -1,0 +1,27 @@
+{
+  "id": "es-ES__modelo-303__2026-04-08__v01",
+  "countryId": "es-ES",
+  "createdAt": "2026-04-08T10:00:00.000Z",
+  "angle": "modelo-303",
+  "platform": ["meta", "tiktok"],
+  "durationSec": 25,
+  "aspectRatio": "9:16",
+  "avatarId": "maria",
+  "voiceId": "maria",
+  "script": {
+    "hook": "Autónomos: si cada vez que oís modelo 303 os tiemblan las manos, esto es para vosotros.",
+    "problem": "Porque tu gestora te pide la base imponible, el IVA soportado, el repercutido, y tú tienes las facturas repartidas en ocho sitios distintos.",
+    "solution": "FacturaAI te lo junta todo. Base, IVA, total, por trimestre, por categoría. Exportas y se lo mandas.",
+    "proof": "Lo que antes me llevaba una tarde entera ahora son dos minutos. Y mi gestora ya no me pide cosas por WhatsApp a las diez de la noche.",
+    "cta": "Gratis en el App Store. FacturaAI."
+  },
+  "scenes": [
+    { "type": "avatar", "startSec": 0, "endSec": 3 },
+    { "type": "broll", "startSec": 3, "endSec": 8, "brollId": "hacienda-letter" },
+    { "type": "app-demo", "startSec": 8, "endSec": 20 },
+    { "type": "avatar", "startSec": 20, "endSec": 25 }
+  ],
+  "captions": { "enabled": true },
+  "cta": { "text": "Gratis en el App Store", "urlKey": "appStore" },
+  "tags": ["modelo-303", "ES", "tax-specific", "female"]
+}

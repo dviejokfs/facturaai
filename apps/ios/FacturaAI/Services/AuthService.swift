@@ -11,6 +11,9 @@ final class AuthService: NSObject, ObservableObject, ASWebAuthenticationPresenta
     @Published var trialDaysLeft: Int = 14
     @Published var trialExpired: Bool = false
     @Published var errorMessage: String?
+    @Published var accountantName: String?
+    @Published var accountantEmail: String?
+    @Published var taxId: String?
 
     override init() {
         super.init()
@@ -38,7 +41,7 @@ final class AuthService: NSObject, ObservableObject, ASWebAuthenticationPresenta
 
             guard let token = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?
                 .queryItems?.first(where: { $0.name == "token" })?.value else {
-                errorMessage = "No token en el callback"
+                errorMessage = "No token in callback"
                 return
             }
 
@@ -58,6 +61,10 @@ final class AuthService: NSObject, ObservableObject, ASWebAuthenticationPresenta
             self.plan = me.plan
             self.trialDaysLeft = me.trialDaysLeft ?? 0
             self.trialExpired = me.trialExpired ?? false
+            self.accountantName = me.accountantName
+            self.accountantEmail = me.accountantEmail
+            self.taxId = me.taxId
+            await RevenueCatService.shared.identify(userId: me.id, email: me.email)
         } catch {
             if case APIError.http(401, _) = error {
                 signOut()
@@ -66,6 +73,7 @@ final class AuthService: NSObject, ObservableObject, ASWebAuthenticationPresenta
     }
 
     func signOut() {
+        Task { await RevenueCatService.shared.signOut() }
         Keychain.deleteToken()
         isSignedIn = false
         userEmail = nil

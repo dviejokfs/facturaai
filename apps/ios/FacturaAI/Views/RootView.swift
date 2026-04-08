@@ -2,34 +2,42 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject var auth: AuthService
+    @EnvironmentObject var store: ExpenseStore
+    @AppStorage("hasCompletedFirstUse") private var hasCompletedFirstUse = false
 
-    var body: some View {
-        if !auth.isSignedIn {
-            OnboardingView()
-        } else if auth.trialExpired && auth.plan == "trial" {
-            PaywallView()
-        } else {
-            MainTabView()
-                .task { await store.reload() }
-        }
+    private var screenshotMode: Bool {
+        ProcessInfo.processInfo.arguments.contains("-UITestScreenshotMode")
     }
 
-    @EnvironmentObject var store: ExpenseStore
+    var body: some View {
+        if screenshotMode {
+            MainTabView()
+        } else if !hasCompletedFirstUse {
+            FirstUseView()
+        } else {
+            MainTabView()
+                .task {
+                    if auth.isSignedIn {
+                        await store.reload()
+                    }
+                }
+        }
+    }
 }
 
 struct MainTabView: View {
     var body: some View {
         TabView {
             DashboardView()
-                .tabItem { Label("Resumen", systemImage: "chart.pie.fill") }
+                .tabItem { Label("Overview", systemImage: "chart.pie.fill") }
             ExpensesListView()
-                .tabItem { Label("Gastos", systemImage: "list.bullet.rectangle") }
+                .tabItem { Label("Expenses", systemImage: "list.bullet.rectangle") }
             ScanView()
-                .tabItem { Label("Escanear", systemImage: "camera.fill") }
+                .tabItem { Label("Scan", systemImage: "camera.fill") }
             ExportView()
-                .tabItem { Label("Exportar", systemImage: "square.and.arrow.up") }
+                .tabItem { Label("Export", systemImage: "square.and.arrow.up") }
             SettingsView()
-                .tabItem { Label("Ajustes", systemImage: "gearshape.fill") }
+                .tabItem { Label("Settings", systemImage: "gearshape.fill") }
         }
         .tint(.indigo)
     }

@@ -1,0 +1,27 @@
+# fastlane/Snapfile — screenshot automation
+# Run with: bundle exec fastlane snapshot
+
+devices([
+  "iPhone 17 Pro Max",
+  "iPhone 15 Pro Max",
+  "iPhone 8 Plus",
+  "iPad Pro 13-inch (M4)"
+])
+
+languages([
+  "en-US",
+  "es-ES"
+])
+
+scheme("FacturaAI")
+output_directory("../../marketing/screenshots/raw")
+clear_previous_screenshots(true)
+
+# Pass launch argument so the app seeds rich mock data and skips auth.
+launch_arguments(["-UITestScreenshotMode YES"])
+
+# Override status bar to 9:41, full battery, full signal
+override_status_bar(true)
+
+# Don't stop on first failing test
+stop_after_first_error(false)

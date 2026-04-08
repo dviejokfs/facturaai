@@ -5,6 +5,7 @@ struct ScanView: View {
     @EnvironmentObject var store: ExpenseStore
     @State private var showScanner = false
     @State private var showManual = false
+    @State private var showCameraUnavailable = false
     @State private var scanning = false
 
     var body: some View {
@@ -16,19 +17,23 @@ struct ScanView: View {
                         .foregroundStyle(.indigo)
                         .padding(.top, 40)
 
-                    Text("Escanea un ticket o factura")
+                    Text("Scan a receipt or invoice")
                         .font(.title2).fontWeight(.semibold)
 
-                    Text("Apunta con la cámara al documento. La IA extraerá automáticamente los datos.")
+                    Text("Point the camera at the document. AI will automatically extract the data.")
                         .font(.subheadline)
                         .multilineTextAlignment(.center)
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 32)
 
                     Button {
-                        showScanner = true
+                        if VNDocumentCameraViewController.isSupported {
+                            showScanner = true
+                        } else {
+                            showCameraUnavailable = true
+                        }
                     } label: {
-                        Label("Abrir cámara", systemImage: "camera.fill")
+                        Label("Open camera", systemImage: "camera.fill")
                             .frame(maxWidth: .infinity)
                             .padding()
                     }
@@ -40,7 +45,7 @@ struct ScanView: View {
                     Button {
                         showManual = true
                     } label: {
-                        Label("Introducir manualmente", systemImage: "square.and.pencil")
+                        Label("Enter manually", systemImage: "square.and.pencil")
                             .frame(maxWidth: .infinity)
                             .padding()
                     }
@@ -51,16 +56,22 @@ struct ScanView: View {
                     if scanning {
                         HStack {
                             ProgressView()
-                            Text("Extrayendo datos con IA…").foregroundStyle(.secondary)
+                            Text("Extracting data with AI…").foregroundStyle(.secondary)
                         }
                         .padding()
                     }
                 }
             }
-            .navigationTitle("Escanear")
+            .navigationTitle("Scan")
+            .alert("Camera not available", isPresented: $showCameraUnavailable) {
+                Button("OK") {}
+            } message: {
+                Text("Document scanning is not available on this device.")
+            }
             .sheet(isPresented: $showScanner) {
-                DocumentScanner { _ in
-                    Task { await simulateExtraction() }
+                DocumentScanner { image in
+                    guard let image, let data = image.jpegData(compressionQuality: 0.85) else { return }
+                    Task { await uploadScanned(data: data, filename: "scan_\(UUID().uuidString).jpg") }
                 }
             }
             .sheet(isPresented: $showManual) {
@@ -69,26 +80,13 @@ struct ScanView: View {
         }
     }
 
-    private func simulateExtraction() async {
+    private func uploadScanned(data: Data, filename: String) async {
         scanning = true
-        try? await Task.sleep(nanoseconds: 1_500_000_000)
-        let new = Expense(
-            vendor: "Ticket escaneado",
-            cif: nil,
-            date: Date(),
-            invoiceNumber: nil,
-            subtotal: 12.40,
-            ivaRate: 10,
-            ivaAmount: 1.24,
-            irpfRate: 0,
-            irpfAmount: 0,
-            total: 13.64,
-            category: .representacion,
-            status: .pending,
-            confidence: 0.78,
-            source: .camera
-        )
-        store.add(new)
+        do {
+            _ = try await store.uploadReceipt(data: data, filename: filename)
+        } catch {
+            store.lastError = error.localizedDescription
+        }
         scanning = false
     }
 }
@@ -142,33 +140,33 @@ struct ManualEntryView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Datos") {
-                    TextField("Proveedor", text: $vendor)
+                Section("Details") {
+                    TextField("Vendor", text: $vendor)
                     TextField("Total (€)", text: $total)
                         .keyboardType(.decimalPad)
-                    DatePicker("Fecha", selection: $date, displayedComponents: .date)
-                    Picker("IVA", selection: $ivaRate) {
+                    DatePicker("Date", selection: $date, displayedComponents: .date)
+                    Picker("VAT", selection: $ivaRate) {
                         Text("21%").tag(Decimal(21))
                         Text("10%").tag(Decimal(10))
                         Text("4%").tag(Decimal(4))
                         Text("0%").tag(Decimal(0))
                     }
-                    Picker("Categoría", selection: $category) {
+                    Picker("Category", selection: $category) {
                         ForEach(TaxCategory.allCases, id: \.self) { c in
                             Text(c.rawValue).tag(c)
                         }
                     }
                 }
                 Section {
-                    Button("Guardar") { save() }
+                    Button("Save") { save() }
                         .disabled(vendor.isEmpty || total.isEmpty)
                 }
             }
-            .navigationTitle("Nuevo gasto")
+            .navigationTitle("New expense")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancelar") { dismiss() }
+                    Button("Cancel") { dismiss() }
                 }
             }
         }

@@ -1,9 +1,8 @@
 import SwiftUI
 
 struct OnboardingView: View {
-    @EnvironmentObject var auth: AuthService
+    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
     @State private var page = 0
-    @State private var loading = false
 
     var body: some View {
         ZStack {
@@ -11,86 +10,68 @@ struct OnboardingView: View {
                            startPoint: .topLeading, endPoint: .bottomTrailing)
                 .ignoresSafeArea()
 
-            TabView(selection: $page) {
-                IntroPage(
-                    icon: "sparkles.rectangle.stack.fill",
-                    title: "FacturaAI",
-                    subtitle: "Tu piloto automático fiscal.\nTodas tus facturas, organizadas por IA."
-                ).tag(0)
+            VStack(spacing: 0) {
+                TabView(selection: $page) {
+                    HeroPage().tag(0)
+                    HowItWorksPage().tag(1)
+                }
+                .tabViewStyle(.page(indexDisplayMode: .always))
+                .indexViewStyle(.page(backgroundDisplayMode: .always))
 
-                IntroPage(
-                    icon: "envelope.badge.fill",
-                    title: "Conecta Gmail",
-                    subtitle: "Encontramos todas tus facturas automáticamente. Sin mover un dedo."
-                ).tag(1)
+                // Start now button — always visible
+                VStack(spacing: 12) {
+                    Button {
+                        withAnimation {
+                            hasSeenOnboarding = true
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "arrow.right.circle.fill")
+                            Text("Start now").fontWeight(.bold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(.white)
+                        .foregroundStyle(.indigo)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                    }
 
-                IntroPage(
-                    icon: "camera.viewfinder",
-                    title: "Escanea tickets",
-                    subtitle: "Una foto y listo. La IA extrae base, IVA, categoría y más."
-                ).tag(2)
-
-                TrialPage(loading: $loading).tag(3)
+                    Text("No account required. Try it free.")
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.7))
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 36)
             }
-            .tabViewStyle(.page(indexDisplayMode: .always))
-            .indexViewStyle(.page(backgroundDisplayMode: .always))
         }
     }
 }
 
-private struct IntroPage: View {
-    let icon: String
-    let title: String
-    let subtitle: String
+// MARK: - Page 1: Hero
 
+private struct HeroPage: View {
     var body: some View {
         VStack(spacing: 24) {
             Spacer()
-            Image(systemName: icon)
-                .font(.system(size: 96))
+
+            Image(systemName: "sparkles.rectangle.stack.fill")
+                .font(.system(size: 80))
                 .foregroundStyle(.white)
-            Text(title)
-                .font(.system(size: 40, weight: .bold, design: .rounded))
+
+            Text("FacturaAI")
+                .font(.system(size: 42, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
-            Text(subtitle)
+
+            Text("Your AI-powered expense manager")
                 .font(.title3)
-                .multilineTextAlignment(.center)
                 .foregroundStyle(.white.opacity(0.9))
-                .padding(.horizontal, 32)
-            Spacer()
-            Spacer()
-        }
-    }
-}
 
-private struct TrialPage: View {
-    @EnvironmentObject var auth: AuthService
-    @Binding var loading: Bool
-
-    var body: some View {
-        VStack(spacing: 18) {
-            Spacer()
-
-            Image(systemName: "crown.fill")
-                .font(.system(size: 64))
-                .foregroundStyle(.yellow)
-
-            Text("14 días gratis")
-                .font(.system(size: 38, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
-
-            Text("Acceso completo a Pro.\nSin tarjeta. Cancela cuando quieras.")
-                .font(.title3)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.white.opacity(0.95))
-                .padding(.horizontal, 24)
-
-            VStack(alignment: .leading, spacing: 12) {
-                Bullet("Sincronización Gmail automática")
-                Bullet("Escaneo IA de tickets ilimitado")
-                Bullet("Export CSV + Excel + Email")
-                Bullet("Categorización fiscal española completa")
-                Bullet("Envío directo a tu gestoría")
+            VStack(alignment: .leading, spacing: 14) {
+                FeatureRow(icon: "camera.fill", text: "Scan receipts with your camera")
+                FeatureRow(icon: "doc.fill", text: "Import invoices from photos or PDFs")
+                FeatureRow(icon: "envelope.fill", text: "Auto-sync invoices from Gmail")
+                FeatureRow(icon: "cpu", text: "AI extracts amounts, tax & categories")
+                FeatureRow(icon: "square.and.arrow.up.fill", text: "Export to your accountant in one tap")
             }
             .padding(20)
             .background(.white.opacity(0.12))
@@ -98,58 +79,90 @@ private struct TrialPage: View {
             .padding(.horizontal, 24)
 
             Spacer()
-
-            VStack(spacing: 10) {
-                Button {
-                    Task {
-                        loading = true
-                        await auth.signInWithGoogle()
-                        loading = false
-                    }
-                } label: {
-                    HStack {
-                        if loading {
-                            ProgressView().tint(.indigo)
-                        } else {
-                            Image(systemName: "sparkles")
-                            Text("Empezar prueba gratis").fontWeight(.bold)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(.white)
-                    .foregroundStyle(.indigo)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                }
-
-                Text("Luego €6,99/mes · Cancela cuando quieras")
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.75))
-            }
-            .padding(.horizontal, 24)
-
-            if let err = auth.errorMessage {
-                Text(err).font(.caption).foregroundStyle(.orange).padding(.top, 4)
-            }
-
-            Text("Al continuar, aceptas los términos y la política de privacidad.")
-                .font(.caption2)
-                .foregroundStyle(.white.opacity(0.6))
-                .padding(.bottom, 28)
-                .padding(.horizontal, 32)
-                .multilineTextAlignment(.center)
+            Spacer()
         }
     }
 }
 
-private struct Bullet: View {
-    let text: String
-    init(_ text: String) { self.text = text }
+// MARK: - Page 2: How it works
+
+private struct HowItWorksPage: View {
     var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(.green)
-            Text(text).foregroundStyle(.white)
+        VStack(spacing: 28) {
+            Spacer()
+
+            Text("How it works")
+                .font(.system(size: 34, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+
+            VStack(spacing: 20) {
+                StepRow(number: "1", icon: "photo.on.rectangle.angled",
+                        title: "Add your expenses",
+                        subtitle: "Snap a photo, pick from gallery, or import a PDF")
+
+                StepRow(number: "2", icon: "sparkles",
+                        title: "AI does the work",
+                        subtitle: "Vendor, amounts, tax rate and category — extracted instantly")
+
+                StepRow(number: "3", icon: "checkmark.circle.fill",
+                        title: "Review & confirm",
+                        subtitle: "Quick review, then your expenses are organized")
+
+                StepRow(number: "4", icon: "paperplane.fill",
+                        title: "Send to your accountant",
+                        subtitle: "Export ZIP with CSV, Excel and original invoices")
+            }
+            .padding(.horizontal, 24)
+
+            Spacer()
+            Spacer()
+        }
+    }
+}
+
+// MARK: - Components
+
+private struct FeatureRow: View {
+    let icon: String
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .frame(width: 24)
+                .foregroundStyle(.white)
+            Text(text)
+                .foregroundStyle(.white)
+            Spacer()
+        }
+    }
+}
+
+private struct StepRow: View {
+    let number: String
+    let icon: String
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 14) {
+            ZStack {
+                Circle()
+                    .fill(.white.opacity(0.2))
+                    .frame(width: 44, height: 44)
+                Image(systemName: icon)
+                    .font(.title3)
+                    .foregroundStyle(.white)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                Text(subtitle)
+                    .font(.subheadline)
+                    .foregroundStyle(.white.opacity(0.8))
+            }
             Spacer()
         }
     }

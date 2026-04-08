@@ -1,0 +1,72 @@
+/* Tabs */
+"tab.overview" = "Overview";
+"tab.expenses" = "Expenses";
+"tab.scan" = "Scan";
+"tab.export" = "Export";
+"tab.settings" = "Settings";
+
+/* Settings */
+"settings.title" = "Settings";
+"settings.account" = "Account";
+"settings.integrations" = "Integrations";
+"settings.plan" = "Plan";
+"settings.data" = "Data";
+"settings.signOut" = "Sign out";
+"settings.restorePurchases" = "Restore purchases";
+"settings.manageSubscription" = "Manage subscription";
+"settings.language" = "Language";
+"settings.language.system" = "System";
+
+/* Common */
+"common.close" = "Close";
+"common.edit" = "Edit";
+
+/* Export */
+"export.title" = "Export";
+"export.button" = "Export for accountant";
+"export.share" = "Share";
+"export.zip" = "Download ZIP";
+"export.csv" = "Download CSV";
+"export.empty" = "No expenses in this period yet.";
+"export.period" = "Period";
+"export.quarter" = "Quarter";
+"export.no_expenses" = "No expenses in this quarter.";
+"export.totals" = "Totals";
+"export.invoices" = "Invoices";
+"export.subtotal" = "Subtotal";
+"export.tax" = "Tax";
+"export.total" = "Total";
+"export.warnings" = "Warnings";
+"export.accountant" = "Accountant";
+"export.generate" = "Generate export";
+"export.generating" = "Generating export…";
+"export.description" = "The ZIP includes: localized CSV, Excel workbook (with an English Data sheet), and the original invoices. Forward straight to your accountant.";
+"export.success.title" = "Export ready!";
+"export.success.subtitle" = "{count} invoices for {quarter}, ready to share.";
+"export.share.email" = "Email {name}";
+"export.share.share" = "Share…";
+"export.share.copy_link" = "Copy share link";
+"export.share.link_copied" = "Link copied!";
+"export.done" = "Done";
+"export.email.subject" = "FacturaAI — Invoices {quarter}";
+"export.email.body" = "Hi,\n\nAttached you'll find the invoice export for {quarter} from FacturaAI.\n\nThe ZIP contains:\n- transactions.csv (localized)\n- transactions_en.csv (universal)\n- transactions.xlsx (Excel with localized + English sheets)\n- invoices/ folder with the original PDFs\n\nBest regards";
+
+/* Settings — accountant */
+"settings.accountant" = "Accountant";
+
+/* Accountant settings */
+"accountant" = "accountant";
+"accountant.title" = "My accountant";
+"accountant.description" = "Save your accountant's details so exports are pre-addressed.";
+"accountant.section.accountant" = "Accountant";
+"accountant.section.tax" = "Your tax ID";
+"accountant.name.placeholder" = "Name";
+"accountant.email.placeholder" = "Email";
+"accountant.taxid.placeholder" = "Tax ID (VAT number, NIF…)";
+"accountant.save" = "Save";
+"accountant.not_configured" = "Not configured yet";
+"accountant.add" = "Add accountant details";
+
+/* Tax */
+"tax.label" = "VAT";
+"tax.id" = "VAT number";

@@ -3,13 +3,15 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject var auth: AuthService
     @EnvironmentObject var store: ExpenseStore
+    @StateObject private var localeService = LocaleService.shared
+    @State private var showSignIn = false
 
     var planLabel: String {
         switch auth.plan {
-        case "trial": return "Prueba · \(auth.trialDaysLeft)d restantes"
-        case "pro": return "Pro — €6,99/mes"
-        case "business": return "Business — €12,99/mes"
-        case "expired": return "Prueba expirada"
+        case "trial": return "Trial · \(auth.trialDaysLeft)d remaining"
+        case "pro": return "Pro — €6.99/mo"
+        case "business": return "Business — €12.99/mo"
+        case "expired": return "Trial expired"
         default: return auth.plan
         }
     }
@@ -17,7 +19,26 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                if auth.plan == "trial" && auth.trialDaysLeft <= 5 {
+                if !auth.isSignedIn {
+                    Section {
+                        Button {
+                            showSignIn = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "person.crop.circle.badge.plus")
+                                    .font(.title2)
+                                    .foregroundStyle(.indigo)
+                                VStack(alignment: .leading) {
+                                    Text("Sign in").fontWeight(.semibold)
+                                    Text("Sync, export & manage your expenses")
+                                        .font(.caption).foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if auth.isSignedIn, auth.plan == "trial", auth.trialDaysLeft <= 5 {
                     Section {
                         TrialBanner(daysLeft: auth.trialDaysLeft)
                             .listRowInsets(EdgeInsets())
@@ -25,62 +46,112 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("Cuenta") {
-                    HStack {
-                        Image(systemName: "person.crop.circle.fill")
-                            .font(.title)
-                            .foregroundStyle(.indigo)
-                        VStack(alignment: .leading) {
-                            Text(auth.userEmail ?? "—").fontWeight(.semibold)
-                            Text(planLabel).font(.caption).foregroundStyle(.secondary)
+                if auth.isSignedIn {
+                    Section("Account") {
+                        HStack {
+                            Image(systemName: "person.crop.circle.fill")
+                                .font(.title)
+                                .foregroundStyle(.indigo)
+                            VStack(alignment: .leading) {
+                                Text(auth.userEmail ?? "—").fontWeight(.semibold)
+                                Text(planLabel).font(.caption).foregroundStyle(.secondary)
+                            }
                         }
                     }
                 }
 
-                Section("Integraciones") {
-                    HStack {
-                        Image(systemName: "envelope.fill").foregroundStyle(.red)
-                        Text("Gmail")
-                        Spacer()
-                        Text(auth.gmailConnected ? "Conectado" : "Desconectado")
-                            .font(.caption)
-                            .foregroundStyle(auth.gmailConnected ? .green : .secondary)
+                if auth.isSignedIn {
+                    Section(NSLocalizedString("settings.accountant", comment: "")) {
+                        NavigationLink {
+                            AccountantSettingsView()
+                        } label: {
+                            HStack {
+                                Image(systemName: "person.text.rectangle.fill").foregroundStyle(.teal)
+                                VStack(alignment: .leading) {
+                                    Text(NSLocalizedString("accountant.title", comment: ""))
+                                    if let email = auth.accountantEmail, !email.isEmpty {
+                                        Text(email).font(.caption).foregroundStyle(.secondary)
+                                    } else {
+                                        Text(NSLocalizedString("accountant.not_configured", comment: ""))
+                                            .font(.caption).foregroundStyle(.orange)
+                                    }
+                                }
+                            }
+                        }
                     }
-                    HStack {
-                        Image(systemName: "icloud.fill").foregroundStyle(.blue)
-                        Text("Google Drive")
-                        Spacer()
-                        Text("Próximamente").font(.caption).foregroundStyle(.secondary)
+
+                    Section("Integrations") {
+                        HStack {
+                            Image(systemName: "envelope.fill").foregroundStyle(.red)
+                            Text("Gmail")
+                            Spacer()
+                            Text(auth.gmailConnected ? "Connected" : "Disconnected")
+                                .font(.caption)
+                                .foregroundStyle(auth.gmailConnected ? .green : .secondary)
+                        }
+                        HStack {
+                            Image(systemName: "icloud.fill").foregroundStyle(.blue)
+                            Text("Google Drive")
+                            Spacer()
+                            Text("Coming soon").font(.caption).foregroundStyle(.secondary)
+                        }
+                        HStack {
+                            Image(systemName: "building.columns.fill").foregroundStyle(.teal)
+                            Text("Bank (PSD2)")
+                            Spacer()
+                            Text("Coming soon").font(.caption).foregroundStyle(.secondary)
+                        }
                     }
-                    HStack {
-                        Image(systemName: "building.columns.fill").foregroundStyle(.teal)
-                        Text("Banco (PSD2)")
-                        Spacer()
-                        Text("Próximamente").font(.caption).foregroundStyle(.secondary)
+
+                    Section("Plan") {
+                        NavigationLink {
+                            PricingView()
+                        } label: {
+                            Label(auth.plan == "pro" || auth.plan == "business"
+                                  ? "Change plan"
+                                  : "View Pro and Business plans",
+                                  systemImage: "sparkles")
+                        }
+                        Button {
+                            Task { _ = await RevenueCatService.shared.restorePurchases() }
+                        } label: {
+                            Label("Restore purchases", systemImage: "arrow.clockwise")
+                        }
+                        Link(destination: URL(string: "https://apps.apple.com/account/subscriptions")!) {
+                            Label("Manage subscription", systemImage: "creditcard")
+                        }
                     }
                 }
 
-                Section("Plan") {
-                    NavigationLink {
-                        PricingView()
-                    } label: {
-                        Label(auth.plan == "pro" || auth.plan == "business"
-                              ? "Cambiar plan"
-                              : "Ver planes Pro y Business",
-                              systemImage: "sparkles")
+                Section(NSLocalizedString("settings.language", comment: "")) {
+                    Picker(NSLocalizedString("settings.language", comment: ""),
+                           selection: Binding(
+                            get: { localeService.override ?? "system" },
+                            set: { newValue in
+                                localeService.override = (newValue == "system") ? nil : newValue
+                                if newValue != "system" {
+                                    Task { try? await APIClient.shared.updateProfile(["locale": newValue]) }
+                                }
+                            })) {
+                        Text(NSLocalizedString("settings.language.system", comment: "")).tag("system")
+                        ForEach(LocaleService.supported, id: \.self) { code in
+                            Text(localeService.displayName(for: code)).tag(code)
+                        }
                     }
                 }
 
-                Section("Datos") {
-                    Text("\(store.expenses.count) gastos almacenados")
+                Section("Data") {
+                    Text("\(store.expenses.count) expenses stored")
                         .foregroundStyle(.secondary)
                 }
 
-                Section {
-                    Button(role: .destructive) {
-                        auth.signOut()
-                    } label: {
-                        Text("Cerrar sesión")
+                if auth.isSignedIn {
+                    Section {
+                        Button(role: .destructive) {
+                            auth.signOut()
+                        } label: {
+                            Text("Sign out")
+                        }
                     }
                 }
 
@@ -91,7 +162,13 @@ struct SettingsView: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
-            .navigationTitle("Ajustes")
+            .navigationTitle("Settings")
+            .sheet(isPresented: $showSignIn) {
+                SignInPrompt(
+                    title: "Sign in",
+                    subtitle: "Create an account to sync your expenses across devices, connect Gmail, and export to your accountant."
+                )
+            }
         }
     }
 }
@@ -102,16 +179,16 @@ private struct TrialBanner: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: "clock.fill")
-                Text("Tu prueba termina en \(daysLeft) día\(daysLeft == 1 ? "" : "s")")
+                Text("Your trial ends in \(daysLeft) day\(daysLeft == 1 ? "" : "s")")
                     .fontWeight(.semibold)
             }
-            Text("Suscríbete para seguir usando FacturaAI sin interrupciones.")
+            Text("Subscribe to keep using FacturaAI without interruptions.")
                 .font(.caption)
                 .foregroundStyle(.white.opacity(0.9))
             NavigationLink {
                 PricingView()
             } label: {
-                Text("Ver planes")
+                Text("View plans")
                     .fontWeight(.semibold)
                     .padding(.horizontal, 14).padding(.vertical, 8)
                     .background(.white)
@@ -132,37 +209,37 @@ struct PricingView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                Text("Elige tu plan")
+                Text("Choose your plan")
                     .font(.largeTitle).fontWeight(.bold)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Text("Sin tarjeta durante la prueba de 14 días.")
+                Text("No credit card during the 14-day trial.")
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                 PlanCard(
                     name: "Pro",
-                    price: "€6,99/mes",
-                    annual: "o €59/año (30% descuento)",
+                    price: "€6.99/mo",
+                    annual: "or €59/year (30% off)",
                     features: [
-                        "Recibos ilimitados",
-                        "Sync Gmail automático diario",
-                        "Escaneo IA de tickets ilimitado",
-                        "Export CSV + Excel + Email",
-                        "Categorización fiscal española completa",
+                        "Unlimited receipts",
+                        "Daily automatic Gmail sync",
+                        "Unlimited AI receipt scanning",
+                        "CSV + Excel + Email export",
+                        "Full Spanish tax categorization",
                     ],
                     highlighted: true,
-                    badge: "Más popular"
+                    badge: "Most popular"
                 )
                 PlanCard(
                     name: "Business",
-                    price: "€12,99/mes",
-                    annual: "o €109/año",
+                    price: "€12.99/mo",
+                    annual: "or €109/year",
                     features: [
-                        "Todo lo de Pro",
-                        "Sync Gmail cada hora",
-                        "Portal gestoría (solo lectura)",
-                        "Hasta 3 usuarios",
-                        "Conexión bancaria PSD2 (próximamente)",
+                        "Everything in Pro",
+                        "Hourly Gmail sync",
+                        "Accountant portal (read-only)",
+                        "Up to 3 users",
+                        "Bank connection PSD2 (coming soon)",
                     ],
                     highlighted: false,
                     badge: nil
@@ -170,7 +247,7 @@ struct PricingView: View {
             }
             .padding()
         }
-        .navigationTitle("Planes")
+        .navigationTitle("Plans")
         .background(Color(.systemGroupedBackground))
     }
 }
@@ -214,7 +291,7 @@ private struct PlanCard: View {
             Button {
                 // TODO: wire StoreKit subscription flow
             } label: {
-                Text("Suscribirme")
+                Text("Subscribe")
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)

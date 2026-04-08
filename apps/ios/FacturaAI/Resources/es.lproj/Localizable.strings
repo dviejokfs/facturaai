@@ -1,0 +1,72 @@
+/* Tabs */
+"tab.overview" = "Resumen";
+"tab.expenses" = "Gastos";
+"tab.scan" = "Escanear";
+"tab.export" = "Exportar";
+"tab.settings" = "Ajustes";
+
+/* Settings */
+"settings.title" = "Ajustes";
+"settings.account" = "Cuenta";
+"settings.integrations" = "Integraciones";
+"settings.plan" = "Plan";
+"settings.data" = "Datos";
+"settings.signOut" = "Cerrar sesión";
+"settings.restorePurchases" = "Restaurar compras";
+"settings.manageSubscription" = "Gestionar suscripción";
+"settings.language" = "Idioma";
+"settings.language.system" = "Sistema";
+
+/* Common */
+"common.close" = "Cerrar";
+"common.edit" = "Editar";
+
+/* Export */
+"export.title" = "Exportar";
+"export.button" = "Exportar para gestor";
+"export.share" = "Compartir";
+"export.zip" = "Descargar ZIP";
+"export.csv" = "Descargar CSV";
+"export.empty" = "Aún no hay gastos en este periodo.";
+"export.period" = "Periodo";
+"export.quarter" = "Trimestre";
+"export.no_expenses" = "No hay gastos en este trimestre.";
+"export.totals" = "Totales";
+"export.invoices" = "Facturas";
+"export.subtotal" = "Base imponible";
+"export.tax" = "IVA";
+"export.total" = "Total";
+"export.warnings" = "Advertencias";
+"export.accountant" = "Gestor";
+"export.generate" = "Generar export";
+"export.generating" = "Generando export…";
+"export.description" = "El ZIP incluye: CSV localizado, libro Excel (con una hoja de datos en inglés) y las facturas originales. Mándaselo directamente a tu gestor.";
+"export.success.title" = "¡Export listo!";
+"export.success.subtitle" = "{count} facturas del {quarter}, listas para enviar.";
+"export.share.email" = "Enviar a {name}";
+"export.share.share" = "Compartir…";
+"export.share.copy_link" = "Copiar enlace";
+"export.share.link_copied" = "¡Enlace copiado!";
+"export.done" = "Listo";
+"export.email.subject" = "FacturaAI — Facturas {quarter}";
+"export.email.body" = "Hola,\n\nAdjunto el export de facturas del {quarter} de FacturaAI.\n\nEl ZIP contiene:\n- transactions.csv (localizado)\n- transactions_en.csv (universal en inglés)\n- transactions.xlsx (Excel con hojas localizada + inglés)\n- carpeta invoices/ con los PDFs originales\n\nUn saludo";
+
+/* Settings — accountant */
+"settings.accountant" = "Gestor";
+
+/* Accountant settings */
+"accountant" = "gestor";
+"accountant.title" = "Mi gestor";
+"accountant.description" = "Guarda los datos de tu gestor para que los exports se envíen pre-dirigidos.";
+"accountant.section.accountant" = "Gestor";
+"accountant.section.tax" = "Tu identificación fiscal";
+"accountant.name.placeholder" = "Nombre";
+"accountant.email.placeholder" = "Email";
+"accountant.taxid.placeholder" = "NIF / CIF";
+"accountant.save" = "Guardar";
+"accountant.not_configured" = "Sin configurar";
+"accountant.add" = "Añadir datos del gestor";
+
+/* Tax */
+"tax.label" = "IVA";
+"tax.id" = "NIF";
