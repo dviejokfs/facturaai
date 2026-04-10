@@ -40,8 +40,8 @@ const schema = z.object({
   // APNs Push Notifications
   APNS_KEY_ID: z.string().default(""),
   APNS_TEAM_ID: z.string().default(""),
-  APNS_BUNDLE_ID: z.string().default("com.kfs.invoscanai"),
-  APNS_KEY_PATH: z.string().default(""), // path to .p8 file
+  APNS_BUNDLE_ID: z.string().default("ee.blocklyne.invoscanai"),
+  APNS_KEY_P8: z.string().default(""), // .p8 key content (inline, base64, or raw PEM)
   APNS_ENVIRONMENT: z.enum(["development", "production"]).default("development"),
 
   // Temps email service

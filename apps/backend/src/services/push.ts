@@ -4,8 +4,24 @@ import * as jose from "jose";
 
 let cachedToken: { jwt: string; expiresAt: number } | null = null;
 
+function resolveKeyPem(): string {
+  const raw = config.APNS_KEY_P8;
+  if (!raw) throw new Error("APNS_KEY_P8 is not set");
+
+  // Already PEM-formatted
+  if (raw.includes("-----BEGIN PRIVATE KEY-----")) return raw;
+
+  // Base64-encoded PEM (for env vars that can't hold newlines)
+  try {
+    const decoded = Buffer.from(raw, "base64").toString("utf-8");
+    if (decoded.includes("-----BEGIN PRIVATE KEY-----")) return decoded;
+  } catch {}
+
+  throw new Error("APNS_KEY_P8 must be a PEM string or base64-encoded PEM");
+}
+
 async function getAPNsToken(): Promise<string | null> {
-  if (!config.APNS_KEY_PATH || !config.APNS_KEY_ID || !config.APNS_TEAM_ID) {
+  if (!config.APNS_KEY_P8 || !config.APNS_KEY_ID || !config.APNS_TEAM_ID) {
     return null;
   }
 
@@ -14,8 +30,7 @@ async function getAPNsToken(): Promise<string | null> {
     return cachedToken.jwt;
   }
 
-  const keyFile = Bun.file(config.APNS_KEY_PATH);
-  const keyPem = await keyFile.text();
+  const keyPem = resolveKeyPem();
   const privateKey = await jose.importPKCS8(keyPem, "ES256");
 
   const now = Math.floor(Date.now() / 1000);
