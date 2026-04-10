@@ -14,9 +14,9 @@ const schema = z.object({
   GOOGLE_REDIRECT_URI: z.string().url(),
   IOS_REDIRECT_SCHEME: z.string().default("invoscanai://auth"),
 
-  // AI Gateway (OpenAI-compatible endpoint — Temps AI Gateway or direct Anthropic)
+  // AI Gateway (OpenAI-compatible — Temps auto-injects TEMPS_API_TOKEN)
   AI_GATEWAY_URL: z.string().url().default("https://app.temps.kfs.es/api/ai/v1"),
-  AI_API_KEY: z.string(), // TEMPS_API_TOKEN or Anthropic key
+  TEMPS_API_TOKEN: z.string().default(""),
   AI_MODEL: z.string().default("claude-sonnet-4-6"),
 
   // S3 storage (accepts Temps blob injection: BLOB_ENDPOINT, BLOB_ACCESS_KEY, BLOB_SECRET_KEY)
