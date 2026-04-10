@@ -4,6 +4,7 @@ import { verifyToken, type JwtPayload } from "./jwt";
 declare module "hono" {
   interface ContextVariableMap {
     user: JwtPayload;
+    requestId: string;
   }
 }
 

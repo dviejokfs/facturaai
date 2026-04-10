@@ -21,7 +21,17 @@ await runMigrations();
 
 const app = new Hono();
 
-app.use("*", logger());
+// Request ID middleware — adds X-Request-Id header for tracing
+app.use("*", async (c, next) => {
+  const requestId = c.req.header("x-request-id") ?? crypto.randomUUID();
+  c.set("requestId", requestId);
+  c.header("X-Request-Id", requestId);
+  await next();
+});
+
+app.use("*", logger((msg, ...rest) => {
+  console.log(JSON.stringify({ ts: new Date().toISOString(), msg: msg.trim(), ...rest }));
+}));
 app.use("*", cors({
   origin: config.NODE_ENV === "production"
     ? [config.PUBLIC_URL]
@@ -124,12 +134,22 @@ api.get("/account/export", async (c) => {
 app.route("/api", api);
 
 app.onError((err, c) => {
-  console.error("[error]", err);
+  const requestId = c.get("requestId") ?? "unknown";
+  console.error(JSON.stringify({
+    ts: new Date().toISOString(),
+    level: "error",
+    requestId,
+    method: c.req.method,
+    path: c.req.path,
+    error: err.message,
+    stack: config.NODE_ENV !== "production" ? err.stack : undefined,
+  }));
   return c.json({
     error: "internal_error",
     message: config.NODE_ENV === "production"
       ? "An unexpected error occurred"
       : err.message,
+    requestId,
   }, 500);
 });
 

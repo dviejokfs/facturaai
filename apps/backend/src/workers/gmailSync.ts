@@ -96,6 +96,9 @@ export async function runGmailSync(userId: string, syncId: string): Promise<void
           userId
         );
 
+        // Extract all attachments, then batch-insert valid invoices in one transaction
+        const toInsert: Array<{ extracted: Awaited<ReturnType<typeof extractAuto>>; resolved: Awaited<ReturnType<typeof resolveTransaction>>; key: string; messageId: string }> = [];
+
         for (const att of attachments) {
           try {
             const extracted = await extractAuto(att.data, att.mimeType, user.company_name as string | null);
@@ -110,32 +113,40 @@ export async function runGmailSync(userId: string, syncId: string): Promise<void
               console.warn(`[gmailSync] S3 upload failed for ${att.filename} (continuing):`, err);
             }
 
-            await sql`
-              INSERT INTO expenses (
-                user_id, type, company_id,
-                vendor, vendor_tax_id, vendor_contact_id,
-                client, client_tax_id, client_contact_id, cif,
-                date, invoice_number,
-                subtotal, iva_rate, iva_amount, irpf_rate, irpf_amount, total,
-                currency, category, status, confidence, source,
-                gmail_message_id, attachment_key
-              ) VALUES (
-                ${userId}, ${resolved.type}, ${resolved.companyId},
-                ${extracted.vendor}, ${extracted.vendorTaxId}, ${resolved.vendorContactId},
-                ${extracted.client}, ${extracted.clientTaxId}, ${resolved.clientContactId},
-                ${extracted.cif},
-                ${extracted.date}, ${extracted.invoiceNumber},
-                ${extracted.subtotal}, ${extracted.ivaRate},
-                ${extracted.ivaAmount}, ${extracted.irpfRate}, ${extracted.irpfAmount},
-                ${extracted.total}, ${extracted.currency}, ${extracted.category},
-                'pending', ${extracted.confidence}, 'gmail',
-                ${att.messageId}, ${key}
-              )
-            `;
-            found++;
+            toInsert.push({ extracted, resolved, key, messageId: att.messageId });
           } catch (err) {
             console.error(`[gmailSync] Failed to extract ${att.filename} from msg ${ref.messageId}:`, err);
           }
+        }
+
+        if (toInsert.length > 0) {
+          await sql.begin(async (tx) => {
+            for (const { extracted, resolved, key, messageId } of toInsert) {
+              await tx`
+                INSERT INTO expenses (
+                  user_id, type, company_id,
+                  vendor, vendor_tax_id, vendor_contact_id,
+                  client, client_tax_id, client_contact_id, cif,
+                  date, invoice_number,
+                  subtotal, iva_rate, iva_amount, irpf_rate, irpf_amount, total,
+                  currency, category, status, confidence, source,
+                  gmail_message_id, attachment_key
+                ) VALUES (
+                  ${userId}, ${resolved.type}, ${resolved.companyId},
+                  ${extracted.vendor}, ${extracted.vendorTaxId}, ${resolved.vendorContactId},
+                  ${extracted.client}, ${extracted.clientTaxId}, ${resolved.clientContactId},
+                  ${extracted.cif},
+                  ${extracted.date}, ${extracted.invoiceNumber},
+                  ${extracted.subtotal}, ${extracted.ivaRate},
+                  ${extracted.ivaAmount}, ${extracted.irpfRate}, ${extracted.irpfAmount},
+                  ${extracted.total}, ${extracted.currency}, ${extracted.category},
+                  'pending', ${extracted.confidence}, 'gmail',
+                  ${messageId}, ${key}
+                )
+              `;
+            }
+          });
+          found += toInsert.length;
         }
       } catch (err) {
         console.error(`[gmailSync] Failed to fetch attachments for msg ${ref.messageId}:`, err);

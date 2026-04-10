@@ -62,35 +62,34 @@ expenseRoutes.patch("/:id", async (c) => {
   `;
   if (!existing) return c.json({ error: "not_found" }, 404);
 
-  // Build dynamic update — one column at a time for clarity
-  if (body.vendor !== undefined)
-    await sql`UPDATE expenses SET vendor = ${body.vendor}, updated_at = NOW() WHERE id = ${id}`;
-  if (body.cif !== undefined)
-    await sql`UPDATE expenses SET cif = ${body.cif}, updated_at = NOW() WHERE id = ${id}`;
-  if (body.date !== undefined)
-    await sql`UPDATE expenses SET date = ${body.date}, updated_at = NOW() WHERE id = ${id}`;
-  if (body.invoiceNumber !== undefined)
-    await sql`UPDATE expenses SET invoice_number = ${body.invoiceNumber}, updated_at = NOW() WHERE id = ${id}`;
-  if (body.subtotal !== undefined)
-    await sql`UPDATE expenses SET subtotal = ${body.subtotal}, updated_at = NOW() WHERE id = ${id}`;
-  if (body.ivaRate !== undefined)
-    await sql`UPDATE expenses SET iva_rate = ${body.ivaRate}, updated_at = NOW() WHERE id = ${id}`;
-  if (body.ivaAmount !== undefined)
-    await sql`UPDATE expenses SET iva_amount = ${body.ivaAmount}, updated_at = NOW() WHERE id = ${id}`;
-  if (body.irpfRate !== undefined)
-    await sql`UPDATE expenses SET irpf_rate = ${body.irpfRate}, updated_at = NOW() WHERE id = ${id}`;
-  if (body.irpfAmount !== undefined)
-    await sql`UPDATE expenses SET irpf_amount = ${body.irpfAmount}, updated_at = NOW() WHERE id = ${id}`;
-  if (body.total !== undefined)
-    await sql`UPDATE expenses SET total = ${body.total}, updated_at = NOW() WHERE id = ${id}`;
-  if (body.category !== undefined)
-    await sql`UPDATE expenses SET category = ${body.category}, updated_at = NOW() WHERE id = ${id}`;
-  if (body.status !== undefined)
-    await sql`UPDATE expenses SET status = ${body.status}, updated_at = NOW() WHERE id = ${id}`;
-  if (body.notes !== undefined)
-    await sql`UPDATE expenses SET notes = ${body.notes}, updated_at = NOW() WHERE id = ${id}`;
+  // Map camelCase body keys to snake_case DB columns
+  const fieldMap: Record<string, string> = {
+    vendor: "vendor", cif: "cif", date: "date",
+    invoiceNumber: "invoice_number", subtotal: "subtotal",
+    ivaRate: "iva_rate", ivaAmount: "iva_amount",
+    irpfRate: "irpf_rate", irpfAmount: "irpf_amount",
+    total: "total", category: "category", status: "status", notes: "notes",
+  };
 
-  const [row] = await sql`SELECT * FROM expenses WHERE id = ${id}`;
+  const sets: string[] = [];
+  const values: unknown[] = [];
+  for (const [key, col] of Object.entries(fieldMap)) {
+    if (body[key as keyof typeof body] !== undefined) {
+      sets.push(`${col} = $${sets.length + 1}`);
+      values.push(body[key as keyof typeof body]);
+    }
+  }
+
+  if (sets.length === 0) {
+    const [row] = await sql`SELECT * FROM expenses WHERE id = ${id}`;
+    return c.json(serializeExpense(row as Record<string, unknown>));
+  }
+
+  sets.push("updated_at = NOW()");
+  const [row] = await sql.unsafe(
+    `UPDATE expenses SET ${sets.join(", ")} WHERE id = $${values.length + 1} AND user_id = $${values.length + 2} RETURNING *`,
+    [...values, id, user.sub],
+  );
   return c.json(serializeExpense(row as Record<string, unknown>));
 });
 

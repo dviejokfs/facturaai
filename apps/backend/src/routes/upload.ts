@@ -67,26 +67,29 @@ uploadRoutes.post("/", async (c) => {
 
   const resolved = await resolveTransaction(user.sub, extracted);
 
-  const [row] = await sql`
-    INSERT INTO expenses (
-      user_id, type, company_id, vendor, vendor_tax_id, vendor_contact_id,
-      client, client_tax_id, client_contact_id, cif,
-      date, invoice_number,
-      subtotal, iva_rate, iva_amount, irpf_rate, irpf_amount, total,
-      currency, category, status, confidence, source, attachment_key
-    ) VALUES (
-      ${user.sub}, ${resolved.type}, ${resolved.companyId},
-      ${extracted.vendor}, ${extracted.vendorTaxId}, ${resolved.vendorContactId},
-      ${extracted.client}, ${extracted.clientTaxId}, ${resolved.clientContactId},
-      ${extracted.cif},
-      ${extracted.date}, ${extracted.invoiceNumber},
-      ${extracted.subtotal}, ${extracted.ivaRate},
-      ${extracted.ivaAmount}, ${extracted.irpfRate}, ${extracted.irpfAmount},
-      ${extracted.total}, ${extracted.currency}, ${extracted.category},
-      'pending', ${extracted.confidence}, 'camera', ${attachmentKey}
-    )
-    RETURNING *
-  `;
+  const [row] = await sql.begin(async (tx) => {
+    const [inserted] = await tx`
+      INSERT INTO expenses (
+        user_id, type, company_id, vendor, vendor_tax_id, vendor_contact_id,
+        client, client_tax_id, client_contact_id, cif,
+        date, invoice_number,
+        subtotal, iva_rate, iva_amount, irpf_rate, irpf_amount, total,
+        currency, category, status, confidence, source, attachment_key
+      ) VALUES (
+        ${user.sub}, ${resolved.type}, ${resolved.companyId},
+        ${extracted.vendor}, ${extracted.vendorTaxId}, ${resolved.vendorContactId},
+        ${extracted.client}, ${extracted.clientTaxId}, ${resolved.clientContactId},
+        ${extracted.cif},
+        ${extracted.date}, ${extracted.invoiceNumber},
+        ${extracted.subtotal}, ${extracted.ivaRate},
+        ${extracted.ivaAmount}, ${extracted.irpfRate}, ${extracted.irpfAmount},
+        ${extracted.total}, ${extracted.currency}, ${extracted.category},
+        'pending', ${extracted.confidence}, 'camera', ${attachmentKey}
+      )
+      RETURNING *
+    `;
+    return [inserted];
+  });
 
   return c.json(serializeExpense(row as Record<string, unknown>));
 });
