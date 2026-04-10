@@ -1,4 +1,4 @@
-# FacturaAI
+# InvoScanAI
 
 AI-powered financial autopilot for Spanish autónomos. Monorepo containing all components.
 
@@ -7,7 +7,7 @@ AI-powered financial autopilot for Spanish autónomos. Monorepo containing all c
 ## Monorepo layout
 
 ```
-facturaai/
+invoscanai/
 ├── apps/
 │   ├── ios/            # Native SwiftUI iOS app (Xcode 16+, iOS 17+)
 │   └── backend/        # Bun + Hono API server (Postgres, Claude, Gmail)
@@ -18,7 +18,7 @@ facturaai/
 ## Architecture overview
 
 ```
-┌────────────┐   facturaai://auth   ┌───────────────────┐   Gmail API    ┌────────┐
+┌────────────┐   invoscanai://auth   ┌───────────────────┐   Gmail API    ┌────────┐
 │  iOS app   │◀────────────────────▶│  Bun/Hono backend │◀──────────────▶│ Google │
 │ (SwiftUI)  │   JWT Bearer         │                   │                └────────┘
 │            │◀────────────────────▶│  - OAuth/JWT      │
@@ -36,7 +36,7 @@ facturaai/
 2. Backend redirects to Google consent with Gmail `readonly` scope
 3. Google → `GET {BACKEND}/auth/google/callback?code=...`
 4. Backend exchanges code, stores `refresh_token`, mints JWT
-5. Backend redirects to `facturaai://auth?token=<jwt>`
+5. Backend redirects to `invoscanai://auth?token=<jwt>`
 6. iOS captures token from the custom URL scheme, stores in Keychain
 7. All subsequent API calls: `Authorization: Bearer <jwt>`
 
@@ -70,14 +70,14 @@ bun run dev
 
 ```bash
 cd apps/ios
-open FacturaAI.xcodeproj
+open InvoScanAI.xcodeproj
 ```
 
-Update `APIClient.baseURL` in `apps/ios/FacturaAI/Services/APIClient.swift` to point to your backend (default: `http://localhost:3000`).
+Update `APIClient.baseURL` in `apps/ios/InvoScanAI/Services/APIClient.swift` to point to your backend (default: `http://localhost:3000`).
 
 ## PRD
 
-FacturaAI is an AI financial assistant for Spanish autónomos. See the full PRD in the project notes. Targets: 5,000 free users and 150 paid subscribers (€1,050 MRR) within 6 months.
+InvoScanAI is an AI financial assistant for Spanish autónomos. See the full PRD in the project notes. Targets: 5,000 free users and 150 paid subscribers (€1,050 MRR) within 6 months.
 
 ## License
 

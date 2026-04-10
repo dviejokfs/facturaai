@@ -1,4 +1,4 @@
-# FacturaAI Ads — Runbook for Tomorrow
+# InvoScanAI Ads — Runbook for Tomorrow
 
 **Goal**: go from empty repo to 10 rendered Spanish ads uploaded to Meta by end of day.
 **Time budget**: ~6 hours of focused work.
@@ -14,8 +14,8 @@ Sign up and get API keys ready so you don't lose the morning on signup flows.
 - [ ] **ElevenLabs** — paid plan (Creator €22/mo or higher for voice cloning) → `ELEVENLABS_API_KEY`
 - [ ] **Hedra** — paid plan with Character-3 access → `HEDRA_API_KEY`
 - [ ] **AssemblyAI** — free tier is fine to start → `ASSEMBLYAI_API_KEY`
-- [ ] **Cloudflare R2** — bucket `facturaai-ads` created, access key + secret → `R2_*`
-- [ ] **Meta Business** — Ad Account ready, payment method on file, FacturaAI Page created
+- [ ] **Cloudflare R2** — bucket `invoscanai-ads` created, access key + secret → `R2_*`
+- [ ] **Meta Business** — Ad Account ready, payment method on file, InvoScanAI Page created
 - [ ] **Google Veo 3** (optional) — Vertex AI project enabled, billing on
 
 Also: **charge your laptop and eat breakfast**. Rendering will burn the battery and your patience.
@@ -27,7 +27,7 @@ Also: **charge your laptop and eat breakfast**. Rendering will burn the battery 
 ### 9:00 — Repo + dependencies (15 min)
 
 ```bash
-cd ~/projects/kfs/mobile-apps/facturaai/marketing/ads
+cd ~/projects/kfs/mobile-apps/invoscanai/marketing/ads
 cp .env.example .env
 # Paste all API keys into .env
 bun install
@@ -228,7 +228,7 @@ Play `final.mp4` on your phone (not desktop). Check:
 - [ ] **Avatar lip sync** is reasonable (not perfect — "good enough" is fine)
 - [ ] **Captions** appear, spelled correctly, in sync
 - [ ] **App demo** is readable at phone size
-- [ ] **CTA card** shows FacturaAI + €7/mes clearly
+- [ ] **CTA card** shows InvoScanAI + €7/mes clearly
 - [ ] **No weird silences or cuts**
 
 **If it passes**: batch the rest.
@@ -267,7 +267,7 @@ Watch all 10 MP4s. Sort into:
 5. Placements: **Reels + Stories + Feed** (Instagram + Facebook). Turn OFF audience network.
 6. Creative: one MP4 per ad set
 7. Primary text: use the `hook` from the spec
-8. Headline: `FacturaAI – €7/mes`
+8. Headline: `InvoScanAI – €7/mes`
 9. CTA button: `Descargar`
 10. Link: App Store URL (iOS only; Android N/A right now)
 

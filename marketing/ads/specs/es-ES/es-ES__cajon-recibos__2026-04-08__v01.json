@@ -11,9 +11,9 @@
   "script": {
     "hook": "Este cajón es mi contabilidad. O lo era.",
     "problem": "Llevo cinco años como autónoma y mi sistema era meter cada ticket en este cajón. Y cada trimestre, rezar.",
-    "solution": "Ahora hago una foto con FacturaAI y se guarda ordenado. La app saca los datos sola. Fecha, base, IVA, todo.",
+    "solution": "Ahora hago una foto con InvoScanAI y se guarda ordenado. La app saca los datos sola. Fecha, base, IVA, todo.",
     "proof": "El cajón sigue ahí, pero vacío. Y mi gestora ya no me pregunta dónde están los recibos de marzo.",
-    "cta": "FacturaAI, gratis en el App Store. Adiós al cajón."
+    "cta": "InvoScanAI, gratis en el App Store. Adiós al cajón."
   },
   "scenes": [
     { "type": "broll", "startSec": 0, "endSec": 6, "brollId": "messy-desk" },

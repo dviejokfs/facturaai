@@ -1,9 +1,9 @@
 {
-  "name": "@facturaai/ads",
+  "name": "@invoscanai/ads",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "FacturaAI ad generation pipeline — country-first, spec-driven, Remotion-rendered",
+  "description": "InvoScanAI ad generation pipeline — country-first, spec-driven, Remotion-rendered",
   "scripts": {
     "ads": "bun run src/cli.ts",
     "scripts": "bun run src/cli.ts scripts",

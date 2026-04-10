@@ -27,7 +27,7 @@ struct OnboardingView: View {
                     } label: {
                         HStack {
                             Image(systemName: "arrow.right.circle.fill")
-                            Text("Start now").fontWeight(.bold)
+                            Text(NSLocalizedString("onboarding.start_now", comment: "")).fontWeight(.bold)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
@@ -36,7 +36,7 @@ struct OnboardingView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 16))
                     }
 
-                    Text("No account required. Try it free.")
+                    Text(NSLocalizedString("onboarding.no_account", comment: ""))
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.7))
                 }
@@ -58,20 +58,20 @@ private struct HeroPage: View {
                 .font(.system(size: 80))
                 .foregroundStyle(.white)
 
-            Text("FacturaAI")
+            Text(NSLocalizedString("onboarding.welcome.app_name", comment: ""))
                 .font(.system(size: 42, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
 
-            Text("Your AI-powered expense manager")
+            Text(NSLocalizedString("onboarding.hero.subtitle", comment: ""))
                 .font(.title3)
                 .foregroundStyle(.white.opacity(0.9))
 
             VStack(alignment: .leading, spacing: 14) {
-                FeatureRow(icon: "camera.fill", text: "Scan receipts with your camera")
-                FeatureRow(icon: "doc.fill", text: "Import invoices from photos or PDFs")
-                FeatureRow(icon: "envelope.fill", text: "Auto-sync invoices from Gmail")
-                FeatureRow(icon: "cpu", text: "AI extracts amounts, tax & categories")
-                FeatureRow(icon: "square.and.arrow.up.fill", text: "Export to your accountant in one tap")
+                FeatureRow(icon: "camera.fill", text: NSLocalizedString("onboarding.hero.feature.scan", comment: ""))
+                FeatureRow(icon: "doc.fill", text: NSLocalizedString("onboarding.hero.feature.import", comment: ""))
+                FeatureRow(icon: "envelope.fill", text: NSLocalizedString("onboarding.hero.feature.gmail", comment: ""))
+                FeatureRow(icon: "cpu", text: NSLocalizedString("onboarding.hero.feature.ai", comment: ""))
+                FeatureRow(icon: "square.and.arrow.up.fill", text: NSLocalizedString("onboarding.hero.feature.export", comment: ""))
             }
             .padding(20)
             .background(.white.opacity(0.12))
@@ -91,26 +91,26 @@ private struct HowItWorksPage: View {
         VStack(spacing: 28) {
             Spacer()
 
-            Text("How it works")
+            Text(NSLocalizedString("onboarding.how_it_works.title", comment: ""))
                 .font(.system(size: 34, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
 
             VStack(spacing: 20) {
                 StepRow(number: "1", icon: "photo.on.rectangle.angled",
-                        title: "Add your expenses",
-                        subtitle: "Snap a photo, pick from gallery, or import a PDF")
+                        title: NSLocalizedString("onboarding.how_it_works.step1.title", comment: ""),
+                        subtitle: NSLocalizedString("onboarding.how_it_works.step1.subtitle", comment: ""))
 
                 StepRow(number: "2", icon: "sparkles",
-                        title: "AI does the work",
-                        subtitle: "Vendor, amounts, tax rate and category — extracted instantly")
+                        title: NSLocalizedString("onboarding.how_it_works.step2.title", comment: ""),
+                        subtitle: NSLocalizedString("onboarding.how_it_works.step2.subtitle", comment: ""))
 
                 StepRow(number: "3", icon: "checkmark.circle.fill",
-                        title: "Review & confirm",
-                        subtitle: "Quick review, then your expenses are organized")
+                        title: NSLocalizedString("onboarding.how_it_works.step3.title", comment: ""),
+                        subtitle: NSLocalizedString("onboarding.how_it_works.step3.subtitle", comment: ""))
 
                 StepRow(number: "4", icon: "paperplane.fill",
-                        title: "Send to your accountant",
-                        subtitle: "Export ZIP with CSV, Excel and original invoices")
+                        title: NSLocalizedString("onboarding.how_it_works.step4.title", comment: ""),
+                        subtitle: NSLocalizedString("onboarding.how_it_works.step4.subtitle", comment: ""))
             }
             .padding(.horizontal, 24)
 

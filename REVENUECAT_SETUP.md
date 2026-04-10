@@ -4,14 +4,14 @@ Everything in code is ready. Once you do the steps below, purchases work end-to-
 
 ## 1. Sign up
 1. Create account at https://app.revenuecat.com
-2. Create project "FacturaAI" → add iOS app with bundle id `es.kungfusoftware.facturaai`
+2. Create project "InvoScanAI" → add iOS app with bundle id `es.kungfusoftware.invoscanai`
 
-## 2. Products (must match `apps/ios/FacturaAI/Configuration.storekit`)
+## 2. Products (must match `apps/ios/InvoScanAI/Configuration.storekit`)
 Create in App Store Connect (or use the storekit file in sandbox):
-- `facturaai_pro_monthly` — €12.99/mo, 14-day free trial
-- `facturaai_pro_yearly` — €99/yr, 14-day free trial
-- `facturaai_business_monthly` — €24.99/mo
-- `facturaai_business_yearly` — €199/yr
+- `invoscanai_pro_monthly` — €12.99/mo, 14-day free trial
+- `invoscanai_pro_yearly` — €99/yr, 14-day free trial
+- `invoscanai_business_monthly` — €24.99/mo
+- `invoscanai_business_yearly` — €199/yr
 
 Import them in RevenueCat → Products.
 
@@ -28,7 +28,7 @@ RevenueCat dashboard → Paywalls → create paywall on `default` offering using
 
 ## 6. SDK key
 Project Settings → API Keys → copy the **Public iOS SDK key** and paste into:
-- `apps/ios/FacturaAI/Resources/Info.plist` → `RC_PUBLIC_SDK_KEY_IOS`
+- `apps/ios/InvoScanAI/Resources/Info.plist` → `RC_PUBLIC_SDK_KEY_IOS`
 
 ## 7. Webhook
 Project Settings → Integrations → Webhooks:

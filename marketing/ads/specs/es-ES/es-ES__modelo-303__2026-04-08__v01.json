@@ -11,9 +11,9 @@
   "script": {
     "hook": "Autónomos: si cada vez que oís modelo 303 os tiemblan las manos, esto es para vosotros.",
     "problem": "Porque tu gestora te pide la base imponible, el IVA soportado, el repercutido, y tú tienes las facturas repartidas en ocho sitios distintos.",
-    "solution": "FacturaAI te lo junta todo. Base, IVA, total, por trimestre, por categoría. Exportas y se lo mandas.",
+    "solution": "InvoScanAI te lo junta todo. Base, IVA, total, por trimestre, por categoría. Exportas y se lo mandas.",
     "proof": "Lo que antes me llevaba una tarde entera ahora son dos minutos. Y mi gestora ya no me pide cosas por WhatsApp a las diez de la noche.",
-    "cta": "Gratis en el App Store. FacturaAI."
+    "cta": "Gratis en el App Store. InvoScanAI."
   },
   "scenes": [
     { "type": "avatar", "startSec": 0, "endSec": 3 },

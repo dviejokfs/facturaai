@@ -1,6 +1,11 @@
 import SwiftUI
 import PhotosUI
 import VisionKit
+import AuthenticationServices
+
+#if canImport(RevenueCatUI)
+import RevenueCatUI
+#endif
 
 struct FirstUseView: View {
     @EnvironmentObject var auth: AuthService
@@ -11,19 +16,23 @@ struct FirstUseView: View {
     @State private var showCameraUnavailable = false
     @State private var showPhotoPicker = false
     @State private var showDocPicker = false
-    @State private var showSignIn = false
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var scanning = false
     @State private var scannedExpense: Expense?
+    @State private var errorMessage: String?
+
+    @State private var companyNameInput: String = ""
+    @State private var taxIdInput: String = ""
+    @State private var selectedCountry: TaxCountry = .spain
+    @State private var showCountryPicker = false
 
     enum Step: Int, CaseIterable {
         case welcome = 0
-        case upload = 1
-        case review = 2
-        case trial = 3
+        case companyName = 1
+        case upload = 2
+        case review = 3
+        case trial = 4
     }
-
-    private let stepLabels = ["Welcome", "Upload", "Review", "Start"]
 
     var body: some View {
         ZStack {
@@ -41,6 +50,8 @@ struct FirstUseView: View {
                     switch step {
                     case .welcome:
                         welcomeStep
+                    case .companyName:
+                        companyNameStep
                     case .upload:
                         uploadStep
                     case .review:
@@ -55,10 +66,17 @@ struct FirstUseView: View {
                 ))
 
                 // Unified step indicator
-                StepIndicator(current: step.rawValue, labels: stepLabels)
+                StepIndicator(current: step.rawValue, total: Step.allCases.count)
                     .padding(.bottom, 16)
             }
+
+            // Blocking extraction overlay
+            if scanning {
+                ExtractionOverlay()
+                    .transition(.opacity)
+            }
         }
+        .animation(.easeInOut(duration: 0.3), value: scanning)
     }
 
     // MARK: - Step 1: Welcome
@@ -77,11 +95,11 @@ struct FirstUseView: View {
                         .foregroundStyle(.indigo)
                 }
 
-                Text("FacturaAI")
+                Text(NSLocalizedString("onboarding.welcome.app_name", comment: ""))
                     .font(.system(size: 38, weight: .bold, design: .rounded))
                     .foregroundStyle(.primary)
 
-                Text("Your AI-powered expense manager\nfor autónomos")
+                Text(NSLocalizedString("onboarding.welcome.tagline", comment: ""))
                     .font(.title3)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -93,12 +111,12 @@ struct FirstUseView: View {
             VStack(spacing: 16) {
                 // Three short value props
                 HStack(spacing: 20) {
-                    ValuePill(icon: "camera.fill", text: "Scan")
-                    ValuePill(icon: "cpu", text: "Extract")
-                    ValuePill(icon: "paperplane.fill", text: "Export")
+                    ValuePill(icon: "camera.fill", text: NSLocalizedString("onboarding.welcome.pill.scan", comment: ""))
+                    ValuePill(icon: "cpu", text: NSLocalizedString("onboarding.welcome.pill.extract", comment: ""))
+                    ValuePill(icon: "paperplane.fill", text: NSLocalizedString("onboarding.welcome.pill.export", comment: ""))
                 }
 
-                Text("Let's see it in action — upload your first invoice.")
+                Text(NSLocalizedString("onboarding.welcome.cta_hint", comment: ""))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -108,10 +126,10 @@ struct FirstUseView: View {
             Spacer()
 
             Button {
-                withAnimation(.easeInOut(duration: 0.35)) { step = .upload }
+                withAnimation(.easeInOut(duration: 0.35)) { step = .companyName }
             } label: {
                 HStack {
-                    Text("Let's try it").fontWeight(.bold)
+                    Text(NSLocalizedString("onboarding.welcome.cta", comment: "")).fontWeight(.bold)
                     Image(systemName: "arrow.right")
                 }
                 .frame(maxWidth: .infinity)
@@ -123,10 +141,147 @@ struct FirstUseView: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 8)
 
-            Text("No account needed. Takes 30 seconds.")
+            Text(NSLocalizedString("onboarding.welcome.footer", comment: ""))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .padding(.bottom, 16)
+        }
+    }
+
+    // MARK: - Step 2: Company Name + Tax ID
+
+    private var isCompanyStepValid: Bool {
+        !companyNameInput.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
+    private var companyNameStep: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                VStack(spacing: 16) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.indigo.opacity(0.12))
+                            .frame(width: 88, height: 88)
+                        Image(systemName: "building.2.fill")
+                            .font(.system(size: 40))
+                            .foregroundStyle(.indigo)
+                    }
+
+                    Text(NSLocalizedString("onboarding.company.title", comment: ""))
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .multilineTextAlignment(.center)
+
+                    Text(NSLocalizedString("onboarding.company.subtitle", comment: ""))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                }
+                .padding(.top, 32)
+
+                // Company name field
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(NSLocalizedString("onboarding.company.name_label", comment: ""))
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.secondary)
+                        .padding(.leading, 4)
+
+                    TextField(NSLocalizedString("onboarding.company.placeholder", comment: ""), text: $companyNameInput)
+                        .textInputAutocapitalization(.words)
+                        .padding(14)
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .padding(.horizontal, 24)
+
+                // Country picker
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(NSLocalizedString("onboarding.company.country_label", comment: ""))
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.secondary)
+                        .padding(.leading, 4)
+
+                    Button {
+                        showCountryPicker = true
+                    } label: {
+                        HStack {
+                            Text(selectedCountry.flag)
+                                .font(.title3)
+                            Text(selectedCountry.displayName)
+                                .foregroundStyle(.primary)
+                            Spacer()
+                            Text(selectedCountry.taxIdLabel)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(14)
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                }
+                .padding(.horizontal, 24)
+
+                // Tax ID field
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(selectedCountry.taxIdLabel)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.secondary)
+                        .padding(.leading, 4)
+
+                    TextField(selectedCountry.taxIdPlaceholder, text: $taxIdInput)
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+                        .padding(14)
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .padding(.horizontal, 24)
+
+                Text(NSLocalizedString("onboarding.company.hint", comment: ""))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+
+                Spacer(minLength: 20)
+
+                Button {
+                    let trimmed = companyNameInput.trimmingCharacters(in: .whitespaces)
+                    let taxTrimmed = taxIdInput.trimmingCharacters(in: .whitespaces)
+                    auth.companyName = trimmed
+                    auth.taxId = taxTrimmed.isEmpty ? nil : taxTrimmed
+                    if auth.isSignedIn {
+                        Task {
+                            var fields: [String: Any] = ["company_name": trimmed, "tax_id_type": selectedCountry.taxIdType]
+                            if !taxTrimmed.isEmpty { fields["tax_id"] = taxTrimmed }
+                            try? await APIClient.shared.updateProfile(fields)
+                        }
+                    }
+                    withAnimation(.easeInOut(duration: 0.35)) { step = .upload }
+                } label: {
+                    HStack {
+                        Text(NSLocalizedString("onboarding.company.cta", comment: "")).fontWeight(.bold)
+                        Image(systemName: "arrow.right")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(isCompanyStepValid ? Color.indigo : Color.gray)
+                    .foregroundStyle(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                }
+                .disabled(!isCompanyStepValid)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 32)
+            }
+        }
+        .sheet(isPresented: $showCountryPicker) {
+            CountryPickerView(selected: $selectedCountry)
         }
     }
 
@@ -145,10 +300,10 @@ struct FirstUseView: View {
                             .foregroundStyle(.indigo)
                     }
 
-                    Text("Upload your first invoice")
+                    Text(NSLocalizedString("onboarding.upload.title", comment: ""))
                         .font(.system(size: 24, weight: .bold, design: .rounded))
 
-                    Text("Pick any receipt or invoice — the AI will do the rest")
+                    Text(NSLocalizedString("onboarding.upload.subtitle", comment: ""))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -159,8 +314,8 @@ struct FirstUseView: View {
                 VStack(spacing: 12) {
                     ActionCard(
                         icon: "camera.fill",
-                        title: "Scan a receipt",
-                        subtitle: "Take a photo of any receipt or invoice",
+                        title: NSLocalizedString("onboarding.upload.scan", comment: ""),
+                        subtitle: NSLocalizedString("onboarding.upload.scan.sub", comment: ""),
                         color: .indigo
                     ) {
                         if VNDocumentCameraViewController.isSupported {
@@ -172,8 +327,8 @@ struct FirstUseView: View {
 
                     ActionCard(
                         icon: "photo.on.rectangle",
-                        title: "Pick from gallery",
-                        subtitle: "Select a photo of an invoice",
+                        title: NSLocalizedString("onboarding.upload.gallery", comment: ""),
+                        subtitle: NSLocalizedString("onboarding.upload.gallery.sub", comment: ""),
                         color: .purple
                     ) {
                         showPhotoPicker = true
@@ -181,8 +336,8 @@ struct FirstUseView: View {
 
                     ActionCard(
                         icon: "doc.fill",
-                        title: "Upload a PDF",
-                        subtitle: "Import a PDF invoice from your files",
+                        title: NSLocalizedString("onboarding.upload.pdf", comment: ""),
+                        subtitle: NSLocalizedString("onboarding.upload.pdf.sub", comment: ""),
                         color: .blue
                     ) {
                         showDocPicker = true
@@ -190,15 +345,23 @@ struct FirstUseView: View {
                 }
                 .padding(.horizontal, 20)
 
-                if scanning {
-                    VStack(spacing: 12) {
-                        ProgressView()
-                            .scaleEffect(1.2)
-                        Text("AI is extracting data…")
+                if let errorMessage {
+                    HStack(spacing: 10) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                        Text(errorMessage)
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        Button { self.errorMessage = nil } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
                     }
-                    .padding(24)
+                    .padding(14)
+                    .background(Color.orange.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .padding(.horizontal, 20)
                 }
             }
         }
@@ -220,17 +383,18 @@ struct FirstUseView: View {
         .sheet(isPresented: $showDocPicker) {
             DocumentPicker { url in
                 guard let url else { return }
-                guard url.startAccessingSecurityScopedResource() else { return }
+                scanning = true
+                guard url.startAccessingSecurityScopedResource() else { scanning = false; return }
                 defer { url.stopAccessingSecurityScopedResource() }
-                guard let data = try? Data(contentsOf: url) else { return }
+                guard let data = try? Data(contentsOf: url) else { scanning = false; return }
                 let filename = url.lastPathComponent
                 Task { await uploadData(data, filename: filename) }
             }
         }
-        .alert("Camera not available", isPresented: $showCameraUnavailable) {
-            Button("OK") {}
+        .alert(NSLocalizedString("scan.camera_unavailable.title", comment: ""), isPresented: $showCameraUnavailable) {
+            Button(NSLocalizedString("common.ok", comment: "")) {}
         } message: {
-            Text("Document scanning is not available on this device. Try importing from your gallery or uploading a PDF instead.")
+            Text(NSLocalizedString("scan.camera_unavailable.message", comment: ""))
         }
     }
 
@@ -249,21 +413,21 @@ struct FirstUseView: View {
                 }
                 .padding(.top, 32)
 
-                Text("Expense extracted!")
+                Text(NSLocalizedString("onboarding.review.title", comment: ""))
                     .font(.system(size: 24, weight: .bold, design: .rounded))
 
-                Text("Here's what the AI found")
+                Text(NSLocalizedString("onboarding.review.subtitle", comment: ""))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
                 if let expense = scannedExpense {
                     VStack(alignment: .leading, spacing: 14) {
-                        resultRow("Vendor", expense.vendor)
-                        resultRow("Total", Formatters.money(expense.total, currency: expense.currency))
-                        resultRow("Subtotal", Formatters.money(expense.subtotal, currency: expense.currency))
-                        resultRow("Tax (\(expense.ivaRate)%)", Formatters.money(expense.ivaAmount, currency: expense.currency))
-                        resultRow("Category", expense.category.rawValue)
-                        resultRow("Confidence", "\(Int(expense.confidence * 100))%")
+                        resultRow(NSLocalizedString("onboarding.review.field.vendor", comment: ""), expense.vendor)
+                        resultRow(NSLocalizedString("onboarding.review.field.total", comment: ""), Formatters.money(expense.total, currency: expense.currency))
+                        resultRow(NSLocalizedString("onboarding.review.field.subtotal", comment: ""), Formatters.money(expense.subtotal, currency: expense.currency))
+                        resultRow(String(format: NSLocalizedString("onboarding.review.field.tax", comment: ""), "\(expense.ivaRate)"), Formatters.money(expense.ivaAmount, currency: expense.currency))
+                        resultRow(NSLocalizedString("onboarding.review.field.category", comment: ""), expense.category.localizedName)
+                        resultRow(NSLocalizedString("onboarding.review.field.confidence", comment: ""), "\(Int(expense.confidence * 100))%")
                     }
                     .padding(20)
                     .background(Color(.secondarySystemGroupedBackground))
@@ -271,7 +435,7 @@ struct FirstUseView: View {
                     .padding(.horizontal, 20)
                 }
 
-                Text("Imagine this for every invoice — automatically.")
+                Text(NSLocalizedString("onboarding.review.tagline", comment: ""))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -282,7 +446,7 @@ struct FirstUseView: View {
                     withAnimation(.easeInOut(duration: 0.35)) { step = .trial }
                 } label: {
                     HStack {
-                        Text("Continue").fontWeight(.semibold)
+                        Text(NSLocalizedString("onboarding.review.continue", comment: "")).fontWeight(.semibold)
                         Image(systemName: "arrow.right")
                     }
                     .frame(maxWidth: .infinity)
@@ -296,7 +460,7 @@ struct FirstUseView: View {
                 Button {
                     withAnimation(.easeInOut(duration: 0.35)) { step = .upload }
                 } label: {
-                    Text("Scan another")
+                    Text(NSLocalizedString("onboarding.review.scan_another", comment: ""))
                         .font(.subheadline)
                         .foregroundStyle(.indigo)
                 }
@@ -306,6 +470,11 @@ struct FirstUseView: View {
     }
 
     // MARK: - Step 4: Trial
+
+    @State private var signingIn = false
+    @State private var signInError: String?
+    @State private var showPaywall = false
+    @StateObject private var revenueCat = RevenueCatService.shared
 
     private var trialStep: some View {
         ScrollView {
@@ -321,35 +490,36 @@ struct FirstUseView: View {
                         .foregroundStyle(.yellow)
                 }
 
-                Text("Ready to manage\nyour expenses?")
-                    .font(.system(size: 26, weight: .bold, design: .rounded))
-                    .multilineTextAlignment(.center)
+                if auth.isSignedIn {
+                    // Phase 2: Already signed in → show subscription prompt
+                    Text(NSLocalizedString("onboarding.trial.title", comment: ""))
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .multilineTextAlignment(.center)
 
-                Text("Start your 14-day free trial to unlock everything.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
+                    Text(NSLocalizedString("onboarding.trial.subtitle", comment: ""))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
 
-                VStack(alignment: .leading, spacing: 12) {
-                    trialFeature("Gmail auto-sync — find all your invoices")
-                    trialFeature("Unlimited AI receipt scanning")
-                    trialFeature("Export CSV + Excel to your accountant")
-                    trialFeature("Full Spanish tax categorization")
-                    trialFeature("Sync across devices")
-                }
-                .padding(20)
-                .background(Color(.secondarySystemGroupedBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-                .padding(.horizontal, 20)
+                    VStack(alignment: .leading, spacing: 12) {
+                        trialFeature(NSLocalizedString("onboarding.trial.feature.gmail", comment: ""))
+                        trialFeature(NSLocalizedString("onboarding.trial.feature.scan", comment: ""))
+                        trialFeature(NSLocalizedString("onboarding.trial.feature.export", comment: ""))
+                        trialFeature(NSLocalizedString("onboarding.trial.feature.tax", comment: ""))
+                        trialFeature(NSLocalizedString("onboarding.trial.feature.sync", comment: ""))
+                    }
+                    .padding(20)
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .padding(.horizontal, 20)
 
-                VStack(spacing: 12) {
                     Button {
-                        showSignIn = true
+                        showPaywall = true
                     } label: {
                         HStack {
                             Image(systemName: "sparkles")
-                            Text("Start free trial").fontWeight(.bold)
+                            Text(NSLocalizedString("onboarding.trial.cta", comment: "")).fontWeight(.bold)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
@@ -357,32 +527,136 @@ struct FirstUseView: View {
                         .foregroundStyle(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
+                    .padding(.horizontal, 20)
 
-                    Text("No credit card required. Cancel anytime.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.horizontal, 20)
+                    Button {
+                        Task { _ = await RevenueCatService.shared.restorePurchases() }
+                    } label: {
+                        Text(NSLocalizedString("onboarding.trial.restore", comment: ""))
+                            .font(.subheadline)
+                            .foregroundStyle(.indigo)
+                    }
 
-                Button {
-                    withAnimation { hasCompletedFirstUse = true }
-                } label: {
-                    Text("Continue without account")
+                    HStack(spacing: 16) {
+                        Link(NSLocalizedString("onboarding.trial.terms", comment: ""), destination: URL(string: "https://invoscanai.com/terms")!)
+                            .font(.caption2).foregroundStyle(.secondary)
+                        Link(NSLocalizedString("onboarding.trial.privacy", comment: ""), destination: URL(string: "https://invoscanai.com/privacy")!)
+                            .font(.caption2).foregroundStyle(.secondary)
+                    }
+                    .padding(.top, 4)
+
+                } else {
+                    // Phase 1: Not signed in → sign in first
+                    Text(NSLocalizedString("onboarding.trial.account.title", comment: ""))
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .multilineTextAlignment(.center)
+
+                    Text(NSLocalizedString("onboarding.trial.account.subtitle", comment: ""))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        trialFeature(NSLocalizedString("onboarding.trial.feature.gmail", comment: ""))
+                        trialFeature(NSLocalizedString("onboarding.trial.feature.scan", comment: ""))
+                        trialFeature(NSLocalizedString("onboarding.trial.feature.export", comment: ""))
+                        trialFeature(NSLocalizedString("onboarding.trial.feature.tax", comment: ""))
+                        trialFeature(NSLocalizedString("onboarding.trial.feature.sync", comment: ""))
+                    }
+                    .padding(20)
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .padding(.horizontal, 20)
+
+                    // Sign in buttons
+                    VStack(spacing: 12) {
+                        SignInWithAppleButton(.signIn) { request in
+                            request.requestedScopes = [.email, .fullName]
+                        } onCompletion: { result in
+                            switch result {
+                            case .success(let authorization):
+                                if let credential = authorization.credential as? ASAuthorizationAppleIDCredential {
+                                    Task {
+                                        signingIn = true
+                                        signInError = nil
+                                        await auth.signInWithApple(credential: credential)
+                                        await persistCompanyName()
+                                        signingIn = false
+                                    }
+                                }
+                            case .failure(let error):
+                                let nsError = error as NSError
+                                if nsError.code != ASAuthorizationError.canceled.rawValue {
+                                    signInError = "Apple Sign In error: \(nsError.localizedDescription)"
+                                }
+                            }
+                        }
+                        .signInWithAppleButtonStyle(.black)
+                        .frame(height: 50)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .disabled(signingIn)
+
+                        Button {
+                            Task {
+                                signingIn = true
+                                signInError = nil
+                                await auth.signInWithGoogle()
+                                await persistCompanyName()
+                                signingIn = false
+                            }
+                        } label: {
+                            HStack {
+                                Image(systemName: "g.circle.fill")
+                                Text(NSLocalizedString("signIn.google", comment: "")).fontWeight(.semibold)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(Color(.systemGray6))
+                            .foregroundStyle(.primary)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                        .disabled(signingIn)
+                    }
+                    .padding(.horizontal, 20)
+
+                    if let signInError {
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.orange)
+                            Text(signInError)
+                                .font(.caption)
+                                .foregroundStyle(.primary)
+                        }
+                        .padding(12)
+                        .background(Color.orange.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .padding(.horizontal, 20)
+                    }
+
+                    if signingIn {
+                        VStack(spacing: 10) {
+                            ProgressView()
+                                .scaleEffect(1.2)
+                                .tint(.indigo)
+                            Text(NSLocalizedString("onboarding.trial.signing_in", comment: ""))
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(16)
+                    }
                 }
-                .padding(.top, 4)
-                .padding(.bottom, 32)
+
+            }
+            .padding(.bottom, 32)
+        }
+        .sheet(isPresented: $showPaywall) {
+            OnboardingPaywallSheet {
+                hasCompletedFirstUse = true
             }
         }
-        .sheet(isPresented: $showSignIn) {
-            SignInPrompt(
-                title: "Create your account",
-                subtitle: "Sign in to start your 14-day free trial. Full access to all features."
-            )
-        }
-        .onChange(of: auth.isSignedIn) {
-            if auth.isSignedIn {
+        .onChange(of: revenueCat.isPro) {
+            if revenueCat.isPro {
                 hasCompletedFirstUse = true
             }
         }
@@ -390,16 +664,29 @@ struct FirstUseView: View {
 
     // MARK: - Helpers
 
+    private func persistCompanyName() async {
+        let name = companyNameInput.trimmingCharacters(in: .whitespaces)
+        let taxId = taxIdInput.trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty, auth.isSignedIn else { return }
+        var fields: [String: Any] = [
+            "company_name": name,
+            "tax_id_type": selectedCountry.taxIdType,
+        ]
+        if !taxId.isEmpty { fields["tax_id"] = taxId }
+        try? await APIClient.shared.updateProfile(fields)
+    }
+
     private func uploadData(_ data: Data, filename: String) async {
         scanning = true
+        errorMessage = nil
         do {
-            let expense = try await store.uploadReceipt(data: data, filename: filename)
+            let expense = try await store.extractReceipt(data: data, filename: filename)
             scannedExpense = expense
             scanning = false
             withAnimation(.easeInOut(duration: 0.35)) { step = .review }
         } catch {
             scanning = false
-            store.lastError = error.localizedDescription
+            withAnimation { errorMessage = error.localizedDescription }
         }
     }
 
@@ -451,48 +738,129 @@ private struct ValuePill: View {
 
 private struct StepIndicator: View {
     let current: Int
-    let labels: [String]
+    let total: Int
 
     var body: some View {
-        HStack(spacing: 0) {
-            ForEach(labels.indices, id: \.self) { i in
-                HStack(spacing: 6) {
-                    ZStack {
-                        Circle()
-                            .fill(i <= current ? Color.indigo : Color(.systemGray4))
-                            .frame(width: 26, height: 26)
-                        if i < current {
-                            Image(systemName: "checkmark")
-                                .font(.caption2.bold())
-                                .foregroundStyle(.white)
-                        } else {
-                            Text("\(i + 1)")
-                                .font(.caption2.bold())
-                                .foregroundStyle(i == current ? .white : .secondary)
-                        }
-                    }
-                    if i < labels.count - 1 {
-                        Text(labels[i])
-                            .font(.caption)
-                            .foregroundStyle(i <= current ? .primary : .secondary)
-                    } else {
-                        Text(labels[i])
-                            .font(.caption)
-                            .foregroundStyle(i <= current ? .primary : .secondary)
-                    }
+        HStack(spacing: 8) {
+            ForEach(0..<total, id: \.self) { i in
+                Capsule()
+                    .fill(i <= current ? Color.indigo : Color(.systemGray4))
+                    .frame(width: i == current ? 24 : 8, height: 8)
+                    .animation(.easeInOut(duration: 0.3), value: current)
+            }
+        }
+        .padding(.vertical, 16)
+    }
+}
+
+// MARK: - Extraction Overlay
+
+private struct ExtractionOverlay: View {
+    @State private var phase = 0
+    @State private var iconScale: CGFloat = 1.0
+
+    private let steps: [(icon: String, text: String)] = [
+        ("doc.text.magnifyingglass", NSLocalizedString("scan.extract.reading", comment: "")),
+        ("cpu", NSLocalizedString("scan.extract.analyzing", comment: "")),
+        ("text.viewfinder", NSLocalizedString("scan.extract.amounts", comment: "")),
+        ("building.columns", NSLocalizedString("scan.extract.vendor", comment: "")),
+        ("checkmark.seal", NSLocalizedString("scan.extract.verifying", comment: "")),
+        ("sparkles", NSLocalizedString("scan.extract.almost", comment: "")),
+    ]
+
+    private var current: (icon: String, text: String) {
+        steps[phase % steps.count]
+    }
+
+    var body: some View {
+        ZStack {
+            // Dimmed background
+            Color.black.opacity(0.5)
+                .ignoresSafeArea()
+
+            // Card
+            VStack(spacing: 28) {
+                ZStack {
+                    // Pulsing ring
+                    Circle()
+                        .stroke(Color.indigo.opacity(0.3), lineWidth: 3)
+                        .frame(width: 100, height: 100)
+                        .scaleEffect(iconScale)
+
+                    Circle()
+                        .fill(Color.indigo.opacity(0.1))
+                        .frame(width: 88, height: 88)
+
+                    Image(systemName: current.icon)
+                        .font(.system(size: 36))
+                        .foregroundStyle(.indigo)
+                        .contentTransition(.symbolEffect(.replace))
+                        .id(current.icon)
                 }
 
-                if i < labels.count - 1 {
-                    Rectangle()
-                        .fill(i < current ? Color.indigo : Color(.systemGray4))
-                        .frame(height: 2)
-                        .padding(.horizontal, 4)
+                VStack(spacing: 8) {
+                    Text(current.text)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                        .contentTransition(.numericText())
+                        .animation(.easeInOut(duration: 0.4), value: phase)
+                        .id(current.text)
+
+                    BouncingDots()
+                }
+
+                // Progress steps
+                HStack(spacing: 4) {
+                    ForEach(0..<steps.count, id: \.self) { i in
+                        Capsule()
+                            .fill(i <= phase % steps.count ? Color.indigo : Color(.systemGray4))
+                            .frame(width: i == phase % steps.count ? 20 : 8, height: 4)
+                            .animation(.easeInOut(duration: 0.3), value: phase)
+                    }
+                }
+            }
+            .padding(40)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 28))
+            .shadow(color: .black.opacity(0.15), radius: 20, y: 10)
+            .padding(.horizontal, 40)
+        }
+        .onAppear {
+            // Pulse ring
+            withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
+                iconScale = 1.15
+            }
+            // Cycle messages
+            Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { _ in
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    phase += 1
                 }
             }
         }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 12)
-        .background(Color(.systemBackground))
+    }
+
+}
+
+// Animated bouncing dots view
+private struct BouncingDots: View {
+    @State private var animating = false
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ForEach(0..<3) { i in
+                Circle()
+                    .fill(Color.indigo)
+                    .frame(width: 6, height: 6)
+                    .offset(y: animating ? -6 : 0)
+                    .animation(
+                        .easeInOut(duration: 0.5)
+                        .repeatForever(autoreverses: true)
+                        .delay(Double(i) * 0.15),
+                        value: animating
+                    )
+            }
+        }
+        .onAppear { animating = true }
     }
 }
 
@@ -523,6 +891,61 @@ struct DocumentPicker: UIViewControllerRepresentable {
         func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
             parent.onPick(nil)
         }
+    }
+}
+
+// MARK: - Onboarding Paywall Sheet
+
+private struct OnboardingPaywallSheet: View {
+    let onComplete: () -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        #if canImport(RevenueCatUI)
+        PaywallView(displayCloseButton: true)
+            .onPurchaseCompleted { _ in
+                Task { await RevenueCatService.shared.refresh() }
+                onComplete()
+                dismiss()
+            }
+            .onRestoreCompleted { _ in
+                Task { await RevenueCatService.shared.refresh() }
+                onComplete()
+                dismiss()
+            }
+        #else
+        // Fallback when RevenueCat SDK is not installed yet
+        NavigationStack {
+            VStack(spacing: 20) {
+                Spacer()
+                Image(systemName: "sparkles")
+                    .font(.system(size: 56))
+                    .foregroundStyle(.indigo)
+                Text(NSLocalizedString("paywall.fallback.title", comment: ""))
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                Text(NSLocalizedString("paywall.fallback.subtitle", comment: ""))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+                Spacer()
+                Button {
+                    onComplete()
+                    dismiss()
+                } label: {
+                    Text(NSLocalizedString("paywall.fallback.continue", comment: ""))
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.indigo)
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 32)
+            }
+        }
+        #endif
     }
 }
 

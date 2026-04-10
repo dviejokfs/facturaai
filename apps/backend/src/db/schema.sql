@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR NOT NULL UNIQUE,
     name VARCHAR,
     google_sub VARCHAR UNIQUE,
+    apple_sub VARCHAR UNIQUE,
     google_access_token TEXT,
     google_refresh_token TEXT,
     google_token_expiry TIMESTAMPTZ,
@@ -58,6 +59,9 @@ CREATE TABLE IF NOT EXISTS gmail_syncs (
 
 CREATE INDEX IF NOT EXISTS idx_gmail_syncs_user ON gmail_syncs(user_id, created_at DESC);
 
+ALTER TABLE gmail_syncs
+    ADD COLUMN IF NOT EXISTS total_messages INT NOT NULL DEFAULT 0;
+
 CREATE TABLE IF NOT EXISTS oauth_states (
     state VARCHAR PRIMARY KEY,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -70,7 +74,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     revenuecat_app_user_id VARCHAR NOT NULL,
     entitlement VARCHAR NOT NULL,           -- 'pro' | 'business'
-    product_id VARCHAR NOT NULL,            -- e.g. 'facturaai_pro_yearly'
+    product_id VARCHAR NOT NULL,            -- e.g. 'invoscanai_pro_yearly'
     period_type VARCHAR,                    -- 'normal' | 'trial' | 'intro'
     status VARCHAR NOT NULL,                -- 'active' | 'in_grace' | 'cancelled' | 'expired' | 'billing_issue'
     store VARCHAR,                          -- 'app_store' | 'play_store' | 'stripe'
@@ -147,3 +151,72 @@ CREATE TABLE IF NOT EXISTS export_shares (
 );
 
 CREATE INDEX IF NOT EXISTS idx_export_shares_export ON export_shares(export_id);
+
+-- ── Vendor / Client party identification ─────────────────────
+ALTER TABLE expenses
+    ADD COLUMN IF NOT EXISTS vendor_tax_id VARCHAR,
+    ADD COLUMN IF NOT EXISTS client        VARCHAR,
+    ADD COLUMN IF NOT EXISTS client_tax_id VARCHAR;
+
+-- ── User company name (for expense vs income detection) ──────
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS company_name VARCHAR;
+
+-- ── Multi-company support ────────────────────────────────────
+CREATE TABLE IF NOT EXISTS companies (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR NOT NULL,
+    tax_id VARCHAR NOT NULL,
+    tax_id_type VARCHAR,
+    address TEXT,
+    is_default BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_companies_user_taxid
+    ON companies(user_id, tax_id);
+CREATE INDEX IF NOT EXISTS idx_companies_user
+    ON companies(user_id);
+
+-- ── Contact directory ────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS contacts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR NOT NULL,
+    tax_id VARCHAR,
+    email VARCHAR,
+    phone VARCHAR,
+    address TEXT,
+    notes TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_user_taxid
+    ON contacts(user_id, tax_id) WHERE tax_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_contacts_user
+    ON contacts(user_id);
+
+-- ── Device tokens for push notifications ─────────────────────
+CREATE TABLE IF NOT EXISTS device_tokens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token VARCHAR NOT NULL,
+    platform VARCHAR NOT NULL DEFAULT 'ios',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_device_tokens_user_token
+    ON device_tokens(user_id, token);
+
+-- ── Expense/Income type + company/contact FKs ────────────────
+ALTER TABLE expenses
+    ADD COLUMN IF NOT EXISTS type VARCHAR NOT NULL DEFAULT 'expense',
+    ADD COLUMN IF NOT EXISTS company_id UUID REFERENCES companies(id) ON DELETE SET NULL,
+    ADD COLUMN IF NOT EXISTS vendor_contact_id UUID REFERENCES contacts(id) ON DELETE SET NULL,
+    ADD COLUMN IF NOT EXISTS client_contact_id UUID REFERENCES contacts(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_expenses_type ON expenses(user_id, type);
+CREATE INDEX IF NOT EXISTS idx_expenses_company ON expenses(company_id) WHERE company_id IS NOT NULL;

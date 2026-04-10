@@ -1,13 +1,31 @@
 import Foundation
 
+enum TransactionType: String, Codable, CaseIterable {
+    case expense, income
+
+    var label: String {
+        switch self {
+        case .expense: return NSLocalizedString("transaction.expense", comment: "")
+        case .income: return NSLocalizedString("transaction.income", comment: "")
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .expense: return "arrow.down.circle.fill"
+        case .income: return "arrow.up.circle.fill"
+        }
+    }
+}
+
 enum ExpenseStatus: String, Codable, CaseIterable {
     case pending, confirmed, rejected
 
     var label: String {
         switch self {
-        case .pending: return "Pending"
-        case .confirmed: return "Confirmed"
-        case .rejected: return "Rejected"
+        case .pending: return NSLocalizedString("expenses.status.pending", comment: "")
+        case .confirmed: return NSLocalizedString("expenses.filter.confirmed", comment: "")
+        case .rejected: return NSLocalizedString("expenses.status.rejected", comment: "")
         }
     }
 }
@@ -35,10 +53,26 @@ enum TaxCategory: String, Codable, CaseIterable {
     case hosting = "Hosting & cloud"
     case telefonia = "Phone & internet"
     case otros = "Other"
+
+    var localizedName: String {
+        switch self {
+        case .software: return NSLocalizedString("category.software", comment: "")
+        case .suministros: return NSLocalizedString("category.utilities", comment: "")
+        case .materialOficina: return NSLocalizedString("category.office", comment: "")
+        case .serviciosProfesionales: return NSLocalizedString("category.professional", comment: "")
+        case .formacion: return NSLocalizedString("category.training", comment: "")
+        case .vehiculo: return NSLocalizedString("category.vehicle", comment: "")
+        case .representacion: return NSLocalizedString("category.meals", comment: "")
+        case .hosting: return NSLocalizedString("category.hosting", comment: "")
+        case .telefonia: return NSLocalizedString("category.phone", comment: "")
+        case .otros: return NSLocalizedString("category.other", comment: "")
+        }
+    }
 }
 
 struct Expense: Identifiable, Codable, Hashable {
     var id: UUID = UUID()
+    var type: TransactionType = .expense
     var vendor: String
     var cif: String?
     var date: Date
@@ -56,6 +90,13 @@ struct Expense: Identifiable, Codable, Hashable {
     var source: ExpenseSource
     var notes: String?
     var attachmentName: String?
+    var hasRemoteAttachment: Bool = false
+    var vendorTaxId: String?
+    var client: String?
+    var clientTaxId: String?
+    var companyId: UUID?
+    var vendorContactId: UUID?
+    var clientContactId: UUID?
 
     var quarter: String {
         let comps = Calendar.current.dateComponents([.year, .month], from: date)

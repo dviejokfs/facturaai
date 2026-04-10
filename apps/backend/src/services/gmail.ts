@@ -1,13 +1,38 @@
 import { google, type gmail_v1 } from "googleapis";
 import { clientForUser } from "../auth/google";
 
-// Query: unread or read, from last N days, with PDF attachments, likely invoices
-const INVOICE_QUERY = [
+// Base query: emails with PDF attachments that look like invoices
+const INVOICE_QUERY_BASE = [
   "has:attachment",
   "filename:pdf",
   "(subject:(factura OR invoice OR receipt OR recibo) OR from:(billing OR invoice OR facturacion OR no-reply@stripe.com OR aws-receipts))",
-  "newer_than:90d",
 ].join(" ");
+
+/**
+ * Exponential backoff helper for Google API 429 errors.
+ * Retries up to `maxRetries` times with delays starting at 1s, doubling up to 32s.
+ */
+async function withBackoff<T>(fn: () => Promise<T>, maxRetries = 5): Promise<T> {
+  let delay = 1000; // start at 1s
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      const status = err?.code ?? err?.response?.status ?? err?.status;
+      if (status === 429 && attempt < maxRetries) {
+        console.warn(`[gmail] 429 rate limit, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+        await new Promise((r) => setTimeout(r, delay));
+        delay = Math.min(delay * 2, 32000);
+      } else {
+        throw err;
+      }
+    }
+  }
+}
+
+export type GmailMessageRef = {
+  messageId: string;
+};
 
 export type GmailAttachment = {
   messageId: string;
@@ -16,51 +41,96 @@ export type GmailAttachment = {
   data: Buffer;
 };
 
-export async function listInvoiceAttachments(
+/**
+ * Phase 1: Paginate through ALL matching messages in Gmail.
+ * Returns every message ID that matches the invoice query.
+ * If `afterDate` is provided, appends `after:YYYY/MM/DD` to limit results.
+ */
+export async function listInvoiceMessageIds(
   accessToken: string,
   refreshToken: string | null,
-  maxMessages = 50
-): Promise<GmailAttachment[]> {
-  const auth = clientForUser(accessToken, refreshToken);
+  userId?: string,
+  afterDate?: Date | null
+): Promise<GmailMessageRef[]> {
+  const auth = clientForUser(accessToken, refreshToken, userId);
   const gmail = google.gmail({ version: "v1", auth });
 
-  const list = await gmail.users.messages.list({
-    userId: "me",
-    q: INVOICE_QUERY,
-    maxResults: maxMessages,
-  });
+  let query = INVOICE_QUERY_BASE;
+  if (afterDate) {
+    const y = afterDate.getFullYear();
+    const m = String(afterDate.getMonth() + 1).padStart(2, "0");
+    const d = String(afterDate.getDate()).padStart(2, "0");
+    query += ` after:${y}/${m}/${d}`;
+  }
 
-  const out: GmailAttachment[] = [];
-  const messages = list.data.messages ?? [];
+  const all: GmailMessageRef[] = [];
+  let pageToken: string | undefined;
 
-  for (const m of messages) {
-    if (!m.id) continue;
-    const msg = await gmail.users.messages.get({
-      userId: "me",
-      id: m.id,
-      format: "full",
-    });
-    const parts = flattenParts(msg.data.payload);
-    for (const p of parts) {
-      const filename = p.filename;
-      const attId = p.body?.attachmentId;
-      if (!filename || !attId) continue;
-      if (!isInvoiceFile(filename, p.mimeType ?? "")) continue;
-
-      const att = await gmail.users.messages.attachments.get({
+  do {
+    const list = await withBackoff(() =>
+      gmail.users.messages.list({
         userId: "me",
-        messageId: m.id,
-        id: attId,
-      });
-      const dataB64 = att.data.data ?? "";
-      const buf = Buffer.from(dataB64, "base64url");
-      out.push({
-        messageId: m.id,
-        filename,
-        mimeType: p.mimeType ?? "application/octet-stream",
-        data: buf,
-      });
+        q: query,
+        maxResults: 100, // max allowed per page
+        pageToken,
+      })
+    );
+
+    const messages = list.data.messages ?? [];
+    for (const m of messages) {
+      if (m.id) all.push({ messageId: m.id });
     }
+
+    pageToken = list.data.nextPageToken ?? undefined;
+  } while (pageToken);
+
+  return all;
+}
+
+/**
+ * Phase 2: Download and extract attachments from a single message.
+ */
+export async function getMessageAttachments(
+  accessToken: string,
+  refreshToken: string | null,
+  messageId: string,
+  userId?: string
+): Promise<GmailAttachment[]> {
+  const auth = clientForUser(accessToken, refreshToken, userId);
+  const gmail = google.gmail({ version: "v1", auth });
+
+  const msg = await withBackoff(() =>
+    gmail.users.messages.get({
+      userId: "me",
+      id: messageId,
+      format: "full",
+    })
+  );
+
+  const parts = flattenParts(msg.data.payload);
+  const out: GmailAttachment[] = [];
+
+  for (const p of parts) {
+    const filename = p.filename;
+    const attId = p.body?.attachmentId;
+    if (!filename || !attId) continue;
+    if (!isInvoiceFile(filename, p.mimeType ?? "")) continue;
+
+    const att = await withBackoff(() =>
+      gmail.users.messages.attachments.get({
+        userId: "me",
+        messageId,
+        id: attId,
+      })
+    );
+    const dataB64 = att.data.data ?? "";
+    const buf = Buffer.from(dataB64, "base64url");
+    out.push({
+      messageId,
+      filename,
+      mimeType: p.mimeType ?? "application/octet-stream",
+      data: buf,
+    });
   }
 
   return out;

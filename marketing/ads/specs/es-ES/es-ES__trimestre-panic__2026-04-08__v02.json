@@ -11,7 +11,7 @@
   "script": {
     "hook": "Si eres autónoma, esto te va a sonar.",
     "problem": "Llega el día 18 del trimestre y empiezo a sudar. Facturas por aquí, tickets por allá, capturas de pantalla, un caos. Y mi gestora esperando.",
-    "solution": "FacturaAI se conecta a mi Gmail y cada vez que llega una factura, la guarda ordenada. Ya no busco nada.",
+    "solution": "InvoScanAI se conecta a mi Gmail y cada vez que llega una factura, la guarda ordenada. Ya no busco nada.",
     "proof": "Este trimestre he tardado dos minutos en mandárselo todo a mi gestora. Dos. Antes eran tres tardes.",
     "cta": "Gratis en el App Store. Siete euros al mes. Tu trimestre, tranquilo."
   },

@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg-icon" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="100%" stop-color="#6366F1"/>
+    </linearGradient>
+    <linearGradient id="doc-icon" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E0E7FF"/>
+    </linearGradient>
+    <linearGradient id="scan-icon" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#A5B4FC"/>
+      <stop offset="50%" stop-color="#818CF8"/>
+      <stop offset="100%" stop-color="#A5B4FC"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="224" fill="url(#bg-icon)"/>
+
+  <!-- Document centered and larger -->
+  <g transform="translate(250, 140)">
+    <rect x="0" y="0" width="400" height="520" rx="32" fill="url(#doc-icon)" opacity="0.95"/>
+    <path d="M280 0 L400 120 L280 120 Z" fill="#C7D2FE" opacity="0.7"/>
+    <!-- Text lines -->
+    <rect x="56" y="100" width="210" height="18" rx="9" fill="#818CF8" opacity="0.5"/>
+    <rect x="56" y="144" width="280" height="14" rx="7" fill="#A5B4FC" opacity="0.4"/>
+    <rect x="56" y="180" width="240" height="14" rx="7" fill="#A5B4FC" opacity="0.4"/>
+    <rect x="56" y="216" width="260" height="14" rx="7" fill="#A5B4FC" opacity="0.4"/>
+    <!-- Amount -->
+    <rect x="56" y="278" width="140" height="32" rx="16" fill="#4F46E5" opacity="0.15"/>
+    <rect x="70" y="288" width="112" height="14" rx="7" fill="#4F46E5" opacity="0.6"/>
+    <!-- More lines -->
+    <rect x="56" y="348" width="280" height="14" rx="7" fill="#A5B4FC" opacity="0.3"/>
+    <rect x="56" y="384" width="210" height="14" rx="7" fill="#A5B4FC" opacity="0.3"/>
+    <rect x="56" y="420" width="240" height="14" rx="7" fill="#A5B4FC" opacity="0.3"/>
+    <rect x="56" y="456" width="200" height="14" rx="7" fill="#A5B4FC" opacity="0.3"/>
+  </g>
+
+  <!-- Scan line -->
+  <g transform="translate(250, 140)">
+    <rect x="-24" y="240" width="448" height="5" rx="2.5" fill="url(#scan-icon)" opacity="0.95"/>
+    <rect x="-24" y="228" width="448" height="28" rx="14" fill="#818CF8" opacity="0.15"/>
+  </g>
+
+  <!-- Corner brackets -->
+  <g stroke="#FFFFFF" stroke-width="10" fill="none" opacity="0.65" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M216 170 L216 130 L256 130"/>
+    <path d="M692 130 L732 130 L732 170"/>
+    <path d="M216 630 L216 670 L256 670"/>
+    <path d="M692 670 L732 670 L732 630"/>
+  </g>
+
+  <!-- AI sparkles -->
+  <g transform="translate(680, 200)" fill="#FDE68A">
+    <path d="M0 -28 L7 -7 L28 0 L7 7 L0 28 L-7 7 L-28 0 L-7 -7 Z" opacity="0.9"/>
+  </g>
+  <g transform="translate(726, 280)" fill="#FDE68A">
+    <path d="M0 -16 L5 -5 L16 0 L5 5 L0 16 L-5 5 L-16 0 L-5 -5 Z" opacity="0.7"/>
+  </g>
+
+  <!-- "AI" text at bottom -->
+  <text x="512" y="870" text-anchor="middle" font-family="SF Pro Rounded, -apple-system, Helvetica Neue, sans-serif" font-weight="900" font-size="140" fill="#FFFFFF" opacity="0.95" letter-spacing="8">
+    AI
+  </text>
+</svg>

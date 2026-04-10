@@ -13,7 +13,7 @@ languages([
   "es-ES"
 ])
 
-scheme("FacturaAI")
+scheme("InvoScanAI")
 output_directory("../../marketing/screenshots/raw")
 clear_previous_screenshots(true)
 

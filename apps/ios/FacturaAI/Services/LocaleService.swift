@@ -13,7 +13,7 @@ final class LocaleService: ObservableObject {
     /// market is: drop strings file + add a case here + ship a backend locale.
     nonisolated static let supported: [String] = ["en-GB", "es-ES"]
 
-    private let key = "facturaai.user_locale"
+    private let key = "invoscanai.user_locale"
 
     @Published var override: String? {
         didSet {
@@ -28,7 +28,7 @@ final class LocaleService: ObservableObject {
 
     /// The locale string sent to the backend on every export call.
     nonisolated static var current: String {
-        if let saved = UserDefaults.standard.string(forKey: "facturaai.user_locale"),
+        if let saved = UserDefaults.standard.string(forKey: "invoscanai.user_locale"),
            supported.contains(saved) {
             return saved
         }

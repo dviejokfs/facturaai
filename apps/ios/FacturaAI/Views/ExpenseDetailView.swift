@@ -1,10 +1,17 @@
 import SwiftUI
+import PDFKit
 
 struct ExpenseDetailView: View {
     @EnvironmentObject var store: ExpenseStore
     @Environment(\.dismiss) private var dismiss
     @State var expense: Expense
     @State private var editing = false
+    @State private var attachmentData: Data?
+    @State private var attachmentContentType: String?
+    @State private var isLoadingAttachment = false
+    @State private var attachmentError: String?
+    @State private var showShareSheet = false
+    @State private var shareFileURL: URL?
 
     var body: some View {
         Form {
@@ -12,49 +19,110 @@ struct ExpenseDetailView: View {
                 HStack {
                     Image(systemName: expense.source.icon)
                         .foregroundStyle(.indigo)
-                    Text(expense.vendor).font(.headline)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(expense.type == .income
+                             ? (expense.client ?? expense.vendor)
+                             : expense.vendor)
+                            .font(.headline)
+                        if expense.type == .income {
+                            Text(NSLocalizedString("transaction.income", comment: ""))
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.green)
+                        }
+                    }
                     Spacer()
                     ConfidenceBadge(value: expense.confidence)
                 }
             }
 
-            Section("Tax details") {
+            Section(NSLocalizedString("detail.tax_details", comment: "")) {
                 if editing {
-                    TextField("Vendor", text: $expense.vendor)
-                    TextField("Tax ID", text: Binding(
+                    TextField(NSLocalizedString("manual.vendor", comment: ""), text: $expense.vendor)
+                    TextField(NSLocalizedString("detail.tax_id", comment: ""), text: Binding(
                         get: { expense.cif ?? "" },
                         set: { expense.cif = $0.isEmpty ? nil : $0 }))
-                    TextField("Invoice #", text: Binding(
+                    TextField(NSLocalizedString("detail.invoice", comment: ""), text: Binding(
                         get: { expense.invoiceNumber ?? "" },
                         set: { expense.invoiceNumber = $0.isEmpty ? nil : $0 }))
-                    DatePicker("Date", selection: $expense.date, displayedComponents: .date)
-                    Picker("Category", selection: $expense.category) {
+                    DatePicker(NSLocalizedString("detail.date", comment: ""), selection: $expense.date, displayedComponents: .date)
+                    Picker(NSLocalizedString("detail.category", comment: ""), selection: $expense.category) {
                         ForEach(TaxCategory.allCases, id: \.self) { c in
-                            Text(c.rawValue).tag(c)
+                            Text(c.localizedName).tag(c)
                         }
                     }
                 } else {
-                    row("Tax ID", expense.cif ?? "—")
-                    row("Invoice #", expense.invoiceNumber ?? "—")
-                    row("Date", Formatters.shortDate.string(from: expense.date))
-                    row("Category", expense.category.rawValue)
+                    if expense.type == .income {
+                        row(NSLocalizedString("detail.vendor", comment: ""), expense.vendor)
+                        if let clientTaxId = expense.clientTaxId, !clientTaxId.isEmpty {
+                            row(NSLocalizedString("detail.client_tax_id", comment: ""), clientTaxId)
+                        }
+                    }
+                    row(NSLocalizedString("detail.tax_id", comment: ""), expense.cif ?? "—")
+                    row(NSLocalizedString("detail.invoice", comment: ""), expense.invoiceNumber ?? "—")
+                    row(NSLocalizedString("detail.date", comment: ""), Formatters.shortDate.string(from: expense.date))
+                    row(NSLocalizedString("detail.category", comment: ""), expense.category.localizedName)
                 }
             }
 
-            Section("Amounts") {
-                row("Subtotal", Formatters.money(expense.subtotal, currency: expense.currency))
-                row("Tax (\(expense.ivaRate)%)", Formatters.money(expense.ivaAmount, currency: expense.currency))
+            Section(NSLocalizedString("detail.amounts", comment: "")) {
+                row(NSLocalizedString("detail.subtotal", comment: ""), Formatters.money(expense.subtotal, currency: expense.currency))
+                row(String(format: NSLocalizedString("detail.tax_rate", comment: ""), "\(expense.ivaRate)"), Formatters.money(expense.ivaAmount, currency: expense.currency))
                 if expense.irpfAmount > 0 {
-                    row("Withholding (\(expense.irpfRate)%)", "-" + Formatters.money(expense.irpfAmount, currency: expense.currency))
+                    row(String(format: NSLocalizedString("detail.withholding_rate", comment: ""), "\(expense.irpfRate)"), "-" + Formatters.money(expense.irpfAmount, currency: expense.currency))
                 }
-                row("Total", Formatters.money(expense.total, currency: expense.currency)).fontWeight(.semibold)
+                row(NSLocalizedString("detail.total", comment: ""), Formatters.money(expense.total, currency: expense.currency)).fontWeight(.semibold)
             }
 
-            if let name = expense.attachmentName {
-                Section("Attachment") {
-                    HStack {
-                        Image(systemName: "doc.fill").foregroundStyle(.indigo)
-                        Text(name)
+            // Inline attachment viewer
+            if expense.hasRemoteAttachment || expense.attachmentName != nil {
+                Section(NSLocalizedString("detail.attachment", comment: "")) {
+                    if isLoadingAttachment {
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                            Spacer()
+                        }
+                        .padding(.vertical, 40)
+                    } else if let error = attachmentError {
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.red)
+                                .font(.caption)
+                            Text(error)
+                                .font(.caption)
+                                .foregroundStyle(.red)
+                        }
+                    } else if let data = attachmentData, let type = attachmentContentType {
+                        // Inline preview
+                        if type.contains("pdf") {
+                            PDFPreview(data: data)
+                                .frame(minHeight: 400)
+                                .listRowInsets(EdgeInsets())
+                        } else if let uiImage = UIImage(data: data) {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .scaledToFit()
+                                .listRowInsets(EdgeInsets())
+                        }
+
+                        // Share/download button
+                        Button {
+                            shareAttachment(data: data, contentType: type)
+                        } label: {
+                            HStack {
+                                Image(systemName: "square.and.arrow.up")
+                                Text(NSLocalizedString("detail.attachment.share", comment: ""))
+                            }
+                        }
+                        .accessibilityLabel(NSLocalizedString("a11y.share_attachment", comment: ""))
+                    } else {
+                        // Not yet loaded — trigger on appear
+                        Color.clear
+                            .frame(height: 1)
+                            .onAppear {
+                                Task { await loadAttachment() }
+                            }
                     }
                 }
             }
@@ -65,7 +133,7 @@ struct ExpenseDetailView: View {
                         store.confirm(expense)
                         dismiss()
                     } label: {
-                        Label("Confirm expense", systemImage: "checkmark.circle.fill")
+                        Label(NSLocalizedString("detail.confirm", comment: ""), systemImage: "checkmark.circle.fill")
                     }
                     .tint(.green)
                 }
@@ -73,20 +141,51 @@ struct ExpenseDetailView: View {
                     store.delete(expense)
                     dismiss()
                 } label: {
-                    Label("Delete", systemImage: "trash")
+                    Label(NSLocalizedString("common.delete", comment: ""), systemImage: "trash")
                 }
             }
         }
-        .navigationTitle("Details")
+        .navigationTitle(NSLocalizedString("detail.title", comment: ""))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button(editing ? "Save" : "Edit") {
+                Button(editing ? NSLocalizedString("detail.save", comment: "") : NSLocalizedString("detail.edit", comment: "")) {
                     if editing { store.update(expense) }
                     editing.toggle()
                 }
             }
         }
+        .sheet(isPresented: $showShareSheet) {
+            if let url = shareFileURL {
+                ShareSheet(items: [url])
+            }
+        }
+    }
+
+    // MARK: - Attachment
+
+    private func loadAttachment() async {
+        guard attachmentData == nil, !isLoadingAttachment else { return }
+        isLoadingAttachment = true
+        defer { isLoadingAttachment = false }
+        do {
+            let (data, contentType) = try await APIClient.shared.downloadAttachment(expenseId: expense.id.uuidString)
+            attachmentData = data
+            attachmentContentType = contentType
+        } catch let APIError.http(code, _) where code == 404 {
+            attachmentError = NSLocalizedString("detail.attachment.not_found", comment: "")
+        } catch {
+            attachmentError = error.localizedDescription
+        }
+    }
+
+    private func shareAttachment(data: Data, contentType: String) {
+        let ext = contentType.contains("pdf") ? "pdf" : contentType.contains("png") ? "png" : "jpg"
+        let filename = expense.attachmentName ?? "invoice.\(ext)"
+        let tmpURL = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+        try? data.write(to: tmpURL)
+        shareFileURL = tmpURL
+        showShareSheet = true
     }
 
     @ViewBuilder

@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { config } from "../config";
 
 const s3 = new S3Client({
@@ -36,6 +36,12 @@ export async function downloadFile(key: string): Promise<Buffer> {
   );
   const bytes = await res.Body!.transformToByteArray();
   return Buffer.from(bytes);
+}
+
+export async function deleteFile(key: string): Promise<void> {
+  await s3.send(
+    new DeleteObjectCommand({ Bucket: config.S3_BUCKET, Key: key })
+  );
 }
 
 export function keyForUpload(userId: string, filename: string): string {

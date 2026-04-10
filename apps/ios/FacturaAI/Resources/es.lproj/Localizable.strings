@@ -1,9 +1,12 @@
 /* Tabs */
-"tab.overview" = "Resumen";
-"tab.expenses" = "Gastos";
-"tab.scan" = "Escanear";
+"tab.home" = "Inicio";
+"tab.invoices" = "Facturas";
 "tab.export" = "Exportar";
 "tab.settings" = "Ajustes";
+/* Legacy tab keys kept for other references */
+"tab.overview" = "Inicio";
+"tab.expenses" = "Facturas";
+"tab.scan" = "Escanear";
 
 /* Settings */
 "settings.title" = "Ajustes";
@@ -16,10 +19,38 @@
 "settings.manageSubscription" = "Gestionar suscripción";
 "settings.language" = "Idioma";
 "settings.language.system" = "Sistema";
+"settings.signIn" = "Iniciar sesión";
+"settings.signIn.subtitle" = "Sincroniza, exporta y gestiona tus gastos";
+"settings.gmail.connected" = "Conectado";
+"settings.gmail.not_connected" = "No conectado";
+"settings.gmail.hint" = "Inicia sesión con Google para importar facturas automáticamente de tu correo";
+"settings.gmail.token_expired" = "Token caducado — inicia sesión de nuevo";
+"settings.gmail.valid_hours" = "Conexión válida por %d hora(s)";
+"settings.gmail.valid_days" = "Conexión válida por %d día(s)";
+"settings.trial_banner.title" = "Tu prueba acaba en %d día(s)";
+"settings.trial_banner.subtitle" = "Suscríbete para seguir usando InvoScanAI sin interrupciones.";
+"settings.trial_banner.cta" = "Ver planes";
+"settings.plan.trial" = "Prueba · %dd restantes";
+"settings.plan.pro" = "Pro — 6,99 €/mes";
+"settings.plan.business" = "Business — 12,99 €/mes";
+"settings.plan.expired" = "Prueba expirada";
+"settings.plan.change" = "Cambiar plan";
+"settings.plan.view" = "Ver planes Pro y Business";
+"settings.coming_soon" = "Próximamente";
+"settings.integration.gdrive" = "Google Drive";
+"settings.integration.bank" = "Banco (PSD2)";
+"settings.expenses_count" = "%d gastos almacenados";
+"settings.app_version" = "InvoScanAI v1.0 · Kung Fu Software SL";
 
 /* Common */
 "common.close" = "Cerrar";
 "common.edit" = "Editar";
+"common.cancel" = "Cancelar";
+"common.save" = "Guardar";
+"common.delete" = "Eliminar";
+"common.done" = "Listo";
+"common.ok" = "OK";
+"common.signIn" = "Iniciar sesión";
 
 /* Export */
 "export.title" = "Exportar";
@@ -47,9 +78,24 @@
 "export.share.share" = "Compartir…";
 "export.share.copy_link" = "Copiar enlace";
 "export.share.link_copied" = "¡Enlace copiado!";
+"export.share.email_sent" = "¡Email enviado!";
+"export.share.sending" = "Enviando…";
 "export.done" = "Listo";
-"export.email.subject" = "FacturaAI — Facturas {quarter}";
-"export.email.body" = "Hola,\n\nAdjunto el export de facturas del {quarter} de FacturaAI.\n\nEl ZIP contiene:\n- transactions.csv (localizado)\n- transactions_en.csv (universal en inglés)\n- transactions.xlsx (Excel con hojas localizada + inglés)\n- carpeta invoices/ con los PDFs originales\n\nUn saludo";
+"export.email.subject" = "InvoScanAI — Facturas {quarter}";
+"export.email.body" = "Hola,\n\nAdjunto el export de facturas del {quarter} de InvoScanAI.\n\nEl ZIP contiene:\n- transactions.csv (localizado)\n- transactions_en.csv (universal en inglés)\n- transactions.xlsx (Excel con hojas localizada + inglés)\n- carpeta invoices/ con los PDFs originales\n\nUn saludo";
+"export.signIn.title" = "Inicia sesión para exportar";
+"export.signIn.subtitle" = "Crea una cuenta para exportar tus gastos como CSV, Excel, o enviarlos directamente a tu gestor.";
+"export.signIn.button" = "Iniciar sesión para exportar";
+"export.signIn.headline" = "Exporta tus gastos";
+"export.signIn.body" = "Inicia sesión para exportar CSV, Excel y facturas originales en un ZIP — listo para enviar a tu gestor.";
+"export.warning.no_tax_id" = "%d gastos sin NIF del proveedor";
+"export.warning.pending" = "%d gastos pendientes de revisar";
+"export.warning.uncategorized" = "%d gastos sin categorizar";
+"export.warning_review.title" = "Revisar";
+"export.warning_review.done" = "Listo";
+"export.warning_review.view_file" = "Ver archivo";
+"export.warning_review.unsupported" = "No se puede previsualizar";
+"detail.status" = "Estado";
 
 /* Settings — accountant */
 "settings.accountant" = "Gestor";
@@ -70,3 +116,368 @@
 /* Tax */
 "tax.label" = "IVA";
 "tax.id" = "NIF";
+
+/* Dashboard */
+"dashboard.title" = "Inicio";
+"dashboard.welcome.title" = "Bienvenido a InvoScanAI";
+"dashboard.welcome.subtitle" = "Tu gestor de gastos con IA. Añade tu primera factura — solo tardarás unos segundos.";
+"dashboard.quick.scan" = "Escanear";
+"dashboard.quick.scan.subtitle" = "Haz una foto";
+"dashboard.quick.upload" = "Subir";
+"dashboard.quick.upload.subtitle" = "PDF o imagen";
+"dashboard.quick.gmail" = "Gmail";
+"dashboard.quick.gmail.subtitle" = "Auto-importar";
+"dashboard.quick.manual" = "Manual";
+"dashboard.quick.manual.subtitle" = "Introducir a mano";
+"dashboard.checklist.title" = "Primeros pasos";
+"dashboard.checklist.account" = "Crea tu cuenta";
+"dashboard.checklist.account.sub" = "Inicia sesión para sincronizar entre dispositivos";
+"dashboard.checklist.scan" = "Escanea tu primera factura";
+"dashboard.checklist.scan.sub" = "Usa la cámara, galería, o sube un PDF";
+"dashboard.checklist.gmail" = "Conecta Gmail";
+"dashboard.checklist.gmail.sub" = "Importa facturas automáticamente de tu correo";
+"dashboard.checklist.accountant" = "Configura tu gestor";
+"dashboard.checklist.accountant.sub" = "Pre-dirige los exports para compartir fácilmente";
+"dashboard.no_expenses_quarter" = "Sin gastos en %@";
+"dashboard.summary.quarter" = "Trimestre actual · %@";
+"dashboard.summary.subtotal" = "Base imponible";
+"dashboard.summary.tax" = "IVA";
+"dashboard.summary.invoices" = "Facturas";
+"dashboard.pending.title" = "%d gasto(s) por revisar";
+"dashboard.pending.subtitle" = "Desliza para confirmar o rechazar";
+"dashboard.metrics.invoices" = "Facturas";
+"dashboard.metrics.confirmed" = "Confirmados";
+"dashboard.metrics.avg" = "Gasto medio";
+"dashboard.monthly.title" = "Gasto mensual";
+"dashboard.vendors.title" = "Proveedores principales";
+"dashboard.vendors.invoice_count" = "%d factura(s)";
+"dashboard.tax.title" = "Resumen fiscal";
+"dashboard.tax.deductible" = "Deducible";
+"dashboard.tax.vat" = "IVA";
+"dashboard.tax.withholding" = "Retenciones";
+"dashboard.category.title" = "Por categoría";
+"dashboard.category.empty" = "Aún no hay gastos";
+"dashboard.sync.title" = "Sincronizar Gmail";
+"dashboard.sync.never" = "Nunca sincronizado";
+"dashboard.sync.last" = "Última: %@";
+"dashboard.sync.button" = "Sincronizar";
+"dashboard.sync.scanning" = "Escaneando bandeja de entrada…";
+"dashboard.sync.progress" = "Procesando %d/%d emails · %d facturas encontradas";
+"dashboard.sync.emails" = "%d emails";
+"dashboard.sync.invoices_found" = "%d facturas";
+"dashboard.sync.token_expired" = "Token caducado — inicia sesión de nuevo";
+"dashboard.sync.expires_hours" = "Caduca en %dh";
+"dashboard.sync.expires_days" = "Caduca en %dd";
+"dashboard.sync.signIn.title" = "Inicia sesión para sincronizar Gmail";
+"dashboard.sync.signIn.subtitle" = "Conecta tu cuenta de Google para buscar e importar facturas automáticamente de tu correo.";
+
+/* Gmail sync screen */
+"gmailSync.title" = "Sincronizar Gmail";
+"gmailSync.connected" = "Conectado";
+"gmailSync.not_connected" = "No conectado";
+"gmailSync.connect" = "Conectar Gmail";
+"gmailSync.connect.subtitle" = "Inicia sesión con Google para importar facturas automáticamente de tu correo.";
+"gmailSync.idle.title" = "Listo para sincronizar";
+"gmailSync.idle.subtitle" = "Escanearemos tu bandeja de entrada en busca de facturas y las importaremos automáticamente.";
+"gmailSync.start" = "Iniciar sincronización";
+"gmailSync.scanning" = "Escaneando bandeja de entrada…";
+"gmailSync.found_emails" = "%d emails con adjuntos encontrados";
+"gmailSync.processing" = "Procesando email %d de %d";
+"gmailSync.invoices_found" = "%d facturas encontradas";
+"gmailSync.completed.title" = "¡Sincronización completa!";
+"gmailSync.completed.subtitle" = "%d facturas encontradas en %d emails.";
+"gmailSync.no_invoices" = "No se encontraron facturas nuevas.";
+"gmailSync.failed" = "Sincronización fallida";
+"gmailSync.retry" = "Reintentar";
+"gmailSync.done" = "Listo";
+"gmailSync.last_sync" = "Última sync: %@";
+"gmailSync.view_expenses" = "Ver gastos importados";
+"gmailSync.syncing" = "Sincronizando…";
+
+/* Scan */
+"scan.title" = "Escanear";
+"scan.headline" = "Añade un recibo o factura";
+"scan.subtitle" = "Escanea, sube o elige de tu galería. La IA extraerá los datos automáticamente.";
+"scan.camera" = "Escanear con cámara";
+"scan.gallery" = "Elegir de la galería";
+"scan.pdf" = "Subir un PDF";
+"scan.manual" = "Introducir manualmente";
+"scan.camera_unavailable.title" = "Cámara no disponible";
+"scan.camera_unavailable.message" = "El escaneo de documentos no está disponible en este dispositivo. Prueba a subir desde la galería o un PDF.";
+"scan.not_invoice.title" = "No es una factura";
+"scan.not_invoice.message" = "El documento que has subido no parece ser una factura o recibo. Inténtalo con una factura válida.";
+"scan.ai_disclosure.title" = "Extracción con IA";
+"scan.ai_disclosure.message" = "Tu imagen de factura será procesada de forma segura por IA (Claude de Anthropic) para extraer los datos. La imagen no es almacenada por el proveedor de IA. Podrás revisar y editar todos los datos extraídos antes de guardar.";
+"scan.ai_disclosure.continue" = "OK, continuar";
+"scan.file_too_large.title" = "Archivo demasiado grande";
+"scan.file_too_large.message" = "La imagen supera el tamaño máximo de 20 MB. Intenta hacer una foto más nítida desde más cerca.";
+
+/* Scan — extraction overlay */
+"scan.extract.reading" = "Leyendo tu documento…";
+"scan.extract.analyzing" = "La IA está analizando el contenido…";
+"scan.extract.amounts" = "Detectando importes e impuestos…";
+"scan.extract.vendor" = "Identificando datos del proveedor…";
+"scan.extract.verifying" = "Verificando datos extraídos…";
+"scan.extract.almost" = "Casi listo…";
+
+/* Review extracted expense */
+"review.title" = "Gasto extraído";
+"review.title.income" = "Ingreso extraído";
+"review.subtitle" = "Revisa los detalles y confirma para añadir este gasto.";
+"review.confidence" = "%d%% de confianza";
+"review.no_company_match" = "Ni el proveedor ni el cliente coinciden con tu empresa. Esta factura podria no estar relacionada con tu negocio.";
+"review.view_original" = "Ver documento original";
+"review.vendor" = "Proveedor (vendedor)";
+"review.client" = "Cliente (comprador)";
+"review.invoice_details" = "Datos de la factura";
+"review.amounts" = "Importes";
+"review.classification" = "Clasificación";
+"review.confirm" = "Confirmar y añadir gasto";
+"review.discard" = "Descartar";
+"review.success.title" = "¡Gasto añadido!";
+"review.scan_another" = "Escanear otro";
+"review.original.title" = "Documento original";
+"review.original.unavailable" = "No se puede previsualizar este documento";
+"review.field.name" = "Nombre";
+"review.field.tax_id" = "NIF";
+"review.field.not_detected" = "No detectado";
+"review.field.date" = "Fecha";
+"review.field.invoice" = "Nº factura";
+"review.field.currency" = "Moneda";
+"review.field.subtotal" = "Base imponible";
+"review.field.tax" = "IVA (%@%%)";
+"review.field.withholding" = "Retención (%@%%)";
+"review.field.total" = "Total";
+"review.field.category" = "Categoría";
+
+/* Manual entry */
+"manual.title" = "Nuevo gasto";
+"manual.details" = "Detalles";
+"manual.vendor" = "Proveedor";
+"manual.total" = "Total";
+"manual.date" = "Fecha";
+"manual.vat" = "IVA";
+"manual.category" = "Categoría";
+"manual.save" = "Guardar";
+
+/* Expense detail */
+"detail.title" = "Detalles";
+"detail.subtotal" = "Base imponible";
+"detail.tax_rate" = "IVA (%@%%)";
+"detail.withholding_rate" = "Retención (%@%%)";
+"detail.total" = "Total";
+"detail.tax_details" = "Datos fiscales";
+"detail.amounts" = "Importes";
+"detail.attachment" = "Adjunto";
+"detail.attachment.not_found" = "Archivo no disponible — puede haberse eliminado del almacenamiento";
+"detail.attachment.share" = "Compartir / Descargar";
+"detail.view_original" = "Ver documento original";
+"detail.confirm" = "Confirmar gasto";
+"detail.edit" = "Editar";
+"detail.save" = "Guardar";
+"detail.tax_id" = "NIF";
+"detail.vendor" = "Emitida por";
+"detail.client_tax_id" = "NIF cliente";
+"detail.invoice" = "Nº factura";
+"detail.date" = "Fecha";
+"detail.category" = "Categoría";
+
+/* Expenses list */
+"expenses.title" = "Facturas";
+"expenses.filter.all" = "Todos";
+"expenses.filter.pending" = "Pendientes";
+"expenses.filter.confirmed" = "Confirmados";
+"expenses.search" = "Buscar proveedor";
+"expenses.empty.title" = "Sin facturas aun";
+"expenses.empty.subtitle" = "Escanea tu primera factura para empezar. Extraeremos todos los datos automaticamente.";
+"expenses.empty.scan" = "Escanear factura";
+"expenses.reject" = "Rechazar";
+"expenses.confirm" = "Confirmar";
+"expenses.status.pending" = "Pendiente";
+"expenses.status.confirmed" = "OK";
+"expenses.status.rejected" = "Rechazado";
+
+/* Swipe review */
+"swipe.confidence" = "%d%% de confianza";
+"swipe.remaining" = "%d restantes";
+"swipe.hint.reject" = "Rechazar";
+"swipe.hint.confirm" = "Confirmar";
+"swipe.hint.swipe" = "Desliza para decidir";
+"swipe.label.confirm" = "CONFIRMAR";
+"swipe.label.reject" = "RECHAZAR";
+"swipe.done.title" = "¡Todo al día!";
+"swipe.done.subtitle" = "Has revisado todos los gastos pendientes.";
+
+/* Sign in */
+"signIn.title" = "Iniciar sesión";
+"signIn.subtitle" = "Crea una cuenta para sincronizar tus gastos entre dispositivos, conectar Gmail y exportar a tu gestor.";
+
+/* Categories */
+"category.software" = "Software y herramientas";
+"category.utilities" = "Suministros";
+"category.office" = "Material de oficina";
+"category.professional" = "Servicios profesionales";
+"category.training" = "Formación";
+"category.vehicle" = "Vehículo";
+"category.meals" = "Comidas de empresa";
+"category.hosting" = "Hosting y cloud";
+"category.phone" = "Teléfono e internet";
+"category.other" = "Otros";
+
+/* Onboarding — Legacy (OnboardingView) */
+"onboarding.start_now" = "Empezar ahora";
+"onboarding.no_account" = "Sin cuenta necesaria. Pruébalo gratis.";
+"onboarding.hero.subtitle" = "Tu gestor de gastos con IA";
+"onboarding.hero.feature.scan" = "Escanea recibos con tu cámara";
+"onboarding.hero.feature.import" = "Importa facturas desde fotos o PDFs";
+"onboarding.hero.feature.gmail" = "Sincronización automática desde Gmail";
+"onboarding.hero.feature.ai" = "La IA extrae importes, impuestos y categorías";
+"onboarding.hero.feature.export" = "Exporta a tu gestor en un solo toque";
+"onboarding.how_it_works.title" = "Cómo funciona";
+"onboarding.how_it_works.step1.title" = "Añade tus gastos";
+"onboarding.how_it_works.step1.subtitle" = "Haz una foto, elige de la galería o sube un PDF";
+"onboarding.how_it_works.step2.title" = "La IA hace el trabajo";
+"onboarding.how_it_works.step2.subtitle" = "Proveedor, importes, tipo de IVA y categoría — extraídos al instante";
+"onboarding.how_it_works.step3.title" = "Revisa y confirma";
+"onboarding.how_it_works.step3.subtitle" = "Revisión rápida y tus gastos quedan organizados";
+"onboarding.how_it_works.step4.title" = "Envía a tu gestor";
+"onboarding.how_it_works.step4.subtitle" = "Exporta un ZIP con CSV, Excel y las facturas originales";
+
+/* Onboarding — Welcome */
+"onboarding.welcome.app_name" = "InvoScanAI";
+"onboarding.welcome.tagline" = "Tu gestor de gastos con IA\npara autónomos y pequeñas empresas";
+"onboarding.welcome.pill.scan" = "Escanear";
+"onboarding.welcome.pill.extract" = "Extraer";
+"onboarding.welcome.pill.export" = "Exportar";
+"onboarding.welcome.cta_hint" = "Vamos a verlo en acción — sube tu primera factura.";
+"onboarding.welcome.cta" = "Vamos a probarlo";
+"onboarding.welcome.footer" = "Sin cuenta necesaria. Solo 30 segundos.";
+
+/* Onboarding — Upload */
+/* Onboarding — Nombre de empresa */
+"onboarding.company.title" = "Cuéntanos sobre tu negocio";
+"onboarding.company.subtitle" = "Lo usaremos para distinguir tus facturas emitidas (ingresos) de las que recibes (gastos).";
+"onboarding.company.name_label" = "Nombre de la empresa / negocio";
+"onboarding.company.placeholder" = "ej. Kung Fu Software SL";
+"onboarding.company.country_label" = "País";
+"onboarding.company.country_title" = "Seleccionar país";
+"onboarding.company.search_country" = "Buscar países…";
+"onboarding.company.hint" = "Esto ayuda a la IA a saber si tú emitiste la factura o la recibiste. El NIF es opcional pero recomendado.";
+"onboarding.company.cta" = "Continuar";
+
+"onboarding.upload.title" = "Sube tu primera factura";
+"onboarding.upload.subtitle" = "Elige cualquier recibo o factura — la IA hará el resto";
+"onboarding.upload.scan" = "Escanear un recibo";
+"onboarding.upload.scan.sub" = "Haz una foto de cualquier recibo o factura";
+"onboarding.upload.gallery" = "Elegir de la galería";
+"onboarding.upload.gallery.sub" = "Selecciona una foto de una factura";
+"onboarding.upload.pdf" = "Subir un PDF";
+"onboarding.upload.pdf.sub" = "Importa un PDF de factura desde tus archivos";
+
+/* Onboarding — Review */
+"onboarding.review.title" = "¡Gasto extraído!";
+"onboarding.review.subtitle" = "Esto es lo que ha encontrado la IA";
+"onboarding.review.field.vendor" = "Proveedor";
+"onboarding.review.field.total" = "Total";
+"onboarding.review.field.subtotal" = "Base imponible";
+"onboarding.review.field.tax" = "IVA (%@%%)";
+"onboarding.review.field.category" = "Categoría";
+"onboarding.review.field.confidence" = "Confianza";
+"onboarding.review.tagline" = "Imagina esto para cada factura — automáticamente.";
+"onboarding.review.continue" = "Continuar";
+"onboarding.review.scan_another" = "Escanear otro";
+
+/* Onboarding — Trial */
+"onboarding.trial.title" = "Empieza tu prueba gratis";
+"onboarding.trial.subtitle" = "14 días gratis, luego elige tu plan.\nCancela cuando quieras.";
+"onboarding.trial.feature.gmail" = "Sincronización Gmail — encuentra todas tus facturas";
+"onboarding.trial.feature.scan" = "Escaneo ilimitado de recibos con IA";
+"onboarding.trial.feature.export" = "Exporta CSV + Excel a tu gestor";
+"onboarding.trial.feature.tax" = "Categorización fiscal automática";
+"onboarding.trial.feature.sync" = "Sincroniza entre dispositivos";
+"onboarding.trial.cta" = "Empezar 14 días de prueba gratis";
+"onboarding.trial.restore" = "Restaurar compras";
+"onboarding.trial.terms" = "Términos de uso";
+"onboarding.trial.privacy" = "Política de privacidad";
+"onboarding.trial.account.title" = "Crea tu cuenta";
+"onboarding.trial.account.subtitle" = "Inicia sesión para empezar tu prueba gratis de 14 días.";
+"onboarding.trial.signing_in" = "Iniciando sesión…";
+
+/* Sign in */
+"signIn.title" = "Iniciar sesión";
+"signIn.subtitle" = "Crea una cuenta para sincronizar tus gastos entre dispositivos, conectar Gmail y exportar a tu gestor.";
+"signIn.google" = "Iniciar sesión con Google";
+"signIn.trial_hint" = "14 días de prueba gratis. Sin tarjeta de crédito.";
+"signIn.signing_in" = "Iniciando sesión…";
+
+/* Paywall fallback */
+"paywall.fallback.title" = "InvoScanAI Pro";
+"paywall.fallback.subtitle" = "Añade el paquete Swift de RevenueCat para habilitar compras dentro de la app.";
+"paywall.fallback.continue" = "Continuar (modo dev)";
+
+/* Paywall */
+"paywall.title" = "Tu prueba ha terminado";
+"paywall.subtitle" = "Conserva el ZIP trimestral que tu gestor ya adora.";
+"paywall.pro" = "Pro";
+"paywall.price.monthly" = "9,99 €/mes";
+"paywall.price.yearly" = "o 79 €/año — ahorra un 34%";
+"paywall.feature.scanning" = "Escaneo ilimitado de recibos con IA";
+"paywall.feature.gmail" = "Auto-importación de Gmail";
+"paywall.feature.currency" = "Multi-divisa (EUR, USD, GBP, …)";
+"paywall.feature.zip" = "ZIP trimestral para tu gestor";
+"paywall.feature.export" = "Excel + CSV + facturas originales";
+"paywall.subscribe" = "Suscribirse a Pro";
+"paywall.gate.title" = "Función Pro";
+"paywall.gate.cta" = "Empezar prueba gratis";
+"paywall.disclosure" = "La suscripción se renueva automáticamente a menos que se desactive al menos 24 horas antes del final del periodo actual. El pago se carga a tu cuenta de iTunes en el momento de la confirmación de la compra. Al suscribirte aceptas nuestros Términos de Uso y Política de Privacidad.";
+"paywall.restore.nothing" = "No se encontraron compras anteriores.";
+"paywall.limit_reached.title" = "Límite de escaneos alcanzado";
+"paywall.limit_reached.message" = "El plan gratuito permite 5 escaneos al mes. Actualiza a Pro para escaneos ilimitados.";
+"paywall.trial_expired.title" = "Prueba expirada";
+"paywall.trial_expired.message" = "Tu prueba gratuita ha terminado. Actualiza para seguir usando todas las funciones.";
+
+/* Tipos de transacción */
+"transaction.expense" = "Gastos";
+"transaction.income" = "Ingresos";
+"expenses.type_filter" = "Tipo";
+"expenses.filter" = "Estado";
+
+/* Dashboard — Ingresos/Gastos */
+"dashboard.income_expense.title" = "Ingresos vs Gastos";
+"dashboard.income_expense.net" = "Neto";
+
+/* Empresa */
+"settings.companies" = "Negocio";
+"settings.company_name" = "Mi empresa";
+"settings.company_name.not_set" = "Sin configurar — toca para añadir";
+"company.setup.title" = "Nombre de tu empresa";
+"company.setup.subtitle" = "Dinos el nombre de tu empresa o negocio para que podamos detectar automáticamente si una factura escaneada es un gasto o un ingreso.";
+"company.name.section" = "Nombre de la empresa";
+"company.name.placeholder" = "ej. Kung Fu Software SL";
+"company.saved" = "¡Guardado!";
+"company.explanation" = "Al escanear una factura, si el emisor coincide con el nombre de tu empresa, se clasificará como ingreso (tú emitiste la factura). En caso contrario, es un gasto.";
+
+/* Contactos */
+"contacts.title" = "Contactos";
+"contacts.empty" = "Sin contactos aún";
+"contacts.empty.subtitle" = "Los contactos se crean automáticamente al escanear facturas con NIF/CIF reconocidos.";
+"contacts.search" = "Buscar contactos";
+
+/* GDPR */
+"settings.downloadData" = "Descargar mis datos";
+"settings.downloadData.error" = "Error al exportar los datos. Inténtalo de nuevo.";
+
+/* Eliminación de cuenta */
+"settings.deleteAccount" = "Eliminar cuenta";
+"settings.deleteAccount.title" = "¿Eliminar cuenta?";
+"settings.deleteAccount.message" = "Esto eliminará permanentemente tu cuenta y todos tus datos. Esta acción no se puede deshacer.";
+"settings.deleteAccount.confirm" = "Eliminar";
+
+/* Accesibilidad */
+"a11y.scan_button" = "Escanear factura";
+"a11y.clear_filters" = "Borrar todos los filtros";
+"a11y.dismiss_error" = "Descartar error";
+"a11y.share_attachment" = "Compartir o descargar adjunto";
+"a11y.previous_item" = "Elemento anterior";
+"a11y.next_item" = "Elemento siguiente";
+"a11y.income_indicator" = "Ingreso";

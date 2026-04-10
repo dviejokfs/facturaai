@@ -2,7 +2,7 @@ import Foundation
 import Security
 
 enum Keychain {
-    private static let service = "es.kungfusoftware.facturaai"
+    private static let service = "es.kungfusoftware.invoscanai"
     private static let tokenKey = "auth_token"
 
     static func saveToken(_ token: String) {

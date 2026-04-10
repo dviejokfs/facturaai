@@ -11,9 +11,9 @@
   "script": {
     "hook": "Soy gestora. Y voy a contarte algo que ningún autónomo quiere oír.",
     "problem": "Cada trimestre recibo zips con cuarenta PDFs desordenados, fotos borrosas de tickets por WhatsApp y Excels de hace diez años. Y luego me preguntan por qué tardo tanto.",
-    "solution": "A los clientes que usan FacturaAI les hago el trimestre en la mitad de tiempo. Me llega todo ordenado, con fecha, proveedor y base imponible. Un PDF limpio.",
+    "solution": "A los clientes que usan InvoScanAI les hago el trimestre en la mitad de tiempo. Me llega todo ordenado, con fecha, proveedor y base imponible. Un PDF limpio.",
     "proof": "Ojalá todos mis clientes la usaran. En serio. Les saldría más barato y yo dormiría mejor.",
-    "cta": "FacturaAI. Gratis en el App Store. Hazle un favor a tu gestora."
+    "cta": "InvoScanAI. Gratis en el App Store. Hazle un favor a tu gestora."
   },
   "scenes": [
     { "type": "avatar", "startSec": 0, "endSec": 8 },

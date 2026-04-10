@@ -11,7 +11,7 @@
   "script": {
     "hook": "Conecté mi Gmail a esta app y me llevé un susto.",
     "problem": "Resulta que tenía veintitrés facturas olvidadas. De Endesa, Movistar, Amazon, del taller. Todas deducibles. Todas perdidas en mi correo.",
-    "solution": "FacturaAI rastrea tu Gmail, encuentra las facturas y las ordena por trimestre. Automático. No tocas nada.",
+    "solution": "InvoScanAI rastrea tu Gmail, encuentra las facturas y las ordena por trimestre. Automático. No tocas nada.",
     "proof": "Veintitrés facturas que mi gestora iba a no ver nunca. Eso son cientos de euros de IVA que me habría comido yo.",
     "cta": "Conecta tu Gmail gratis. A ver cuánto dinero te encuentras."
   },

@@ -1,9 +1,12 @@
 /* Tabs */
-"tab.overview" = "Overview";
-"tab.expenses" = "Expenses";
-"tab.scan" = "Scan";
+"tab.home" = "Home";
+"tab.invoices" = "Invoices";
 "tab.export" = "Export";
 "tab.settings" = "Settings";
+/* Legacy tab keys kept for other references */
+"tab.overview" = "Home";
+"tab.expenses" = "Invoices";
+"tab.scan" = "Scan";
 
 /* Settings */
 "settings.title" = "Settings";
@@ -16,10 +19,38 @@
 "settings.manageSubscription" = "Manage subscription";
 "settings.language" = "Language";
 "settings.language.system" = "System";
+"settings.signIn" = "Sign in";
+"settings.signIn.subtitle" = "Sync, export & manage your expenses";
+"settings.gmail.connected" = "Connected";
+"settings.gmail.not_connected" = "Not connected";
+"settings.gmail.hint" = "Sign in with Google to auto-import invoices from your inbox";
+"settings.gmail.token_expired" = "Token expired — please sign in again";
+"settings.gmail.valid_hours" = "Connection valid for %d hour(s)";
+"settings.gmail.valid_days" = "Connection valid for %d day(s)";
+"settings.trial_banner.title" = "Your trial ends in %d day(s)";
+"settings.trial_banner.subtitle" = "Subscribe to keep using InvoScanAI without interruptions.";
+"settings.trial_banner.cta" = "View plans";
+"settings.plan.trial" = "Trial · %dd remaining";
+"settings.plan.pro" = "Pro — €6.99/mo";
+"settings.plan.business" = "Business — €12.99/mo";
+"settings.plan.expired" = "Trial expired";
+"settings.plan.change" = "Change plan";
+"settings.plan.view" = "View Pro and Business plans";
+"settings.coming_soon" = "Coming soon";
+"settings.integration.gdrive" = "Google Drive";
+"settings.integration.bank" = "Bank (PSD2)";
+"settings.expenses_count" = "%d expenses stored";
+"settings.app_version" = "InvoScanAI v1.0 · Kung Fu Software SL";
 
 /* Common */
 "common.close" = "Close";
 "common.edit" = "Edit";
+"common.cancel" = "Cancel";
+"common.save" = "Save";
+"common.delete" = "Delete";
+"common.done" = "Done";
+"common.ok" = "OK";
+"common.signIn" = "Sign in";
 
 /* Export */
 "export.title" = "Export";
@@ -47,9 +78,24 @@
 "export.share.share" = "Share…";
 "export.share.copy_link" = "Copy share link";
 "export.share.link_copied" = "Link copied!";
+"export.share.email_sent" = "Email sent!";
+"export.share.sending" = "Sending…";
 "export.done" = "Done";
-"export.email.subject" = "FacturaAI — Invoices {quarter}";
-"export.email.body" = "Hi,\n\nAttached you'll find the invoice export for {quarter} from FacturaAI.\n\nThe ZIP contains:\n- transactions.csv (localized)\n- transactions_en.csv (universal)\n- transactions.xlsx (Excel with localized + English sheets)\n- invoices/ folder with the original PDFs\n\nBest regards";
+"export.email.subject" = "InvoScanAI — Invoices {quarter}";
+"export.email.body" = "Hi,\n\nAttached you'll find the invoice export for {quarter} from InvoScanAI.\n\nThe ZIP contains:\n- transactions.csv (localized)\n- transactions_en.csv (universal)\n- transactions.xlsx (Excel with localized + English sheets)\n- invoices/ folder with the original PDFs\n\nBest regards";
+"export.signIn.title" = "Sign in to export";
+"export.signIn.subtitle" = "Create an account to export your expenses as CSV, Excel, or send them directly to your accountant.";
+"export.signIn.button" = "Sign in to export";
+"export.signIn.headline" = "Export your expenses";
+"export.signIn.body" = "Sign in to export CSV, Excel, and original invoices in a ZIP — ready to send to your accountant.";
+"export.warning.no_tax_id" = "%d expenses without supplier tax ID";
+"export.warning.pending" = "%d expenses still pending";
+"export.warning.uncategorized" = "%d uncategorized expenses";
+"export.warning_review.title" = "Review";
+"export.warning_review.done" = "Done";
+"export.warning_review.view_file" = "View file";
+"export.warning_review.unsupported" = "Cannot preview";
+"detail.status" = "Status";
 
 /* Settings — accountant */
 "settings.accountant" = "Accountant";
@@ -70,3 +116,368 @@
 /* Tax */
 "tax.label" = "VAT";
 "tax.id" = "VAT number";
+
+/* Dashboard */
+"dashboard.title" = "Home";
+"dashboard.welcome.title" = "Welcome to InvoScanAI";
+"dashboard.welcome.subtitle" = "Your AI expense manager. Let's get your first invoice in — it only takes a few seconds.";
+"dashboard.quick.scan" = "Scan";
+"dashboard.quick.scan.subtitle" = "Take a photo";
+"dashboard.quick.upload" = "Upload";
+"dashboard.quick.upload.subtitle" = "PDF or image";
+"dashboard.quick.gmail" = "Gmail";
+"dashboard.quick.gmail.subtitle" = "Auto-import";
+"dashboard.quick.manual" = "Manual";
+"dashboard.quick.manual.subtitle" = "Enter by hand";
+"dashboard.checklist.title" = "Getting started";
+"dashboard.checklist.account" = "Create your account";
+"dashboard.checklist.account.sub" = "Sign in to sync across devices";
+"dashboard.checklist.scan" = "Scan your first invoice";
+"dashboard.checklist.scan.sub" = "Use the camera, gallery, or upload a PDF";
+"dashboard.checklist.gmail" = "Connect Gmail";
+"dashboard.checklist.gmail.sub" = "Auto-import invoices from your inbox";
+"dashboard.checklist.accountant" = "Set up your accountant";
+"dashboard.checklist.accountant.sub" = "Pre-address exports for easy sharing";
+"dashboard.no_expenses_quarter" = "No expenses in %@";
+"dashboard.summary.quarter" = "Current quarter · %@";
+"dashboard.summary.subtotal" = "Subtotal";
+"dashboard.summary.tax" = "Tax";
+"dashboard.summary.invoices" = "Invoices";
+"dashboard.pending.title" = "%d expense(s) to review";
+"dashboard.pending.subtitle" = "Swipe to confirm or reject";
+"dashboard.metrics.invoices" = "Invoices";
+"dashboard.metrics.confirmed" = "Confirmed";
+"dashboard.metrics.avg" = "Avg. expense";
+"dashboard.monthly.title" = "Monthly spending";
+"dashboard.vendors.title" = "Top vendors";
+"dashboard.vendors.invoice_count" = "%d invoice(s)";
+"dashboard.tax.title" = "Tax summary";
+"dashboard.tax.deductible" = "Deductible";
+"dashboard.tax.vat" = "VAT / Tax";
+"dashboard.tax.withholding" = "Withholding";
+"dashboard.category.title" = "By category";
+"dashboard.category.empty" = "No expenses yet";
+"dashboard.sync.title" = "Sync Gmail";
+"dashboard.sync.never" = "Never synced";
+"dashboard.sync.last" = "Last: %@";
+"dashboard.sync.button" = "Sync";
+"dashboard.sync.scanning" = "Scanning inbox…";
+"dashboard.sync.progress" = "Processing %d/%d emails · %d invoices found";
+"dashboard.sync.emails" = "%d emails";
+"dashboard.sync.invoices_found" = "%d invoices";
+"dashboard.sync.token_expired" = "Token expired — re-sign in";
+"dashboard.sync.expires_hours" = "Expires in %dh";
+"dashboard.sync.expires_days" = "Expires in %dd";
+"dashboard.sync.signIn.title" = "Sign in to sync Gmail";
+"dashboard.sync.signIn.subtitle" = "Connect your Google account to automatically find and import invoices from your inbox.";
+
+/* Gmail sync screen */
+"gmailSync.title" = "Gmail Sync";
+"gmailSync.connected" = "Connected";
+"gmailSync.not_connected" = "Not connected";
+"gmailSync.connect" = "Connect Gmail";
+"gmailSync.connect.subtitle" = "Sign in with Google to auto-import invoices from your inbox.";
+"gmailSync.idle.title" = "Ready to sync";
+"gmailSync.idle.subtitle" = "We'll scan your inbox for invoices and import them automatically.";
+"gmailSync.start" = "Start sync";
+"gmailSync.scanning" = "Scanning inbox…";
+"gmailSync.found_emails" = "Found %d emails with attachments";
+"gmailSync.processing" = "Processing email %d of %d";
+"gmailSync.invoices_found" = "%d invoices found";
+"gmailSync.completed.title" = "Sync complete!";
+"gmailSync.completed.subtitle" = "Found %d invoices from %d emails.";
+"gmailSync.no_invoices" = "No new invoices found.";
+"gmailSync.failed" = "Sync failed";
+"gmailSync.retry" = "Retry";
+"gmailSync.done" = "Done";
+"gmailSync.last_sync" = "Last sync: %@";
+"gmailSync.view_expenses" = "View imported expenses";
+"gmailSync.syncing" = "Syncing…";
+
+/* Scan */
+"scan.title" = "Scan";
+"scan.headline" = "Add a receipt or invoice";
+"scan.subtitle" = "Scan, upload, or pick from your gallery. AI will extract the data automatically.";
+"scan.camera" = "Scan with camera";
+"scan.gallery" = "Pick from gallery";
+"scan.pdf" = "Upload a PDF";
+"scan.manual" = "Enter manually";
+"scan.camera_unavailable.title" = "Camera not available";
+"scan.camera_unavailable.message" = "Document scanning is not available on this device. Try uploading from your gallery or a PDF instead.";
+"scan.not_invoice.title" = "Not an invoice";
+"scan.not_invoice.message" = "The document you uploaded doesn't appear to be an invoice or receipt. Please try with a valid invoice.";
+"scan.ai_disclosure.title" = "AI-Powered Extraction";
+"scan.ai_disclosure.message" = "Your invoice image will be securely processed by AI (Claude by Anthropic) to extract the data. The image is not stored by the AI provider. You can review and edit all extracted data before saving.";
+"scan.ai_disclosure.continue" = "OK, continue";
+"scan.file_too_large.title" = "File too large";
+"scan.file_too_large.message" = "The image exceeds the maximum size of 20 MB. Try taking a clearer photo from closer.";
+
+/* Scan — extraction overlay */
+"scan.extract.reading" = "Reading your document…";
+"scan.extract.analyzing" = "AI is analyzing the content…";
+"scan.extract.amounts" = "Detecting amounts & tax rates…";
+"scan.extract.vendor" = "Identifying vendor details…";
+"scan.extract.verifying" = "Verifying extracted data…";
+"scan.extract.almost" = "Almost there…";
+
+/* Review extracted expense */
+"review.title" = "Expense extracted";
+"review.title.income" = "Income extracted";
+"review.subtitle" = "Review the details below and confirm to add this expense.";
+"review.confidence" = "%d%% confidence";
+"review.no_company_match" = "Neither vendor nor client matches your company. This invoice may not be related to your business.";
+"review.view_original" = "View original document";
+"review.vendor" = "Vendor (seller)";
+"review.client" = "Client (buyer)";
+"review.invoice_details" = "Invoice details";
+"review.amounts" = "Amounts";
+"review.classification" = "Classification";
+"review.confirm" = "Confirm & add expense";
+"review.discard" = "Discard";
+"review.success.title" = "Expense added!";
+"review.scan_another" = "Scan another";
+"review.original.title" = "Original document";
+"review.original.unavailable" = "Unable to preview this document";
+"review.field.name" = "Name";
+"review.field.tax_id" = "Tax ID";
+"review.field.not_detected" = "Not detected";
+"review.field.date" = "Date";
+"review.field.invoice" = "Invoice #";
+"review.field.currency" = "Currency";
+"review.field.subtotal" = "Subtotal";
+"review.field.tax" = "Tax (%@%%)";
+"review.field.withholding" = "Withholding (%@%%)";
+"review.field.total" = "Total";
+"review.field.category" = "Category";
+
+/* Manual entry */
+"manual.title" = "New expense";
+"manual.details" = "Details";
+"manual.vendor" = "Vendor";
+"manual.total" = "Total";
+"manual.date" = "Date";
+"manual.vat" = "VAT";
+"manual.category" = "Category";
+"manual.save" = "Save";
+
+/* Expense detail */
+"detail.title" = "Details";
+"detail.subtotal" = "Subtotal";
+"detail.tax_rate" = "Tax (%@%%)";
+"detail.withholding_rate" = "Withholding (%@%%)";
+"detail.total" = "Total";
+"detail.tax_details" = "Tax details";
+"detail.amounts" = "Amounts";
+"detail.attachment" = "Attachment";
+"detail.attachment.not_found" = "File not available — it may have been deleted from storage";
+"detail.attachment.share" = "Share / Download";
+"detail.view_original" = "View original document";
+"detail.confirm" = "Confirm expense";
+"detail.edit" = "Edit";
+"detail.save" = "Save";
+"detail.tax_id" = "Tax ID";
+"detail.vendor" = "Issued by";
+"detail.client_tax_id" = "Client Tax ID";
+"detail.invoice" = "Invoice #";
+"detail.date" = "Date";
+"detail.category" = "Category";
+
+/* Expenses list */
+"expenses.title" = "Invoices";
+"expenses.filter.all" = "All";
+"expenses.filter.pending" = "Pending";
+"expenses.filter.confirmed" = "Confirmed";
+"expenses.search" = "Search vendor";
+"expenses.empty.title" = "No invoices yet";
+"expenses.empty.subtitle" = "Scan your first invoice to get started. We'll extract all the data automatically.";
+"expenses.empty.scan" = "Scan invoice";
+"expenses.reject" = "Reject";
+"expenses.confirm" = "Confirm";
+"expenses.status.pending" = "Pending";
+"expenses.status.confirmed" = "OK";
+"expenses.status.rejected" = "Rejected";
+
+/* Swipe review */
+"swipe.confidence" = "%d%% confidence";
+"swipe.remaining" = "%d remaining";
+"swipe.hint.reject" = "Reject";
+"swipe.hint.confirm" = "Confirm";
+"swipe.hint.swipe" = "Swipe to decide";
+"swipe.label.confirm" = "CONFIRM";
+"swipe.label.reject" = "REJECT";
+"swipe.done.title" = "All caught up!";
+"swipe.done.subtitle" = "You've reviewed all pending expenses.";
+
+/* Sign in */
+"signIn.title" = "Sign in";
+"signIn.subtitle" = "Create an account to sync your expenses across devices, connect Gmail, and export to your accountant.";
+
+/* Categories */
+"category.software" = "Software & tools";
+"category.utilities" = "Utilities";
+"category.office" = "Office supplies";
+"category.professional" = "Professional services";
+"category.training" = "Training";
+"category.vehicle" = "Vehicle";
+"category.meals" = "Business meals";
+"category.hosting" = "Hosting & cloud";
+"category.phone" = "Phone & internet";
+"category.other" = "Other";
+
+/* Onboarding — Legacy (OnboardingView) */
+"onboarding.start_now" = "Start now";
+"onboarding.no_account" = "No account required. Try it free.";
+"onboarding.hero.subtitle" = "Your AI-powered expense manager";
+"onboarding.hero.feature.scan" = "Scan receipts with your camera";
+"onboarding.hero.feature.import" = "Import invoices from photos or PDFs";
+"onboarding.hero.feature.gmail" = "Auto-sync invoices from Gmail";
+"onboarding.hero.feature.ai" = "AI extracts amounts, tax & categories";
+"onboarding.hero.feature.export" = "Export to your accountant in one tap";
+"onboarding.how_it_works.title" = "How it works";
+"onboarding.how_it_works.step1.title" = "Add your expenses";
+"onboarding.how_it_works.step1.subtitle" = "Snap a photo, pick from gallery, or import a PDF";
+"onboarding.how_it_works.step2.title" = "AI does the work";
+"onboarding.how_it_works.step2.subtitle" = "Vendor, amounts, tax rate and category — extracted instantly";
+"onboarding.how_it_works.step3.title" = "Review & confirm";
+"onboarding.how_it_works.step3.subtitle" = "Quick review, then your expenses are organized";
+"onboarding.how_it_works.step4.title" = "Send to your accountant";
+"onboarding.how_it_works.step4.subtitle" = "Export ZIP with CSV, Excel and original invoices";
+
+/* Onboarding — Welcome */
+"onboarding.welcome.app_name" = "InvoScanAI";
+"onboarding.welcome.tagline" = "Your AI-powered expense manager\nfor freelancers & small businesses";
+"onboarding.welcome.pill.scan" = "Scan";
+"onboarding.welcome.pill.extract" = "Extract";
+"onboarding.welcome.pill.export" = "Export";
+"onboarding.welcome.cta_hint" = "Let's see it in action — upload your first invoice.";
+"onboarding.welcome.cta" = "Let's try it";
+"onboarding.welcome.footer" = "No account needed. Takes 30 seconds.";
+
+/* Onboarding — Company Name */
+"onboarding.company.title" = "Tell us about your business";
+"onboarding.company.subtitle" = "We'll use this to tell apart your invoices (income) from bills you receive (expenses).";
+"onboarding.company.name_label" = "Company / business name";
+"onboarding.company.placeholder" = "e.g. Kung Fu Software SL";
+"onboarding.company.country_label" = "Country";
+"onboarding.company.country_title" = "Select country";
+"onboarding.company.search_country" = "Search countries…";
+"onboarding.company.hint" = "This helps the AI know if you issued the invoice or received it. Tax ID is optional but recommended.";
+"onboarding.company.cta" = "Continue";
+
+/* Onboarding — Upload */
+"onboarding.upload.title" = "Upload your first invoice";
+"onboarding.upload.subtitle" = "Pick any receipt or invoice — the AI will do the rest";
+"onboarding.upload.scan" = "Scan a receipt";
+"onboarding.upload.scan.sub" = "Take a photo of any receipt or invoice";
+"onboarding.upload.gallery" = "Pick from gallery";
+"onboarding.upload.gallery.sub" = "Select a photo of an invoice";
+"onboarding.upload.pdf" = "Upload a PDF";
+"onboarding.upload.pdf.sub" = "Import a PDF invoice from your files";
+
+/* Onboarding — Review */
+"onboarding.review.title" = "Expense extracted!";
+"onboarding.review.subtitle" = "Here's what the AI found";
+"onboarding.review.field.vendor" = "Vendor";
+"onboarding.review.field.total" = "Total";
+"onboarding.review.field.subtotal" = "Subtotal";
+"onboarding.review.field.tax" = "Tax (%@%%)";
+"onboarding.review.field.category" = "Category";
+"onboarding.review.field.confidence" = "Confidence";
+"onboarding.review.tagline" = "Imagine this for every invoice — automatically.";
+"onboarding.review.continue" = "Continue";
+"onboarding.review.scan_another" = "Scan another";
+
+/* Onboarding — Trial */
+"onboarding.trial.title" = "Start your free trial";
+"onboarding.trial.subtitle" = "14 days free, then choose your plan.\nCancel anytime.";
+"onboarding.trial.feature.gmail" = "Gmail auto-sync — find all your invoices";
+"onboarding.trial.feature.scan" = "Unlimited AI receipt scanning";
+"onboarding.trial.feature.export" = "Export CSV + Excel to your accountant";
+"onboarding.trial.feature.tax" = "Automatic tax categorization";
+"onboarding.trial.feature.sync" = "Sync across devices";
+"onboarding.trial.cta" = "Start 14-day free trial";
+"onboarding.trial.restore" = "Restore purchases";
+"onboarding.trial.terms" = "Terms of Use";
+"onboarding.trial.privacy" = "Privacy Policy";
+"onboarding.trial.account.title" = "Create your account";
+"onboarding.trial.account.subtitle" = "Sign in to start your 14-day free trial.";
+"onboarding.trial.signing_in" = "Signing in…";
+
+/* Sign in */
+"signIn.title" = "Sign in";
+"signIn.subtitle" = "Create an account to sync your expenses across devices, connect Gmail, and export to your accountant.";
+"signIn.google" = "Sign in with Google";
+"signIn.trial_hint" = "14-day free trial. No credit card required.";
+"signIn.signing_in" = "Signing in…";
+
+/* Paywall fallback */
+"paywall.fallback.title" = "InvoScanAI Pro";
+"paywall.fallback.subtitle" = "Add the RevenueCat Swift package to enable in-app purchases.";
+"paywall.fallback.continue" = "Continue (dev mode)";
+
+/* Paywall */
+"paywall.title" = "Your trial has ended";
+"paywall.subtitle" = "Keep the quarterly ZIP your accountant already loves.";
+"paywall.pro" = "Pro";
+"paywall.price.monthly" = "€9.99/mo";
+"paywall.price.yearly" = "or €79/year — save 34%";
+"paywall.feature.scanning" = "Unlimited AI receipt scanning";
+"paywall.feature.gmail" = "Gmail auto-import";
+"paywall.feature.currency" = "Multi-currency (EUR, USD, GBP, …)";
+"paywall.feature.zip" = "Quarterly ZIP for your accountant";
+"paywall.feature.export" = "Excel + CSV + original invoices";
+"paywall.subscribe" = "Subscribe to Pro";
+"paywall.gate.title" = "Pro feature";
+"paywall.gate.cta" = "Start free trial";
+"paywall.disclosure" = "Subscription auto-renews unless turned off at least 24 hours before the end of the current period. Payment is charged to your iTunes Account at confirmation of purchase. By subscribing you agree to our Terms of Use and Privacy Policy.";
+"paywall.restore.nothing" = "No previous purchases found.";
+"paywall.limit_reached.title" = "Scan limit reached";
+"paywall.limit_reached.message" = "Free plan allows 5 scans per month. Upgrade to Pro for unlimited scans.";
+"paywall.trial_expired.title" = "Trial expired";
+"paywall.trial_expired.message" = "Your free trial has ended. Upgrade to continue using all features.";
+
+/* Transaction types */
+"transaction.expense" = "Expenses";
+"transaction.income" = "Income";
+"expenses.type_filter" = "Type";
+"expenses.filter" = "Status";
+
+/* Dashboard — Income/Expense */
+"dashboard.income_expense.title" = "Income vs Expenses";
+"dashboard.income_expense.net" = "Net";
+
+/* Company */
+"settings.companies" = "Business";
+"settings.company_name" = "My company";
+"settings.company_name.not_set" = "Not set — tap to configure";
+"company.setup.title" = "Your company name";
+"company.setup.subtitle" = "Tell us your company or business name so we can automatically detect if a scanned invoice is an expense or income.";
+"company.name.section" = "Company name";
+"company.name.placeholder" = "e.g. Kung Fu Software SL";
+"company.saved" = "Saved!";
+"company.explanation" = "When scanning an invoice, if the vendor matches your company name, it will be classified as income (you issued the invoice). Otherwise, it's an expense.";
+
+/* Contacts */
+"contacts.title" = "Contacts";
+"contacts.empty" = "No contacts yet";
+"contacts.empty.subtitle" = "Contacts are auto-created when scanning invoices with recognized tax IDs.";
+"contacts.search" = "Search contacts";
+
+/* GDPR */
+"settings.downloadData" = "Download my data";
+"settings.downloadData.error" = "Failed to export data. Please try again.";
+
+/* Account deletion */
+"settings.deleteAccount" = "Delete Account";
+"settings.deleteAccount.title" = "Delete Account?";
+"settings.deleteAccount.message" = "This will permanently delete your account and all your data. This action cannot be undone.";
+"settings.deleteAccount.confirm" = "Delete";
+
+/* Accessibility */
+"a11y.scan_button" = "Scan invoice";
+"a11y.clear_filters" = "Clear all filters";
+"a11y.dismiss_error" = "Dismiss error";
+"a11y.share_attachment" = "Share or download attachment";
+"a11y.previous_item" = "Previous item";
+"a11y.next_item" = "Next item";
+"a11y.income_indicator" = "Income";

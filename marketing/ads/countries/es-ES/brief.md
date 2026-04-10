@@ -43,10 +43,10 @@ They are not shopping for "fire your gestor" software. They are drowning in rece
 
 ## Positioning (non-negotiable)
 
-> **FacturaAI NO sustituye a tu gestor. Lo complementa.**
+> **InvoScanAI NO sustituye a tu gestor. Lo complementa.**
 > Ordena tus facturas automáticamente para que el envío al gestor sea un clic, no un drama.
 
-The gestor stays. FacturaAI makes the autónomo a *good client* to their gestor. Possible future channel: gestores recommending it to their own clients.
+The gestor stays. InvoScanAI makes the autónomo a *good client* to their gestor. Possible future channel: gestores recommending it to their own clients.
 
 ## Forbidden angles
 

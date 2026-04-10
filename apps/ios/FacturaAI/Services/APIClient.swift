@@ -1,7 +1,15 @@
 import Foundation
 
+/// Reason the backend returned a 403 with `upgrade: true`.
+enum UpgradeReason: String {
+    case limitReached = "limit_reached"
+    case trialExpired = "trial_expired"
+    case unknown
+}
+
 enum APIError: Error, LocalizedError {
     case notAuthenticated
+    case upgradeNeeded(UpgradeReason)
     case http(Int, String)
     case decoding(Error)
     case transport(Error)
@@ -9,6 +17,7 @@ enum APIError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .notAuthenticated: return "Not authenticated"
+        case .upgradeNeeded: return "Upgrade required"
         case .http(let code, let body): return "HTTP \(code): \(body)"
         case .decoding(let e): return "Decoding: \(e.localizedDescription)"
         case .transport(let e): return "Network: \(e.localizedDescription)"
@@ -19,12 +28,23 @@ enum APIError: Error, LocalizedError {
 final class APIClient {
     static let shared = APIClient()
 
-    /// Override for production / TestFlight.
-    var baseURL = URL(string: "http://192.168.1.133:3005")!
+    /// Reads API base URL from Info.plist (API_BASE_URL).
+    /// Falls back to localhost for development.
+    var baseURL: URL = {
+        #if DEBUG
+        return URL(string: "http://192.168.1.133:3005")!
+        #else
+        guard let urlString = Bundle.main.object(forInfoDictionaryKey: "API_BASE_URL") as? String,
+              let url = URL(string: urlString) else {
+            fatalError("API_BASE_URL not set in Info.plist for production build")
+        }
+        return url
+        #endif
+    }()
 
     private let session: URLSession = {
         let cfg = URLSessionConfiguration.default
-        cfg.timeoutIntervalForRequest = 30
+        cfg.timeoutIntervalForRequest = 60
         return URLSession(configuration: cfg)
     }()
 
@@ -86,10 +106,40 @@ final class APIClient {
         let _: EmptyResponse = try await request("DELETE", path: "api/expenses/\(id)")
     }
 
+    func downloadAttachment(expenseId: String) async throws -> (Data, String) {
+        let req = try authorizedRequest("GET", path: "api/expenses/\(expenseId)/attachment")
+        let (data, resp) = try await session.data(for: req)
+        guard let http = resp as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            throw APIError.http((resp as? HTTPURLResponse)?.statusCode ?? 0, String(data: data, encoding: .utf8) ?? "")
+        }
+        let contentType = http.value(forHTTPHeaderField: "Content-Type") ?? "application/octet-stream"
+        return (data, contentType)
+    }
+
     func uploadReceipt(imageData: Data, filename: String, mimeType: String) async throws -> RemoteExpense {
         let boundary = "Boundary-\(UUID().uuidString)"
         var req = try authorizedRequest("POST", path: "api/expenses/upload")
         req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        var body = Data()
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
+        body.append(imageData)
+        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+        req.httpBody = body
+
+        return try await send(req)
+    }
+
+    /// Public extraction — no auth required. Returns raw extracted data without persisting.
+    func extractOnly(imageData: Data, filename: String, mimeType: String) async throws -> ExtractedResponse {
+        let boundary = "Boundary-\(UUID().uuidString)"
+        let url = baseURL.appendingPathComponent("api/extract")
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
 
         var body = Data()
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
@@ -112,6 +162,16 @@ final class APIClient {
         try await request("GET", path: "api/gmail/sync/\(id)")
     }
 
+    func listGmailSyncs() async throws -> [GmailSync] {
+        try await request("GET", path: "api/gmail/sync")
+    }
+
+    /// Returns the most recent active (running/queued) sync, or the latest completed one.
+    /// Returns nil if no syncs exist.
+    func getActiveGmailSync() async throws -> GmailSync? {
+        try await request("GET", path: "api/gmail/sync/active")
+    }
+
     // MARK: - Export
 
     func exportCSV(quarter: String, locale: String = LocaleService.current) async throws -> Data {
@@ -129,7 +189,7 @@ final class APIClient {
         let (data, resp) = try await session.data(for: req)
         try validate(resp, data: data)
         let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent("FacturaAI_Export_\(quarter).zip")
+            .appendingPathComponent("InvoScanAI_Export_\(quarter).zip")
         try data.write(to: url, options: .atomic)
         return url
     }
@@ -156,7 +216,7 @@ final class APIClient {
         let (data, resp) = try await session.data(for: req)
         try validate(resp, data: data)
         let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent("FacturaAI_Export_\(id.prefix(8)).zip")
+            .appendingPathComponent("InvoScanAI_Export_\(id.prefix(8)).zip")
         try data.write(to: url, options: .atomic)
         return url
     }
@@ -164,6 +224,79 @@ final class APIClient {
     /// Create a public share link for a completed export.
     func createShareLink(exportId: String) async throws -> ExportShareResponse {
         try await request("POST", path: "api/export/jobs/\(exportId)/share", jsonBody: [:])
+    }
+
+    func sendExportEmail(exportId: String, email: String? = nil) async throws -> ExportEmailResponse {
+        var body: [String: Any] = [:]
+        if let e = email { body["email"] = e }
+        return try await request("POST", path: "api/export/jobs/\(exportId)/share/email", jsonBody: body)
+    }
+
+    // MARK: - Companies
+
+    func listCompanies() async throws -> [RemoteCompany] {
+        try await request("GET", path: "api/companies")
+    }
+
+    func createCompany(name: String, taxId: String, taxIdType: String? = nil, address: String? = nil, isDefault: Bool = false) async throws -> RemoteCompany {
+        var body: [String: Any] = ["name": name, "taxId": taxId, "isDefault": isDefault]
+        if let t = taxIdType { body["taxIdType"] = t }
+        if let a = address { body["address"] = a }
+        return try await request("POST", path: "api/companies", jsonBody: body)
+    }
+
+    func updateCompany(id: String, body: [String: Any]) async throws -> RemoteCompany {
+        try await request("PATCH", path: "api/companies/\(id)", jsonBody: body)
+    }
+
+    func deleteCompany(id: String) async throws {
+        let _: EmptyResponse = try await request("DELETE", path: "api/companies/\(id)")
+    }
+
+    // MARK: - Contacts
+
+    func listContacts(query: String? = nil) async throws -> [RemoteContact] {
+        let path = query != nil ? "api/contacts?q=\(query!)" : "api/contacts"
+        return try await request("GET", path: path)
+    }
+
+    func createContact(name: String, taxId: String? = nil, email: String? = nil) async throws -> RemoteContact {
+        var body: [String: Any] = ["name": name]
+        if let t = taxId { body["taxId"] = t }
+        if let e = email { body["email"] = e }
+        return try await request("POST", path: "api/contacts", jsonBody: body)
+    }
+
+    func deleteContact(id: String) async throws {
+        let _: EmptyResponse = try await request("DELETE", path: "api/contacts/\(id)")
+    }
+
+    // MARK: - Devices (Push Notifications)
+
+    func registerDevice(token: String, platform: String = "ios") async throws {
+        let _: EmptyResponse = try await request("POST", path: "api/devices", jsonBody: [
+            "token": token,
+            "platform": platform
+        ])
+    }
+
+    // MARK: - GDPR Data Export
+
+    /// Download a full GDPR personal-data export as a JSON file.
+    func exportPersonalData() async throws -> URL {
+        let req = try authorizedRequest("GET", path: "api/account/export")
+        let (data, resp) = try await session.data(for: req)
+        try validate(resp, data: data)
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("InvoScanAI_MyData.json")
+        try data.write(to: url, options: .atomic)
+        return url
+    }
+
+    // MARK: - Account Deletion
+
+    func deleteAccount() async throws {
+        let _: EmptyResponse = try await request("DELETE", path: "auth/account")
     }
 
     // MARK: - Profile
@@ -215,6 +348,10 @@ final class APIClient {
         do {
             return try decoder.decode(T.self, from: data)
         } catch {
+            print("[APIClient] Decoding \(T.self) failed: \(error)")
+            if let raw = String(data: data, encoding: .utf8) {
+                print("[APIClient] Raw response: \(raw.prefix(500))")
+            }
             throw APIError.decoding(error)
         }
     }
@@ -223,6 +360,23 @@ final class APIClient {
         guard let http = resp as? HTTPURLResponse else { return }
         if !(200..<300).contains(http.statusCode) {
             let body = String(data: data, encoding: .utf8) ?? ""
+
+            // Detect 403 with upgrade payload from the backend
+            if http.statusCode == 403,
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               json["upgrade"] as? Bool == true {
+                let errorKey = json["error"] as? String ?? ""
+                let reason = UpgradeReason(rawValue: errorKey) ?? .unknown
+                // Post notification so the UI can present a paywall automatically
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(
+                        name: .upgradeNeeded,
+                        object: reason
+                    )
+                }
+                throw APIError.upgradeNeeded(reason)
+            }
+
             throw APIError.http(http.statusCode, body)
         }
     }
@@ -244,6 +398,10 @@ struct MeResponse: Decodable {
     let taxIdType: String?
     let accountantEmail: String?
     let accountantName: String?
+    let gmailConnected: Bool?
+    let googleTokenExpiry: Date?
+    let googleHasRefreshToken: Bool?
+    let companyName: String?
 
     enum CodingKeys: String, CodingKey {
         case id, email, name, plan, locale
@@ -255,12 +413,20 @@ struct MeResponse: Decodable {
         case taxIdType = "tax_id_type"
         case accountantEmail = "accountant_email"
         case accountantName = "accountant_name"
+        case gmailConnected = "gmail_connected"
+        case googleTokenExpiry = "google_token_expiry"
+        case googleHasRefreshToken = "google_has_refresh_token"
+        case companyName = "company_name"
     }
 }
 
 struct RemoteExpense: Decodable, Identifiable {
     let id: String
+    let type: String?
     let vendor: String
+    let vendorTaxId: String?
+    let client: String?
+    let clientTaxId: String?
     let cif: String?
     let date: Date
     let invoiceNumber: String?
@@ -276,14 +442,24 @@ struct RemoteExpense: Decodable, Identifiable {
     let confidence: Double
     let source: String
     let notes: String?
+    let companyId: String?
+    let vendorContactId: String?
+    let clientContactId: String?
+    let attachmentKey: String?
 
     enum CodingKeys: String, CodingKey {
-        case id, vendor, cif, date, subtotal, total, currency, category, status, confidence, source, notes
+        case id, type, vendor, cif, date, subtotal, total, currency, category, status, confidence, source, notes, client
+        case vendorTaxId = "vendor_tax_id"
+        case clientTaxId = "client_tax_id"
         case invoiceNumber = "invoice_number"
         case ivaRate = "iva_rate"
         case ivaAmount = "iva_amount"
         case irpfRate = "irpf_rate"
         case irpfAmount = "irpf_amount"
+        case companyId = "company_id"
+        case vendorContactId = "vendor_contact_id"
+        case clientContactId = "client_contact_id"
+        case attachmentKey = "attachment_key"
     }
 }
 
@@ -292,12 +468,21 @@ struct GmailSync: Decodable {
     let status: String
     let messagesProcessed: Int?
     let invoicesFound: Int?
+    let totalMessages: Int?
+    let error: String?
+    let lastSyncAt: String?
+    let createdAt: String?
 
     enum CodingKeys: String, CodingKey {
-        case id, status
+        case id, status, error
         case messagesProcessed = "messages_processed"
         case invoicesFound = "invoices_found"
+        case totalMessages = "total_messages"
+        case lastSyncAt = "last_sync_at"
+        case createdAt = "created_at"
     }
+
+    var isComplete: Bool { status == "completed" || status == "failed" }
 }
 
 extension RemoteExpense {
@@ -305,8 +490,10 @@ extension RemoteExpense {
         let cat = TaxCategory(rawValue: mapCategoryLabel(category)) ?? .otros
         let src: ExpenseSource = ExpenseSource(rawValue: source) ?? .manual
         let st: ExpenseStatus = ExpenseStatus(rawValue: status) ?? .pending
+        let txType = TransactionType(rawValue: type ?? "expense") ?? .expense
         return Expense(
             id: UUID(uuidString: id) ?? UUID(),
+            type: txType,
             vendor: vendor,
             cif: cif,
             date: date,
@@ -323,7 +510,14 @@ extension RemoteExpense {
             confidence: confidence,
             source: src,
             notes: notes,
-            attachmentName: nil
+            attachmentName: attachmentKey?.split(separator: "/").last.map(String.init),
+            hasRemoteAttachment: attachmentKey != nil,
+            vendorTaxId: vendorTaxId,
+            client: client,
+            clientTaxId: clientTaxId,
+            companyId: companyId != nil ? UUID(uuidString: companyId!) : nil,
+            vendorContactId: vendorContactId != nil ? UUID(uuidString: vendorContactId!) : nil,
+            clientContactId: clientContactId != nil ? UUID(uuidString: clientContactId!) : nil
         )
     }
 }
@@ -368,6 +562,94 @@ struct ExportShareResponse: Decodable {
     let token: String
     let url: String
     let expiresAt: String
+}
+
+struct ExportEmailResponse: Decodable {
+    let ok: Bool
+    let sentTo: String
+}
+
+struct ExtractedResponse: Decodable {
+    let vendor: String
+    let vendorTaxId: String?
+    let client: String?
+    let clientTaxId: String?
+    let cif: String?
+    let date: String // "YYYY-MM-DD"
+    let invoiceNumber: String?
+    let subtotal: Decimal
+    let ivaRate: Decimal
+    let ivaAmount: Decimal
+    let irpfRate: Decimal
+    let irpfAmount: Decimal
+    let total: Decimal
+    let currency: String
+    let category: String
+    let confidence: Double
+    let isValidInvoice: Bool
+}
+
+extension ExtractedResponse {
+    func toDomain() -> Expense {
+        let cat = TaxCategory(rawValue: mapCategoryLabel(category)) ?? .otros
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd"
+        fmt.locale = Locale(identifier: "en_US_POSIX")
+        let parsedDate = fmt.date(from: date) ?? Date()
+        return Expense(
+            vendor: vendor,
+            cif: cif,
+            date: parsedDate,
+            invoiceNumber: invoiceNumber,
+            subtotal: subtotal,
+            ivaRate: ivaRate,
+            ivaAmount: ivaAmount,
+            irpfRate: irpfRate,
+            irpfAmount: irpfAmount,
+            total: total,
+            currency: currency,
+            category: cat,
+            status: .pending,
+            confidence: confidence,
+            source: .camera,
+            vendorTaxId: vendorTaxId,
+            client: client,
+            clientTaxId: clientTaxId
+        )
+    }
+}
+
+// MARK: - Company & Contact Models
+
+struct RemoteCompany: Decodable, Identifiable {
+    let id: String
+    let name: String
+    let taxId: String
+    let taxIdType: String?
+    let address: String?
+    let isDefault: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, address
+        case taxId = "tax_id"
+        case taxIdType = "tax_id_type"
+        case isDefault = "is_default"
+    }
+}
+
+struct RemoteContact: Decodable, Identifiable {
+    let id: String
+    let name: String
+    let taxId: String?
+    let email: String?
+    let phone: String?
+    let address: String?
+    let notes: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, email, phone, address, notes
+        case taxId = "tax_id"
+    }
 }
 
 private func mapCategoryLabel(_ key: String) -> String {

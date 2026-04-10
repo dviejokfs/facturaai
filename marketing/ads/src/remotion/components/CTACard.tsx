@@ -23,7 +23,7 @@ export const CTACard: React.FC<{ text: string; price: string; url: string }> = (
           fontFamily: 'Inter',
         }}
       >
-        <div style={{ fontSize: 96, fontWeight: 900, marginBottom: 24 }}>FacturaAI</div>
+        <div style={{ fontSize: 96, fontWeight: 900, marginBottom: 24 }}>InvoScanAI</div>
         <div style={{ fontSize: 56, fontWeight: 700, marginBottom: 32 }}>{text}</div>
         <div
           style={{

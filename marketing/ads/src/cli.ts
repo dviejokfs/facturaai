@@ -96,7 +96,7 @@ function required(key: string): string {
 }
 
 function printHelp() {
-  console.log(`@facturaai/ads CLI
+  console.log(`@invoscanai/ads CLI
 
 Commands:
   scripts  --country <id> --angle <name> [--count 10] [--avatar id] [--voice id]

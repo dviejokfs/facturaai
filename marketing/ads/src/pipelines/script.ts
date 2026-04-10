@@ -30,7 +30,7 @@ export async function generateScripts(opts: GenerateScriptsOpts): Promise<string
 ${brief}
 
 # Task
-Write ${opts.count} short-form video ad scripts for FacturaAI in ${country.language} (${country.country}).
+Write ${opts.count} short-form video ad scripts for InvoScanAI in ${country.language} (${country.country}).
 Angle: "${opts.angle}"
 
 Each script must be a JSON object with this exact shape:

@@ -1,6 +1,6 @@
-# @facturaai/ads
+# @invoscanai/ads
 
-Country-first, spec-driven ad generation pipeline for FacturaAI.
+Country-first, spec-driven ad generation pipeline for InvoScanAI.
 
 ## Principles
 

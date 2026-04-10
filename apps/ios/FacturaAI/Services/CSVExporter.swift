@@ -2,7 +2,7 @@ import Foundation
 
 enum CSVExporter {
     static func csv(for expenses: [Expense]) -> String {
-        var out = "Fecha,Proveedor,CIF,NumFactura,Subtotal,IVA%,IVA,IRPF%,IRPF,Total,Categoria,Estado\n"
+        var out = "Date,Vendor,TaxID,InvoiceNumber,Subtotal,TaxRate%,TaxAmount,WithholdingRate%,WithholdingAmount,Total,Category,Status\n"
         let df = DateFormatter()
         df.dateFormat = "yyyy-MM-dd"
         for e in expenses {

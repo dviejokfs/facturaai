@@ -2,8 +2,8 @@ import { SignJWT, jwtVerify } from "jose";
 import { config } from "../config";
 
 const secret = new TextEncoder().encode(config.JWT_SECRET);
-const ISSUER = "facturaai";
-const AUDIENCE = "facturaai-ios";
+const ISSUER = "invoscanai";
+const AUDIENCE = "invoscanai-ios";
 
 export type JwtPayload = {
   sub: string; // user id

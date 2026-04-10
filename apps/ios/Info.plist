@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleDevelopmentRegion</key>
-    <string>es</string>
+    <string>en</string>
     <key>CFBundleDisplayName</key>
-    <string>FacturaAI</string>
+    <string>InvoScanAI</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -18,10 +18,10 @@
     <array>
         <dict>
             <key>CFBundleURLName</key>
-            <string>es.kungfusoftware.facturaai.auth</string>
+            <string>es.kungfusoftware.invoscanai.auth</string>
             <key>CFBundleURLSchemes</key>
             <array>
-                <string>facturaai</string>
+                <string>invoscanai</string>
             </array>
         </dict>
     </array>
@@ -31,14 +31,36 @@
     <string>1</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
+    <key>API_BASE_URL</key>
+    <string>$(API_BASE_URL)</string>
     <key>RC_PUBLIC_SDK_KEY_IOS</key>
-    <string></string>
+    <string>test_SKkVnhCLoPUTvKrZKxlFtRGQAeb</string>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsLocalNetworking</key>
+        <true/>
+    </dict>
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>InvoScanAI connects to your local development server for testing.</string>
+    <key>NSBonjourServices</key>
+    <array>
+        <string>_http._tcp</string>
+    </array>
     <key>NSCameraUsageDescription</key>
-    <string>FacturaAI uses the camera to scan paper receipts and invoices.</string>
+    <string>InvoScanAI uses the camera to scan paper receipts and invoices.</string>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>FacturaAI accesses your photos to import saved invoices.</string>
+    <string>InvoScanAI accesses your photos to import saved invoices.</string>
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>remote-notification</string>
+    </array>
     <key>UILaunchScreen</key>
-    <dict/>
+    <dict>
+        <key>BackgroundColor</key>
+        <string>LaunchBackgroundColor</string>
+        <key>ImageName</key>
+        <string>AppIcon</string>
+    </dict>
     <key>UIRequiredDeviceCapabilities</key>
     <array>
         <string>armv7</string>

@@ -72,3 +72,116 @@ export async function requireEntitlement(userId: string, entitlement: Entitlemen
     throw new EntitlementRequiredError(entitlement);
   }
 }
+
+// ─── Plan-aware helpers ────────────────────────────────────────────────────
+
+type UserPlanRow = { plan: string; trial_ends_at: Date | string };
+
+const planCache = new Map<string, { row: UserPlanRow; fetchedAt: number }>();
+
+export async function getUserPlan(userId: string): Promise<UserPlanRow> {
+  const now = Date.now();
+  const hit = planCache.get(userId);
+  if (hit && now - hit.fetchedAt < TTL_MS) return hit.row;
+
+  const [row] = (await sql`
+    SELECT plan, trial_ends_at FROM users WHERE id = ${userId}
+  `) as UserPlanRow[];
+
+  const result: UserPlanRow = row ?? { plan: "free", trial_ends_at: new Date(0) };
+  planCache.set(userId, { row: result, fetchedAt: now });
+  return result;
+}
+
+export function invalidatePlanCache(userId: string) {
+  planCache.delete(userId);
+}
+
+/**
+ * Returns true if the user's trial has expired (plan = 'trial' and trial_ends_at < now).
+ */
+export function isTrialExpired(plan: UserPlanRow): boolean {
+  if (plan.plan !== "trial") return false;
+  const expiresAt = typeof plan.trial_ends_at === "string"
+    ? new Date(plan.trial_ends_at)
+    : plan.trial_ends_at;
+  return expiresAt < new Date();
+}
+
+/**
+ * Checks whether the user has an active paid plan (via subscription or non-expired trial
+ * that grants the entitlement). Combines both the subscriptions table and users table.
+ *
+ * Returns { allowed: true } or { allowed: false, error, message, upgrade, status? }.
+ */
+export async function checkProAccess(userId: string): Promise<
+  | { allowed: true }
+  | { allowed: false; error: string; message: string; upgrade: boolean; status?: number }
+> {
+  // First check subscription entitlements (RevenueCat-backed)
+  if (await hasEntitlement(userId, "pro")) {
+    return { allowed: true };
+  }
+
+  // No subscription — check user plan/trial
+  const plan = await getUserPlan(userId);
+
+  if (isTrialExpired(plan)) {
+    return {
+      allowed: false,
+      error: "trial_expired",
+      message: "Your trial has expired. Upgrade to Pro to continue using this feature.",
+      upgrade: true,
+      status: 403,
+    };
+  }
+
+  // Active trial with no subscription — they still don't have "pro" entitlement
+  // Only subscriptions grant pro access, trials are limited like free
+  return {
+    allowed: false,
+    error: "pro_required",
+    message: "This feature requires a Pro subscription.",
+    upgrade: true,
+    status: 403,
+  };
+}
+
+/**
+ * Checks the free-tier scan limit (5/month). Users with "pro" or "business" bypass.
+ * Returns { allowed: true } or an error payload.
+ */
+export async function checkScanLimit(userId: string): Promise<
+  | { allowed: true }
+  | { allowed: false; error: string; message: string; upgrade: boolean; status: number }
+> {
+  // Pro/business users bypass limits
+  if (await hasEntitlement(userId, "pro")) {
+    return { allowed: true };
+  }
+
+  const plan = await getUserPlan(userId);
+  const trialExpired = isTrialExpired(plan);
+
+  const [countRow] = (await sql`
+    SELECT count(*)::int AS cnt FROM expenses
+    WHERE user_id = ${userId}
+      AND created_at >= date_trunc('month', NOW())
+  `) as Array<{ cnt: number }>;
+
+  const count = countRow?.cnt ?? 0;
+
+  if (count >= 5) {
+    return {
+      allowed: false,
+      error: trialExpired ? "trial_expired" : "limit_reached",
+      message: trialExpired
+        ? "Your trial has expired. Upgrade to Pro for unlimited scans."
+        : "Free plan limited to 5 scans per month. Upgrade to Pro for unlimited scans.",
+      upgrade: true,
+      status: 403,
+    };
+  }
+
+  return { allowed: true };
+}

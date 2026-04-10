@@ -4,7 +4,7 @@
 <dict>
     <key>com.apple.security.application-groups</key>
     <array>
-        <string>group.es.kungfusoftware.facturaai</string>
+        <string>group.es.kungfusoftware.invoscanai</string>
     </array>
 </dict>
 </plist>

@@ -11,6 +11,8 @@ import {
   excelNumberFormat,
   type LocaleStrings,
 } from "../i18n";
+import { checkProAccess } from "../services/entitlements";
+import { sendExportEmail } from "../services/email";
 
 export const exportRoutes = new Hono();
 
@@ -142,7 +144,7 @@ async function buildXlsx(
   loc: LocaleStrings,
 ): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
-  wb.creator = "FacturaAI";
+  wb.creator = "InvoScanAI";
   wb.created = new Date();
 
   const numberFmt = excelNumberFormat();
@@ -248,7 +250,7 @@ function buildReadme(
 ): string {
   const L = loc.labels;
   const lines: string[] = [];
-  lines.push(`FacturaAI — ${L.summary} ${quarter}`);
+  lines.push(`InvoScanAI — ${L.summary} ${quarter}`);
   lines.push(`${L.generatedBy}: ${new Date().toISOString()}`);
   lines.push("");
   lines.push(`${L.total} (${L.expenses}):`);
@@ -265,7 +267,7 @@ function buildReadme(
   lines.push("  transactions.csv         — localized CSV");
   lines.push("  transactions_en.csv      — universal English/ISO CSV");
   lines.push("  transactions.xlsx        — Excel: localized sheet(s) + Data (EN)");
-  lines.push("  invoices/<CCY>/          — original PDFs/images per currency");
+  lines.push("  invoices/<YYYY>/<MM>/    — original PDFs/images by year and month");
   lines.push("");
   return lines.join("\n");
 }
@@ -317,6 +319,16 @@ exportRoutes.get("/summary/:quarter", async (c) => {
 
 exportRoutes.get("/zip", async (c) => {
   const user = c.get("user");
+
+  // ZIP export requires Pro
+  const access = await checkProAccess(user.sub);
+  if (!access.allowed) {
+    return c.json(
+      { error: access.error, message: access.message, upgrade: access.upgrade },
+      access.status as 403,
+    );
+  }
+
   const quarter = c.req.query("quarter");
   if (!quarter) return c.json({ error: "quarter required (e.g., 2026-Q2)" }, 400);
 
@@ -394,16 +406,18 @@ exportRoutes.get("/zip", async (c) => {
   // README
   entries["README.txt"] = strToU8(buildReadme(quarter, loc, totalsByCurrency));
 
-  // Attachments grouped by currency folder
-  for (const [ccy, list] of byCurrency) {
+  // Attachments grouped by year/month folder
+  for (const list of byCurrency.values()) {
     for (const r of list) {
       if (!r.attachment_key) continue;
       try {
         const buf = await downloadFile(r.attachment_key);
         const ext = attachmentExt(r.attachment_key);
+        const dateStr = String(r.date).slice(0, 10);
+        const [year, month] = dateStr.split("-");
         const totalStr = parseFloat(r.total).toFixed(2);
-        const name = `${String(r.date).slice(0, 10)}_${safeFileName(r.vendor)}_${totalStr}.${ext}`;
-        entries[`invoices/${ccy}/${name}`] = new Uint8Array(buf);
+        const name = `${dateStr}_${safeFileName(r.vendor)}_${totalStr}.${ext}`;
+        entries[`invoices/${year}/${month}/${name}`] = new Uint8Array(buf);
       } catch (err) {
         console.warn(`Failed to fetch attachment ${r.attachment_key}:`, err);
       }
@@ -413,7 +427,7 @@ exportRoutes.get("/zip", async (c) => {
   // Zip everything synchronously (fine for typical ~50 invoices/quarter)
   const zipped = zipSync(entries, { level: 6 });
 
-  const filename = `FacturaAI_Export_${taxId}_${quarter}.zip`;
+  const filename = `InvoScanAI_Export_${taxId}_${quarter}.zip`;
   return new Response(zipped, {
     headers: {
       "Content-Type": "application/zip",
@@ -454,7 +468,7 @@ exportRoutes.get("/csv", async (c) => {
   return new Response(buildLocalizedCsv(rows, loc), {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="facturaai-${quarter}.csv"`,
+      "Content-Disposition": `attachment; filename="invoscanai-${quarter}.csv"`,
     },
   });
 });
@@ -504,6 +518,16 @@ function detectWarnings(rows: ExpenseRow[], loc: LocaleStrings): Warning[] {
  */
 exportRoutes.post("/jobs", async (c) => {
   const user = c.get("user");
+
+  // Export jobs (ZIP+XLSX) require Pro — free users can use /csv instead
+  const access = await checkProAccess(user.sub);
+  if (!access.allowed) {
+    return c.json(
+      { error: access.error, message: access.message, upgrade: access.upgrade },
+      access.status as 403,
+    );
+  }
+
   const body = (await c.req.json().catch(() => ({}))) as {
     periodStart?: string;
     periodEnd?: string;
@@ -622,16 +646,18 @@ exportRoutes.post("/jobs", async (c) => {
 
       await sql`UPDATE exports SET progress = 50 WHERE id = ${jobId}`;
 
-      // Fetch attachments
-      for (const [ccy, list] of byCurrency) {
+      // Fetch attachments grouped by year/month
+      for (const list of byCurrency.values()) {
         for (const r of list) {
           if (!r.attachment_key) continue;
           try {
             const buf = await downloadFile(r.attachment_key);
             const ext = attachmentExt(r.attachment_key);
+            const dateStr = String(r.date).slice(0, 10);
+            const [year, month] = dateStr.split("-");
             const totalStr = parseFloat(r.total).toFixed(2);
-            const name = `${String(r.date).slice(0, 10)}_${safeFileName(r.vendor)}_${totalStr}.${ext}`;
-            entries[`invoices/${ccy}/${name}`] = new Uint8Array(buf);
+            const name = `${dateStr}_${safeFileName(r.vendor)}_${totalStr}.${ext}`;
+            entries[`invoices/${year}/${month}/${name}`] = new Uint8Array(buf);
           } catch (err) {
             console.warn(`Failed to fetch attachment ${r.attachment_key}:`, err);
           }
@@ -650,8 +676,9 @@ exportRoutes.post("/jobs", async (c) => {
         WHERE id = ${jobId}
       `;
     } catch (err) {
-      console.error(`Export job ${jobId} failed:`, err);
-      await sql`UPDATE exports SET status = 'failed' WHERE id = ${jobId}`;
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`Export job ${jobId} failed:`, msg, err);
+      await sql`UPDATE exports SET status = 'failed', warnings = ${JSON.stringify([{ type: "error", count: 0, message: msg }])}::jsonb WHERE id = ${jobId}`;
     }
   })();
 
@@ -677,8 +704,8 @@ exportRoutes.get("/jobs/:id", async (c) => {
     id: string;
     status: string;
     progress: number;
-    stats: object;
-    warnings: object;
+    stats: object | string;
+    warnings: object | string;
     storage_key: string | null;
     created_at: string;
     expires_at: string;
@@ -688,8 +715,8 @@ exportRoutes.get("/jobs/:id", async (c) => {
     id: job.id,
     status: job.status,
     progress: job.progress,
-    stats: job.stats,
-    warnings: job.warnings,
+    stats: typeof job.stats === "string" ? JSON.parse(job.stats) : job.stats,
+    warnings: typeof job.warnings === "string" ? JSON.parse(job.warnings) : job.warnings,
     storageKey: job.storage_key,
     createdAt: job.created_at,
     expiresAt: job.expires_at,
@@ -709,7 +736,7 @@ exportRoutes.get("/jobs/:id/download", async (c) => {
   return new Response(buf, {
     headers: {
       "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="FacturaAI_Export_${id.slice(0, 8)}.zip"`,
+      "Content-Disposition": `attachment; filename="InvoScanAI_Export_${id.slice(0, 8)}.zip"`,
       "Content-Length": String(buf.byteLength),
     },
   });
@@ -737,6 +764,82 @@ exportRoutes.post("/jobs/:id/share", async (c) => {
   return c.json({ token, url, expiresAt: expiresAt.toISOString() });
 });
 
+/** POST /api/export/jobs/:id/share/email — email the share link to the accountant */
+exportRoutes.post("/jobs/:id/share/email", async (c) => {
+  const user = c.get("user");
+  const id = c.req.param("id");
+  const body = (await c.req.json().catch(() => ({}))) as { email?: string };
+
+  // Fetch user profile for accountant info
+  const [profile] = (await sql`
+    SELECT name, company_name, accountant_email, accountant_name
+    FROM users WHERE id = ${user.sub}
+  `) as Array<{
+    name: string | null;
+    company_name: string | null;
+    accountant_email: string | null;
+    accountant_name: string | null;
+  }>;
+
+  const recipientEmail = body.email || profile?.accountant_email;
+  if (!recipientEmail) {
+    return c.json({ error: "no email provided and no accountant_email on profile" }, 400);
+  }
+
+  // Get or create share link
+  const [existing] = (await sql`
+    SELECT token, expires_at FROM export_shares
+    WHERE export_id = ${id} ORDER BY created_at DESC LIMIT 1
+  `) as Array<{ token: string; expires_at: string }>;
+
+  let shareToken: string;
+  let expiresAt: string;
+
+  if (existing && new Date(existing.expires_at) > new Date()) {
+    shareToken = existing.token;
+    expiresAt = existing.expires_at;
+  } else {
+    shareToken = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+    const expiry = new Date(Date.now() + 7 * 24 * 3600 * 1000);
+    expiresAt = expiry.toISOString();
+    await sql`
+      INSERT INTO export_shares (token, export_id, expires_at)
+      VALUES (${shareToken}, ${id}, ${expiresAt})
+    `;
+  }
+
+  const shareUrl = `${process.env.PUBLIC_URL ?? "http://localhost:3000"}/e/${shareToken}`;
+
+  // Fetch period for quarter label
+  const [job] = (await sql`
+    SELECT period_start, period_end FROM exports
+    WHERE id = ${id} AND user_id = ${user.sub}
+  `) as Array<{ period_start: string; period_end: string }>;
+
+  if (!job) return c.json({ error: "not_found" }, 404);
+
+  // Derive quarter label from period
+  const startDate = new Date(job.period_start);
+  const q = Math.ceil((startDate.getMonth() + 1) / 3);
+  const quarter = `${startDate.getFullYear()}-Q${q}`;
+
+  try {
+    await sendExportEmail({
+      to: recipientEmail,
+      accountantName: profile?.accountant_name ?? null,
+      senderName: profile?.name ?? null,
+      companyName: profile?.company_name ?? null,
+      quarter,
+      shareUrl,
+      expiresAt,
+    });
+    return c.json({ ok: true, sentTo: recipientEmail });
+  } catch (err) {
+    console.error("Failed to send export email:", err);
+    return c.json({ error: "email_failed", message: "Could not send email" }, 500);
+  }
+});
+
 /** GET /api/export/jobs — list recent exports for this user */
 exportRoutes.get("/jobs", async (c) => {
   const user = c.get("user");
@@ -746,7 +849,11 @@ exportRoutes.get("/jobs", async (c) => {
     FROM exports WHERE user_id = ${user.sub}
     ORDER BY created_at DESC LIMIT 20
   `) as Array<Record<string, unknown>>;
-  return c.json(rows);
+  return c.json(rows.map((r) => ({
+    ...r,
+    stats: typeof r.stats === "string" ? JSON.parse(r.stats as string) : r.stats,
+    warnings: typeof r.warnings === "string" ? JSON.parse(r.warnings as string) : r.warnings,
+  })));
 });
 
 // ─── public share download (mounted at /e/:token, no auth) ─────────────────
@@ -783,7 +890,7 @@ shareDownloadRoute.get("/:token", async (c) => {
   return new Response(buf, {
     headers: {
       "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="FacturaAI_Export.zip"`,
+      "Content-Disposition": `attachment; filename="InvoScanAI_Export.zip"`,
       "Content-Length": String(buf.byteLength),
     },
   });

@@ -1,4 +1,4 @@
-# FacturaAI — App Store Screenshot Plan
+# InvoScanAI — App Store Screenshot Plan
 
 ## Required sizes (App Store Connect, 2026)
 
@@ -39,7 +39,7 @@ Each frame pairs one screen with a punchy headline overlaid at the top third
 ## Production pipeline
 
 1. **Generate** raw screenshots with `fastlane snapshot` (UI test target
-   `FacturaAIUITests/ScreenshotUITests.swift` drives the nav flow).
+   `InvoScanAIUITests/ScreenshotUITests.swift` drives the nav flow).
 2. **Frame** with `fastlane frameit` — uses `Framefile.json` for layout +
    `title.strings` for localized copy.
 3. **Export** final PNGs into `marketing/screenshots/framed/<locale>/` ready to

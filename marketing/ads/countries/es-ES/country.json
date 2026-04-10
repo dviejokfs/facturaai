@@ -10,8 +10,8 @@
   "selfEmployedTerm": "autónomo",
   "taxPeriodTerm": "trimestre",
   "appLocale": "es-ES",
-  "appStoreUrl": "https://apps.apple.com/es/app/facturaai",
-  "landingUrl": "https://facturaai.com/es",
+  "appStoreUrl": "https://apps.apple.com/es/app/invoscanai",
+  "landingUrl": "https://invoscanai.com/es",
   "voices": {
     "carlos": {
       "provider": "elevenlabs",

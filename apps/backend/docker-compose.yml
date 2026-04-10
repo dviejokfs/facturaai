@@ -1,7 +1,7 @@
 services:
   rustfs:
     image: rustfs/rustfs:latest
-    container_name: facturaai-rustfs
+    container_name: invoscanai-rustfs
     restart: unless-stopped
     environment:
       RUSTFS_ACCESS_KEY: facturaai
@@ -11,10 +11,10 @@ services:
       RUSTFS_ADDRESS: ":9000"
       RUSTFS_CONSOLE_ADDRESS: ":9001"
     ports:
-      - "9000:9000"   # S3 API
-      - "9001:9001"   # Web console
+      - "19000:9000"   # S3 API
+      - "19001:9001"   # Web console
     volumes:
-      - facturaai_rustfs:/datago
+      - invoscanai_rustfs:/datago
 
 volumes:
-  facturaai_rustfs:
+  invoscanai_rustfs:

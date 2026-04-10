@@ -1,5 +1,6 @@
 import { google } from "googleapis";
 import { config } from "../config";
+import { sql } from "../db/client";
 
 export const GMAIL_SCOPES = [
   "openid",
@@ -41,11 +42,24 @@ export async function fetchUserInfo(accessToken: string) {
   return data; // { id, email, name, ... }
 }
 
-export function clientForUser(accessToken: string, refreshToken?: string | null) {
+export function clientForUser(accessToken: string, refreshToken?: string | null, userId?: string) {
   const client = createOAuthClient();
   client.setCredentials({
     access_token: accessToken,
     refresh_token: refreshToken ?? undefined,
   });
+  // When the SDK auto-refreshes the access token, persist the new token + expiry
+  if (userId) {
+    client.on("tokens", (tokens) => {
+      const expiry = tokens.expiry_date ? new Date(tokens.expiry_date) : null;
+      sql`
+        UPDATE users
+        SET google_access_token = ${tokens.access_token ?? accessToken},
+            google_token_expiry = ${expiry},
+            updated_at = NOW()
+        WHERE id = ${userId}
+      `.catch((err: unknown) => console.error("Failed to persist refreshed token:", err));
+    });
+  }
   return client;
 }

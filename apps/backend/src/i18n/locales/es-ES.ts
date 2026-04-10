@@ -28,7 +28,7 @@ export const esES = {
     invoiceNumber: "Nº factura",
     accountant: "gestor",
     exportFor: "Exportar para gestor",
-    generatedBy: "Generado por FacturaAI",
+    generatedBy: "Generado por InvoScanAI",
     sheetName: "Movimientos",
     quarter: "Trimestre",
     movements: "Movimientos",

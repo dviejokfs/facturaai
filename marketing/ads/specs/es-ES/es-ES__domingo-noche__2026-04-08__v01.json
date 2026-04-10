@@ -11,9 +11,9 @@
   "script": {
     "hook": "Domingo noche. Nueve de la noche. Mañana empieza el trimestre. Y tú:",
     "problem": "Abriendo Gmail. Buscando Endesa. Buscando Movistar. Buscando ese cliente que te pagó en enero. Bajando PDFs uno a uno a una carpeta que se llama nueva carpeta cuatro.",
-    "solution": "O podrías abrir FacturaAI, darle a exportar trimestre, y mandárselo a tu gestora. Treinta segundos.",
+    "solution": "O podrías abrir InvoScanAI, darle a exportar trimestre, y mandárselo a tu gestora. Treinta segundos.",
     "proof": "Y el domingo por la noche, cenar tranquilo. Como las personas normales.",
-    "cta": "FacturaAI. Gratis. Siete euros al mes. Tu domingo, tuyo."
+    "cta": "InvoScanAI. Gratis. Siete euros al mes. Tu domingo, tuyo."
   },
   "scenes": [
     { "type": "avatar", "startSec": 0, "endSec": 2 },

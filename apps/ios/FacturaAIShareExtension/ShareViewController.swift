@@ -7,19 +7,19 @@ import UniformTypeIdentifiers
 /// the host app via custom URL scheme so the main app can ingest them.
 ///
 /// SETUP (one-time, in Xcode):
-///   1. File → New → Target → Share Extension. Name it "FacturaAIShareExtension".
+///   1. File → New → Target → Share Extension. Name it "InvoScanAIShareExtension".
 ///      Replace the generated ShareViewController.swift with this file.
-///   2. In both the FacturaAI target and FacturaAIShareExtension target, add the
+///   2. In both the InvoScanAI target and InvoScanAIShareExtension target, add the
 ///      App Groups capability and create a group named:
-///        group.es.kungfusoftware.facturaai
+///        group.es.kungfusoftware.invoscanai
 ///   3. In the extension's Info.plist, set NSExtensionAttributes →
 ///      NSExtensionActivationRule to allow images, PDFs and files (see
 ///      Info.plist in this folder).
 ///   4. The extension's Info.plist already declares it accepts the relevant types.
 class ShareViewController: UIViewController {
 
-    private let appGroupId = "group.es.kungfusoftware.facturaai"
-    private let hostScheme = "facturaai"
+    private let appGroupId = "group.es.kungfusoftware.invoscanai"
+    private let hostScheme = "invoscanai"
 
     override func viewDidLoad() {
         super.viewDidLoad()

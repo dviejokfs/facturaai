@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg-dark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1E1B4B"/>
+      <stop offset="100%" stop-color="#312E81"/>
+    </linearGradient>
+    <linearGradient id="doc-dark" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#E0E7FF"/>
+      <stop offset="100%" stop-color="#C7D2FE"/>
+    </linearGradient>
+    <linearGradient id="scan-dark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#818CF8"/>
+      <stop offset="50%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#818CF8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Dark background -->
+  <rect width="1024" height="1024" rx="224" fill="url(#bg-dark)"/>
+
+  <!-- Document -->
+  <g transform="translate(280, 180)">
+    <rect x="0" y="0" width="340" height="440" rx="28" fill="url(#doc-dark)" opacity="0.95"/>
+    <path d="M240 0 L340 100 L240 100 Z" fill="#A5B4FC" opacity="0.5"/>
+    <!-- Text lines -->
+    <rect x="48" y="80" width="180" height="16" rx="8" fill="#4F46E5" opacity="0.6"/>
+    <rect x="48" y="120" width="240" height="12" rx="6" fill="#6366F1" opacity="0.4"/>
+    <rect x="48" y="152" width="200" height="12" rx="6" fill="#6366F1" opacity="0.4"/>
+    <rect x="48" y="184" width="220" height="12" rx="6" fill="#6366F1" opacity="0.4"/>
+    <!-- Amount -->
+    <rect x="48" y="240" width="120" height="28" rx="14" fill="#4F46E5" opacity="0.2"/>
+    <rect x="60" y="248" width="96" height="12" rx="6" fill="#4F46E5" opacity="0.7"/>
+    <!-- More lines -->
+    <rect x="48" y="300" width="240" height="12" rx="6" fill="#6366F1" opacity="0.3"/>
+    <rect x="48" y="332" width="180" height="12" rx="6" fill="#6366F1" opacity="0.3"/>
+    <rect x="48" y="364" width="200" height="12" rx="6" fill="#6366F1" opacity="0.3"/>
+  </g>
+
+  <!-- Scan line -->
+  <g transform="translate(280, 180)">
+    <rect x="-20" y="200" width="380" height="4" rx="2" fill="url(#scan-dark)" opacity="0.95"/>
+    <rect x="-20" y="190" width="380" height="24" rx="12" fill="#6366F1" opacity="0.2"/>
+  </g>
+
+  <!-- Corner brackets -->
+  <g stroke="#A5B4FC" stroke-width="8" fill="none" opacity="0.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M250 200 L250 170 L280 170"/>
+    <path d="M650 170 L680 170 L680 200"/>
+    <path d="M250 600 L250 630 L280 630"/>
+    <path d="M650 630 L680 630 L680 600"/>
+  </g>
+
+  <!-- AI sparkles -->
+  <g transform="translate(620, 220)" fill="#FDE68A">
+    <path d="M0 -24 L6 -6 L24 0 L6 6 L0 24 L-6 6 L-24 0 L-6 -6 Z" opacity="0.9"/>
+  </g>
+  <g transform="translate(660, 290)" fill="#FDE68A">
+    <path d="M0 -14 L4 -4 L14 0 L4 4 L0 14 L-4 4 L-14 0 L-4 -4 Z" opacity="0.7"/>
+  </g>
+
+  <!-- Text -->
+  <text x="512" y="780" text-anchor="middle" font-family="SF Pro Rounded, -apple-system, Helvetica Neue, sans-serif" font-weight="700" font-size="88" fill="#E0E7FF" letter-spacing="-1">
+    InvoScan
+  </text>
+  <text x="512" y="860" text-anchor="middle" font-family="SF Pro Rounded, -apple-system, Helvetica Neue, sans-serif" font-weight="800" font-size="72" fill="#FDE68A" letter-spacing="4">
+    AI
+  </text>
+</svg>

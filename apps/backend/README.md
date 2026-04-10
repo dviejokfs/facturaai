@@ -1,6 +1,6 @@
-# FacturaAI Backend
+# InvoScanAI Backend
 
-Bun + Hono API for FacturaAI. Handles Google OAuth, Gmail sync, Claude-powered invoice extraction, and Spanish-tax-aware CSV export.
+Bun + Hono API for InvoScanAI. Handles Google OAuth, Gmail sync, Claude-powered invoice extraction, and Spanish-tax-aware CSV export.
 
 ## Stack
 
@@ -20,18 +20,18 @@ Bun + Hono API for FacturaAI. Handles Google OAuth, Gmail sync, Claude-powered i
 docker compose up -d
 ```
 
-- Postgres: `localhost:5432` (user/pass/db = `facturaai`)
+- Postgres: `localhost:5432` (user/pass/db = `invoscanai`)
 - RustFS S3 API: `localhost:9000`
-- RustFS console: `http://localhost:9001` (login: `facturaai` / `facturaai-secret`)
+- RustFS console: `http://localhost:9001` (login: `invoscanai` / `invoscanai-secret`)
 
 Create the bucket once:
 
 ```bash
-# Via the RustFS console at localhost:9001, create bucket "facturaai-invoices"
+# Via the RustFS console at localhost:9001, create bucket "invoscanai-invoices"
 # OR via aws CLI:
-aws --endpoint-url http://localhost:9000 s3 mb s3://facturaai-invoices \
+aws --endpoint-url http://localhost:9000 s3 mb s3://invoscanai-invoices \
   --region auto \
-  --profile facturaai
+  --profile invoscanai
 ```
 
 ### 2. Configure env
@@ -63,7 +63,7 @@ Server listens on `http://localhost:3000`.
 | GET | `/` | Health/info |
 | GET | `/health` | Liveness |
 | GET | `/auth/google/start` | Begin OAuth flow (redirects to Google) |
-| GET | `/auth/google/callback` | OAuth callback, redirects to `facturaai://auth?token=JWT` |
+| GET | `/auth/google/callback` | OAuth callback, redirects to `invoscanai://auth?token=JWT` |
 
 ### Protected (require `Authorization: Bearer <jwt>`)
 

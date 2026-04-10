@@ -2,11 +2,11 @@ import Foundation
 
 /// Reads files dropped into the App Group container by the Share Extension and
 /// hands them to ExpenseStore for OCR/upload. Called when the app is opened via
-/// the `facturaai://share?f=...` URL.
+/// the `invoscanai://share?f=...` URL.
 @MainActor
 final class SharedInboxService {
     static let shared = SharedInboxService()
-    private let appGroupId = "group.es.kungfusoftware.facturaai"
+    private let appGroupId = "group.es.kungfusoftware.invoscanai"
 
     private var inboxURL: URL? {
         FileManager.default

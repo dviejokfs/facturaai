@@ -5,13 +5,21 @@ struct SettingsView: View {
     @EnvironmentObject var store: ExpenseStore
     @StateObject private var localeService = LocaleService.shared
     @State private var showSignIn = false
+    @State private var showGmailSync = false
+    @State private var showDeleteAccountAlert = false
+    @State private var isDeletingAccount = false
+    @State private var isExportingData = false
+    @State private var exportedFileURL: URL?
+    @State private var showExportShare = false
+    @State private var showExportError = false
+    @AppStorage("hasCompletedFirstUse") private var hasCompletedFirstUse = true
 
     var planLabel: String {
         switch auth.plan {
-        case "trial": return "Trial · \(auth.trialDaysLeft)d remaining"
-        case "pro": return "Pro — €6.99/mo"
-        case "business": return "Business — €12.99/mo"
-        case "expired": return "Trial expired"
+        case "trial": return String(format: NSLocalizedString("settings.plan.trial", comment: ""), auth.trialDaysLeft)
+        case "pro": return NSLocalizedString("settings.plan.pro", comment: "")
+        case "business": return NSLocalizedString("settings.plan.business", comment: "")
+        case "expired": return NSLocalizedString("settings.plan.expired", comment: "")
         default: return auth.plan
         }
     }
@@ -29,8 +37,8 @@ struct SettingsView: View {
                                     .font(.title2)
                                     .foregroundStyle(.indigo)
                                 VStack(alignment: .leading) {
-                                    Text("Sign in").fontWeight(.semibold)
-                                    Text("Sync, export & manage your expenses")
+                                    Text(NSLocalizedString("settings.signIn", comment: "")).fontWeight(.semibold)
+                                    Text(NSLocalizedString("settings.signIn.subtitle", comment: ""))
                                         .font(.caption).foregroundStyle(.secondary)
                                 }
                             }
@@ -38,7 +46,13 @@ struct SettingsView: View {
                     }
                 }
 
-                if auth.isSignedIn, auth.plan == "trial", auth.trialDaysLeft <= 5 {
+                if auth.isSignedIn, auth.trialExpired {
+                    Section {
+                        ExpiredTrialBanner()
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.clear)
+                    }
+                } else if auth.isSignedIn, auth.plan == "trial", auth.trialDaysLeft <= 5 {
                     Section {
                         TrialBanner(daysLeft: auth.trialDaysLeft)
                             .listRowInsets(EdgeInsets())
@@ -47,7 +61,7 @@ struct SettingsView: View {
                 }
 
                 if auth.isSignedIn {
-                    Section("Account") {
+                    Section(NSLocalizedString("settings.account", comment: "")) {
                         HStack {
                             Image(systemName: "person.crop.circle.fill")
                                 .font(.title)
@@ -80,45 +94,84 @@ struct SettingsView: View {
                         }
                     }
 
-                    Section("Integrations") {
-                        HStack {
-                            Image(systemName: "envelope.fill").foregroundStyle(.red)
-                            Text("Gmail")
-                            Spacer()
-                            Text(auth.gmailConnected ? "Connected" : "Disconnected")
-                                .font(.caption)
-                                .foregroundStyle(auth.gmailConnected ? .green : .secondary)
+                    Section(NSLocalizedString("settings.companies", comment: "")) {
+                        NavigationLink {
+                            CompanyNameView()
+                        } label: {
+                            HStack {
+                                Image(systemName: "building.2.fill").foregroundStyle(.indigo)
+                                VStack(alignment: .leading) {
+                                    Text(NSLocalizedString("settings.company_name", comment: ""))
+                                    Text(auth.companyName ?? NSLocalizedString("settings.company_name.not_set", comment: ""))
+                                        .font(.caption)
+                                        .foregroundColor(auth.companyName != nil ? .secondary : .orange)
+                                }
+                            }
                         }
-                        HStack {
-                            Image(systemName: "icloud.fill").foregroundStyle(.blue)
-                            Text("Google Drive")
-                            Spacer()
-                            Text("Coming soon").font(.caption).foregroundStyle(.secondary)
-                        }
-                        HStack {
-                            Image(systemName: "building.columns.fill").foregroundStyle(.teal)
-                            Text("Bank (PSD2)")
-                            Spacer()
-                            Text("Coming soon").font(.caption).foregroundStyle(.secondary)
+
+                        NavigationLink {
+                            ContactsView()
+                        } label: {
+                            HStack {
+                                Image(systemName: "person.2.fill").foregroundStyle(.teal)
+                                Text(NSLocalizedString("contacts.title", comment: ""))
+                            }
                         }
                     }
 
-                    Section("Plan") {
+                    Section(NSLocalizedString("settings.integrations", comment: "")) {
+                        Button {
+                            showGmailSync = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "envelope.fill").foregroundStyle(.red)
+                                Text("Gmail")
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                                if store.isSyncing, let progress = store.syncProgress {
+                                    GmailSyncBadge(progress: progress)
+                                } else {
+                                    Text(auth.gmailConnected ? NSLocalizedString("settings.gmail.connected", comment: "") : NSLocalizedString("settings.gmail.not_connected", comment: ""))
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                        .foregroundStyle(auth.gmailConnected ? .green : .secondary)
+                                }
+                                Image(systemName: "chevron.right")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                                    .accessibilityHidden(true)
+                            }
+                        }
+                        HStack {
+                            Image(systemName: "folder.fill").foregroundStyle(.blue)
+                            Text(NSLocalizedString("settings.integration.gdrive", comment: ""))
+                            Spacer()
+                            Text(NSLocalizedString("settings.coming_soon", comment: "")).font(.caption).foregroundStyle(.secondary)
+                        }
+                        HStack {
+                            Image(systemName: "building.columns.fill").foregroundStyle(.teal)
+                            Text(NSLocalizedString("settings.integration.bank", comment: ""))
+                            Spacer()
+                            Text(NSLocalizedString("settings.coming_soon", comment: "")).font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+
+                    Section(NSLocalizedString("settings.plan", comment: "")) {
                         NavigationLink {
                             PricingView()
                         } label: {
                             Label(auth.plan == "pro" || auth.plan == "business"
-                                  ? "Change plan"
-                                  : "View Pro and Business plans",
+                                  ? NSLocalizedString("settings.plan.change", comment: "")
+                                  : NSLocalizedString("settings.plan.view", comment: ""),
                                   systemImage: "sparkles")
                         }
                         Button {
                             Task { _ = await RevenueCatService.shared.restorePurchases() }
                         } label: {
-                            Label("Restore purchases", systemImage: "arrow.clockwise")
+                            Label(NSLocalizedString("settings.restorePurchases", comment: ""), systemImage: "arrow.clockwise")
                         }
                         Link(destination: URL(string: "https://apps.apple.com/account/subscriptions")!) {
-                            Label("Manage subscription", systemImage: "creditcard")
+                            Label(NSLocalizedString("settings.manageSubscription", comment: ""), systemImage: "creditcard")
                         }
                     }
                 }
@@ -140,37 +193,125 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("Data") {
-                    Text("\(store.expenses.count) expenses stored")
+                Section(NSLocalizedString("settings.data", comment: "")) {
+                    Text(String(format: NSLocalizedString("settings.expenses_count", comment: ""), store.expenses.count))
                         .foregroundStyle(.secondary)
+
+                    if auth.isSignedIn {
+                        Button {
+                            Task {
+                                isExportingData = true
+                                do {
+                                    let url = try await APIClient.shared.exportPersonalData()
+                                    exportedFileURL = url
+                                    showExportShare = true
+                                } catch {
+                                    print("[Settings] Data export failed: \(error)")
+                                    showExportError = true
+                                }
+                                isExportingData = false
+                            }
+                        } label: {
+                            HStack {
+                                if isExportingData {
+                                    ProgressView()
+                                        .scaleEffect(0.8)
+                                }
+                                Label(NSLocalizedString("settings.downloadData", comment: ""), systemImage: "arrow.down.doc.fill")
+                            }
+                        }
+                        .disabled(isExportingData)
+                    }
                 }
 
                 if auth.isSignedIn {
                     Section {
                         Button(role: .destructive) {
+                            showDeleteAccountAlert = true
+                        } label: {
+                            if isDeletingAccount {
+                                HStack {
+                                    ProgressView()
+                                        .scaleEffect(0.8)
+                                    Text(NSLocalizedString("settings.deleteAccount", comment: ""))
+                                }
+                            } else {
+                                Text(NSLocalizedString("settings.deleteAccount", comment: ""))
+                            }
+                        }
+                        .disabled(isDeletingAccount)
+                        .alert(
+                            NSLocalizedString("settings.deleteAccount.title", comment: ""),
+                            isPresented: $showDeleteAccountAlert
+                        ) {
+                            Button(NSLocalizedString("common.cancel", comment: ""), role: .cancel) {}
+                            Button(NSLocalizedString("settings.deleteAccount.confirm", comment: ""), role: .destructive) {
+                                Task {
+                                    isDeletingAccount = true
+                                    do {
+                                        try await APIClient.shared.deleteAccount()
+                                        hasCompletedFirstUse = false
+                                        auth.signOut()
+                                    } catch {
+                                        print("[Settings] Account deletion failed: \(error)")
+                                    }
+                                    isDeletingAccount = false
+                                }
+                            }
+                        } message: {
+                            Text(NSLocalizedString("settings.deleteAccount.message", comment: ""))
+                        }
+                    }
+
+                    Section {
+                        Button(role: .destructive) {
                             auth.signOut()
                         } label: {
-                            Text("Sign out")
+                            Text(NSLocalizedString("settings.signOut", comment: ""))
                         }
                     }
                 }
 
                 Section {
-                    Text("FacturaAI v1.0 · Kung Fu Software SL")
+                    Text(NSLocalizedString("settings.app_version", comment: ""))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
-            .navigationTitle("Settings")
+            .navigationTitle(NSLocalizedString("settings.title", comment: ""))
             .sheet(isPresented: $showSignIn) {
                 SignInPrompt(
-                    title: "Sign in",
-                    subtitle: "Create an account to sync your expenses across devices, connect Gmail, and export to your accountant."
+                    title: NSLocalizedString("signIn.title", comment: ""),
+                    subtitle: NSLocalizedString("signIn.subtitle", comment: "")
                 )
+            }
+            .sheet(isPresented: $showGmailSync) {
+                GmailSyncView()
+            }
+            .sheet(isPresented: $showExportShare) {
+                if let url = exportedFileURL {
+                    ShareSheet(items: [url])
+                }
+            }
+            .alert(NSLocalizedString("settings.downloadData.error", comment: ""), isPresented: $showExportError) {
+                Button(NSLocalizedString("common.ok", comment: "")) {}
             }
         }
     }
+
+}
+
+// MARK: - Share Sheet
+
+private struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 private struct TrialBanner: View {
@@ -179,16 +320,16 @@ private struct TrialBanner: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: "clock.fill")
-                Text("Your trial ends in \(daysLeft) day\(daysLeft == 1 ? "" : "s")")
+                Text(String(format: NSLocalizedString("settings.trial_banner.title", comment: ""), daysLeft))
                     .fontWeight(.semibold)
             }
-            Text("Subscribe to keep using FacturaAI without interruptions.")
+            Text(NSLocalizedString("settings.trial_banner.subtitle", comment: ""))
                 .font(.caption)
                 .foregroundStyle(.white.opacity(0.9))
             NavigationLink {
                 PricingView()
             } label: {
-                Text("View plans")
+                Text(NSLocalizedString("settings.trial_banner.cta", comment: ""))
                     .fontWeight(.semibold)
                     .padding(.horizontal, 14).padding(.vertical, 8)
                     .background(.white)
@@ -205,109 +346,67 @@ private struct TrialBanner: View {
     }
 }
 
-struct PricingView: View {
+private struct ExpiredTrialBanner: View {
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                Text("Choose your plan")
-                    .font(.largeTitle).fontWeight(.bold)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Text("No credit card during the 14-day trial.")
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                PlanCard(
-                    name: "Pro",
-                    price: "€6.99/mo",
-                    annual: "or €59/year (30% off)",
-                    features: [
-                        "Unlimited receipts",
-                        "Daily automatic Gmail sync",
-                        "Unlimited AI receipt scanning",
-                        "CSV + Excel + Email export",
-                        "Full Spanish tax categorization",
-                    ],
-                    highlighted: true,
-                    badge: "Most popular"
-                )
-                PlanCard(
-                    name: "Business",
-                    price: "€12.99/mo",
-                    annual: "or €109/year",
-                    features: [
-                        "Everything in Pro",
-                        "Hourly Gmail sync",
-                        "Accountant portal (read-only)",
-                        "Up to 3 users",
-                        "Bank connection PSD2 (coming soon)",
-                    ],
-                    highlighted: false,
-                    badge: nil
-                )
-            }
-            .padding()
-        }
-        .navigationTitle("Plans")
-        .background(Color(.systemGroupedBackground))
-    }
-}
-
-private struct PlanCard: View {
-    let name: String
-    let price: String
-    let annual: String
-    let features: [String]
-    let highlighted: Bool
-    let badge: String?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text(name).font(.title2).fontWeight(.bold)
-                Spacer()
-                if let badge {
-                    Text(badge)
-                        .font(.caption2).fontWeight(.bold)
-                        .padding(.horizontal, 8).padding(.vertical, 3)
-                        .background(.yellow)
-                        .foregroundStyle(.black)
-                        .clipShape(Capsule())
-                }
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.title3)
+                Text(NSLocalizedString("paywall.trial_expired.title", comment: ""))
+                    .font(.headline).fontWeight(.bold)
             }
-            Text(price)
-                .font(.title).fontWeight(.bold)
-                .foregroundStyle(highlighted ? .white : .indigo)
-            Text(annual)
-                .font(.caption)
-                .foregroundStyle(highlighted ? .white.opacity(0.85) : .secondary)
-            Divider().background(highlighted ? .white.opacity(0.3) : .gray.opacity(0.3))
-            ForEach(features, id: \.self) { f in
-                HStack(spacing: 8) {
-                    Image(systemName: "checkmark.circle.fill")
-                    Text(f).font(.subheadline)
-                }
-                .foregroundStyle(highlighted ? .white : .primary)
-            }
-            Button {
-                // TODO: wire StoreKit subscription flow
+            Text(NSLocalizedString("paywall.trial_expired.message", comment: ""))
+                .font(.subheadline)
+                .foregroundStyle(.white.opacity(0.9))
+            NavigationLink {
+                PricingView()
             } label: {
-                Text("Subscribe")
+                Text(NSLocalizedString("paywall.subscribe", comment: ""))
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(highlighted ? .white : Color.indigo)
-                    .foregroundStyle(highlighted ? .indigo : .white)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .padding(.vertical, 10)
+                    .background(.white)
+                    .foregroundStyle(.red)
+                    .clipShape(Capsule())
             }
-            .padding(.top, 4)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(highlighted
-                      ? AnyShapeStyle(LinearGradient(colors: [.indigo, .purple], startPoint: .topLeading, endPoint: .bottomTrailing))
-                      : AnyShapeStyle(Color(.secondarySystemGroupedBackground)))
-        )
+        .background(LinearGradient(colors: [.red, .orange], startPoint: .leading, endPoint: .trailing))
+        .foregroundStyle(.white)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .padding(.horizontal)
+    }
+}
+
+struct PricingView: View {
+    var body: some View {
+        PaywallSheet(placement: .manage)
+    }
+}
+
+private struct GmailSyncBadge: View {
+    let progress: ExpenseStore.GmailSyncProgress
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ProgressView()
+                .scaleEffect(0.7)
+            if progress.totalMessages > 0 {
+                Text("\(progress.messagesProcessed)/\(progress.totalMessages)")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.indigo)
+            } else {
+                Text(NSLocalizedString("dashboard.sync.scanning", comment: ""))
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.indigo)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(Color.indigo.opacity(0.1))
+        .clipShape(Capsule())
     }
 }

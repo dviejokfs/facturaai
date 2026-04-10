@@ -12,7 +12,7 @@ const schema = z.object({
   GOOGLE_CLIENT_ID: z.string(),
   GOOGLE_CLIENT_SECRET: z.string(),
   GOOGLE_REDIRECT_URI: z.string().url(),
-  IOS_REDIRECT_SCHEME: z.string().default("facturaai://auth"),
+  IOS_REDIRECT_SCHEME: z.string().default("invoscanai://auth"),
 
   ANTHROPIC_API_KEY: z.string(),
   ANTHROPIC_MODEL: z.string().default("claude-sonnet-4-5-20250929"),
@@ -23,13 +23,24 @@ const schema = z.object({
   S3_ACCESS_KEY_ID: z.string().optional(),
   S3_SECRET_ACCESS_KEY: z.string().optional(),
 
-  // RevenueCat — populated AFTER you sign up and create the FacturaAI project.
+  // RevenueCat — populated AFTER you sign up and create the InvoScanAI project.
   // Public SDK key is consumed by the iOS app via APIClient.config.
   // Secret API key + webhook secret are server-only.
   REVENUECAT_PUBLIC_SDK_KEY_IOS: z.string().default(""),
   REVENUECAT_SECRET_API_KEY: z.string().default(""),
   REVENUECAT_WEBHOOK_SECRET: z.string().default(""),
   REVENUECAT_PROJECT_ID: z.string().default(""),
+
+  // APNs Push Notifications
+  APNS_KEY_ID: z.string().default(""),
+  APNS_TEAM_ID: z.string().default(""),
+  APNS_BUNDLE_ID: z.string().default("com.kfs.invoscanai"),
+  APNS_KEY_PATH: z.string().default(""), // path to .p8 file
+  APNS_ENVIRONMENT: z.enum(["development", "production"]).default("development"),
+
+  // Temps email service
+  TEMPS_API_URL: z.string().url().default(""),
+  TEMPS_DEPLOYMENT_TOKEN: z.string().default(""),
 });
 
 // Bun loads .env automatically

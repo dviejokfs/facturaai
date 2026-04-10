@@ -1,6 +1,6 @@
-# FacturaAI — iOS App
+# InvoScanAI — iOS App
 
-Native SwiftUI app for the FacturaAI MVP. AI-powered expense autopilot for Spanish autónomos.
+Native SwiftUI app for the InvoScanAI MVP. AI-powered expense autopilot for Spanish autónomos.
 
 ## Requirements
 
@@ -11,7 +11,7 @@ Native SwiftUI app for the FacturaAI MVP. AI-powered expense autopilot for Spani
 ## Run
 
 ```bash
-open FacturaAI.xcodeproj
+open InvoScanAI.xcodeproj
 ```
 
 Then hit ⌘R. The app runs standalone with in-memory mock data — no backend required.
@@ -19,8 +19,8 @@ Then hit ⌘R. The app runs standalone with in-memory mock data — no backend r
 ## Architecture
 
 ```
-FacturaAI/
-├── FacturaAIApp.swift          # @main, injects stores
+InvoScanAI/
+├── InvoScanAIApp.swift          # @main, injects stores
 ├── Models/
 │   └── Expense.swift           # Core domain types
 ├── Services/

@@ -1,5 +1,5 @@
 {
-  "identifier" : "FACTURAAI_STOREKIT_CONFIG",
+  "identifier" : "INVOSCANAI_STOREKIT_CONFIG",
   "nonRenewingSubscriptions" : [],
   "products" : [],
   "settings" : {
@@ -10,20 +10,20 @@
   },
   "subscriptionGroups" : [
     {
-      "id" : "facturaai_main",
+      "id" : "invoscanai_main",
       "localizations" : [
         {
-          "description" : "FacturaAI subscription tiers",
-          "displayName" : "FacturaAI",
+          "description" : "InvoScanAI subscription tiers",
+          "displayName" : "InvoScanAI",
           "locale" : "en_US"
         },
         {
-          "description" : "Niveles de suscripción de FacturaAI",
-          "displayName" : "FacturaAI",
+          "description" : "Niveles de suscripción de InvoScanAI",
+          "displayName" : "InvoScanAI",
           "locale" : "es_ES"
         }
       ],
-      "name" : "FacturaAI Main",
+      "name" : "InvoScanAI Main",
       "subscriptions" : [
         {
           "adHocOffers" : [],
@@ -31,7 +31,7 @@
           "displayPrice" : "12.99",
           "familyShareable" : false,
           "groupNumber" : 1,
-          "internalID" : "FACTURAAI_PRO_MONTHLY",
+          "internalID" : "INVOSCANAI_PRO_MONTHLY",
           "introductoryOffer" : {
             "internalID" : "PRO_MONTHLY_TRIAL",
             "paymentMode" : "free",
@@ -49,10 +49,10 @@
               "locale" : "es_ES"
             }
           ],
-          "productID" : "facturaai_pro_monthly",
+          "productID" : "invoscanai_pro_monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "Pro Monthly",
-          "subscriptionGroupID" : "facturaai_main",
+          "subscriptionGroupID" : "invoscanai_main",
           "type" : "RecurringSubscription"
         },
         {
@@ -61,7 +61,7 @@
           "displayPrice" : "99.00",
           "familyShareable" : false,
           "groupNumber" : 1,
-          "internalID" : "FACTURAAI_PRO_YEARLY",
+          "internalID" : "INVOSCANAI_PRO_YEARLY",
           "introductoryOffer" : {
             "internalID" : "PRO_YEARLY_TRIAL",
             "paymentMode" : "free",
@@ -79,10 +79,10 @@
               "locale" : "es_ES"
             }
           ],
-          "productID" : "facturaai_pro_yearly",
+          "productID" : "invoscanai_pro_yearly",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Pro Yearly",
-          "subscriptionGroupID" : "facturaai_main",
+          "subscriptionGroupID" : "invoscanai_main",
           "type" : "RecurringSubscription"
         },
         {
@@ -91,7 +91,7 @@
           "displayPrice" : "24.99",
           "familyShareable" : false,
           "groupNumber" : 1,
-          "internalID" : "FACTURAAI_BUSINESS_MONTHLY",
+          "internalID" : "INVOSCANAI_BUSINESS_MONTHLY",
           "introductoryOffer" : {
             "internalID" : "BUSINESS_MONTHLY_TRIAL",
             "paymentMode" : "free",
@@ -104,10 +104,10 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "facturaai_business_monthly",
+          "productID" : "invoscanai_business_monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "Business Monthly",
-          "subscriptionGroupID" : "facturaai_main",
+          "subscriptionGroupID" : "invoscanai_main",
           "type" : "RecurringSubscription"
         },
         {
@@ -116,7 +116,7 @@
           "displayPrice" : "199.00",
           "familyShareable" : false,
           "groupNumber" : 1,
-          "internalID" : "FACTURAAI_BUSINESS_YEARLY",
+          "internalID" : "INVOSCANAI_BUSINESS_YEARLY",
           "introductoryOffer" : {
             "internalID" : "BUSINESS_YEARLY_TRIAL",
             "paymentMode" : "free",
@@ -129,10 +129,10 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "facturaai_business_yearly",
+          "productID" : "invoscanai_business_yearly",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Business Yearly",
-          "subscriptionGroupID" : "facturaai_main",
+          "subscriptionGroupID" : "invoscanai_main",
           "type" : "RecurringSubscription"
         }
       ]

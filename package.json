@@ -1,12 +1,13 @@
 {
-  "name": "facturaai",
+  "name": "invoscanai",
   "version": "1.0.0",
   "private": true,
-  "description": "FacturaAI monorepo — AI-powered financial autopilot for Spanish autónomos",
+  "description": "InvoScanAI monorepo — AI-powered financial autopilot for Spanish autónomos",
   "workspaces": ["apps/*", "marketing/ads"],
   "scripts": {
     "dev": "bun --cwd apps/backend run dev",
     "backend:dev": "bun --cwd apps/backend run dev",
-    "backend:migrate": "bun --cwd apps/backend run db:migrate"
+    "backend:migrate": "bun --cwd apps/backend run db:migrate",
+    "web:dev": "bun --cwd apps/web run dev"
   }
 }

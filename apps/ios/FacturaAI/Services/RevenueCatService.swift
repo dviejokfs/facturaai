@@ -19,14 +19,14 @@ import RevenueCat
 ///      File → Add Package Dependencies → https://github.com/RevenueCat/purchases-ios
 ///      Add both `RevenueCat` and `RevenueCatUI` library products.
 ///
-///   2. In the FacturaAI target → Signing & Capabilities, add the **In-App Purchase**
+///   2. In the InvoScanAI target → Signing & Capabilities, add the **In-App Purchase**
 ///      capability.
 ///
-///   3. In the FacturaAI scheme → Run → Options, set "StoreKit Configuration" to
-///      `FacturaAI/Configuration.storekit` so the simulator runs against local
+///   3. In the InvoScanAI scheme → Run → Options, set "StoreKit Configuration" to
+///      `InvoScanAI/Configuration.storekit` so the simulator runs against local
 ///      sandbox products instead of needing App Store Connect.
 ///
-///   4. Sign up at https://app.revenuecat.com, create the FacturaAI project, create
+///   4. Sign up at https://app.revenuecat.com, create the InvoScanAI project, create
 ///      the four products (matching `Configuration.storekit` IDs), create the
 ///      `pro` and `business` entitlements, create the `default` offering, and copy
 ///      the public iOS SDK key.
@@ -64,7 +64,7 @@ final class RevenueCatService: ObservableObject {
         Bundle.main.object(forInfoDictionaryKey: "RC_PUBLIC_SDK_KEY_IOS") as? String ?? ""
     }
 
-    /// Call once at app launch (from `FacturaAIApp.init`).
+    /// Call once at app launch (from `InvoScanAIApp.init`).
     func configure() {
         #if canImport(RevenueCat)
         guard !Self.publicSDKKey.isEmpty else {

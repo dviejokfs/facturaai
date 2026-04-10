@@ -11,7 +11,7 @@
   "script": {
     "hook": "Dejad de mandarle fotos de tickets a vuestra gestora por WhatsApp. En serio.",
     "problem": "Ni ella quiere recibirlos, ni tú quieres hacerle fotos. Y luego no se sabe cuál es cuál.",
-    "solution": "FacturaAI: haces una foto y se guarda con fecha, proveedor, base e IVA. Al final del trimestre lo mandas todo junto.",
+    "solution": "InvoScanAI: haces una foto y se guarda con fecha, proveedor, base e IVA. Al final del trimestre lo mandas todo junto.",
     "proof": "Tu gestora lo va a agradecer. Y tú también.",
     "cta": "Gratis. App Store. Siete al mes."
   },
