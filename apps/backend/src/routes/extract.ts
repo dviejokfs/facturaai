@@ -60,7 +60,8 @@ extractRoutes.post("/", async (c) => {
   try {
     extracted = await extractAuto(bytes, mime);
   } catch (err) {
-    return c.json({ error: "extraction_failed", details: String(err) }, 422);
+    console.error("[extract] public extraction failed:", err);
+    return c.json({ error: "extraction_failed", message: "Failed to extract invoice data. Please try a clearer image." }, 422);
   }
 
   if (!extracted.isValidInvoice) {

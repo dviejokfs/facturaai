@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { logger } from "hono/logger";
+import { cors } from "hono/cors";
 import { config } from "./config";
 import { sql } from "./db/client";
 import { runMigrations } from "./db/migrate";
@@ -21,6 +22,14 @@ await runMigrations();
 const app = new Hono();
 
 app.use("*", logger());
+app.use("*", cors({
+  origin: config.NODE_ENV === "production"
+    ? [config.PUBLIC_URL]
+    : ["http://localhost:3000", "http://localhost:3005"],
+  allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowHeaders: ["Content-Type", "Authorization"],
+  maxAge: 86400,
+}));
 
 app.get("/", (c) => c.json({ name: "invoscanai", version: "1.0.0", status: "ok" }));
 app.get("/health", (c) => c.json({ ok: true }));
@@ -115,13 +124,23 @@ api.get("/account/export", async (c) => {
 app.route("/api", api);
 
 app.onError((err, c) => {
-  console.error(err);
-  const message =
-    config.NODE_ENV === "production"
+  console.error("[error]", err);
+  return c.json({
+    error: "internal_error",
+    message: config.NODE_ENV === "production"
       ? "An unexpected error occurred"
-      : err.message;
-  return c.json({ error: "internal_error", message }, 500);
+      : err.message,
+  }, 500);
 });
+
+// Graceful shutdown
+const shutdown = async () => {
+  console.log("[server] Shutting down gracefully...");
+  await sql.close();
+  process.exit(0);
+};
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
 
 console.log(`InvoScanAI backend listening on :${config.PORT}`);
 export default {

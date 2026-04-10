@@ -5,6 +5,7 @@ import { config } from "../config";
 const client = new OpenAI({
   baseURL: config.AI_GATEWAY_URL,
   apiKey: config.TEMPS_API_TOKEN,
+  timeout: 30_000,
 });
 
 export type ExtractedExpense = {

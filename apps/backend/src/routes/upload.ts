@@ -48,7 +48,8 @@ uploadRoutes.post("/", async (c) => {
   try {
     extracted = await extractAuto(bytes, mime, companyName);
   } catch (err) {
-    return c.json({ error: "extraction_failed", details: String(err) }, 422);
+    console.error("[upload] extraction failed:", err);
+    return c.json({ error: "extraction_failed", message: "Failed to extract invoice data. Please try again." }, 422);
   }
 
   if (!extracted.isValidInvoice) {
