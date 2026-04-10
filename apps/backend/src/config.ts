@@ -5,7 +5,7 @@ const schema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   PUBLIC_URL: z.string().url().default("http://localhost:3000"),
 
-  DATABASE_URL: z.string().url(),
+  POSTGRES_URL: z.string().url(),
 
   JWT_SECRET: z.string().min(32),
 
@@ -14,14 +14,20 @@ const schema = z.object({
   GOOGLE_REDIRECT_URI: z.string().url(),
   IOS_REDIRECT_SCHEME: z.string().default("invoscanai://auth"),
 
-  ANTHROPIC_API_KEY: z.string(),
-  ANTHROPIC_MODEL: z.string().default("claude-sonnet-4-5-20250929"),
+  // AI Gateway (OpenAI-compatible endpoint — Temps AI Gateway or direct Anthropic)
+  AI_GATEWAY_URL: z.string().url().default("https://app.temps.kfs.es/api/ai/v1"),
+  AI_API_KEY: z.string(), // TEMPS_API_TOKEN or Anthropic key
+  AI_MODEL: z.string().default("claude-sonnet-4-6"),
 
+  // S3 storage (accepts Temps blob injection: BLOB_ENDPOINT, BLOB_ACCESS_KEY, BLOB_SECRET_KEY)
   S3_ENDPOINT: z.string().url().optional(),
+  BLOB_ENDPOINT: z.string().url().optional(),
   S3_REGION: z.string().default("auto"),
   S3_BUCKET: z.string(),
   S3_ACCESS_KEY_ID: z.string().optional(),
+  BLOB_ACCESS_KEY: z.string().optional(),
   S3_SECRET_ACCESS_KEY: z.string().optional(),
+  BLOB_SECRET_KEY: z.string().optional(),
 
   // RevenueCat — populated AFTER you sign up and create the InvoScanAI project.
   // Public SDK key is consumed by the iOS app via APIClient.config.

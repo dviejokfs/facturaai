@@ -1,8 +1,11 @@
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import pdfParse from "pdf-parse";
 import { config } from "../config";
 
-const client = new Anthropic({ apiKey: config.ANTHROPIC_API_KEY });
+const client = new OpenAI({
+  baseURL: config.AI_GATEWAY_URL,
+  apiKey: config.AI_API_KEY,
+});
 
 export type ExtractedExpense = {
   vendor: string;
@@ -110,11 +113,11 @@ export async function extractFromPdfText(pdfBuffer: Buffer, companyName?: string
   const parsed = await pdfParse(pdfBuffer);
   const text = parsed.text.slice(0, 8000); // bound for safety
 
-  const response = await client.messages.create({
-    model: config.ANTHROPIC_MODEL,
+  const response = await client.chat.completions.create({
+    model: config.AI_MODEL,
     max_tokens: 1024,
-    system: SYSTEM_PROMPT,
     messages: [
+      { role: "system", content: SYSTEM_PROMPT },
       {
         role: "user",
         content: `Extract the invoice data. Return JSON matching this schema:\n${JSON_SCHEMA_HINT}${companyContext(companyName)}\n\n---\n\nInvoice text:\n\n${text}`,
@@ -122,9 +125,9 @@ export async function extractFromPdfText(pdfBuffer: Buffer, companyName?: string
     ],
   });
 
-  const block = response.content[0];
-  if (block.type !== "text") throw new Error("Unexpected response block type");
-  return parseJsonResponse(block.text);
+  const content = response.choices[0]?.message?.content;
+  if (!content) throw new Error("Empty response from AI");
+  return parseJsonResponse(content);
 }
 
 export async function extractFromImage(
@@ -134,17 +137,17 @@ export async function extractFromImage(
 ): Promise<ExtractedExpense> {
   const base64 = imageBuffer.toString("base64");
 
-  const response = await client.messages.create({
-    model: config.ANTHROPIC_MODEL,
+  const response = await client.chat.completions.create({
+    model: config.AI_MODEL,
     max_tokens: 1024,
-    system: SYSTEM_PROMPT,
     messages: [
+      { role: "system", content: SYSTEM_PROMPT },
       {
         role: "user",
         content: [
           {
-            type: "image",
-            source: { type: "base64", media_type: mediaType, data: base64 },
+            type: "image_url",
+            image_url: { url: `data:${mediaType};base64,${base64}` },
           },
           {
             type: "text",
@@ -155,9 +158,9 @@ export async function extractFromImage(
     ],
   });
 
-  const block = response.content[0];
-  if (block.type !== "text") throw new Error("Unexpected response block type");
-  return parseJsonResponse(block.text);
+  const content = response.choices[0]?.message?.content;
+  if (!content) throw new Error("Empty response from AI");
+  return parseJsonResponse(content);
 }
 
 export async function extractAuto(

@@ -1,17 +1,18 @@
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { config } from "../config";
 
+const endpoint = config.S3_ENDPOINT ?? config.BLOB_ENDPOINT;
+const accessKey = config.S3_ACCESS_KEY_ID ?? config.BLOB_ACCESS_KEY;
+const secretKey = config.S3_SECRET_ACCESS_KEY ?? config.BLOB_SECRET_KEY;
+
 const s3 = new S3Client({
   region: config.S3_REGION,
-  endpoint: config.S3_ENDPOINT,
+  endpoint,
   credentials:
-    config.S3_ACCESS_KEY_ID && config.S3_SECRET_ACCESS_KEY
-      ? {
-          accessKeyId: config.S3_ACCESS_KEY_ID,
-          secretAccessKey: config.S3_SECRET_ACCESS_KEY,
-        }
+    accessKey && secretKey
+      ? { accessKeyId: accessKey, secretAccessKey: secretKey }
       : undefined,
-  forcePathStyle: !!config.S3_ENDPOINT,
+  forcePathStyle: !!endpoint,
 });
 
 export async function uploadFile(
