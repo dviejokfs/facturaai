@@ -1,12 +1,44 @@
 import { Hono } from "hono";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { buildAuthUrl, exchangeCode, fetchUserInfo } from "../auth/google";
-import { signToken } from "../auth/jwt";
+import { signToken, verifyToken } from "../auth/jwt";
 import { requireAuth } from "../auth/middleware";
 import { sql } from "../db/client";
 import { config } from "../config";
 import { deleteFile } from "../services/storage";
 import { sendWelcomeEmail } from "../services/email";
+
+/**
+ * Merge anonymous user's expenses into the real user, then delete the anonymous user.
+ */
+async function mergeAnonymousUser(anonymousToken: string, realUserId: string) {
+  try {
+    const payload = await verifyToken(anonymousToken);
+    if (!payload.anonymous) return;
+
+    const anonymousUserId = payload.sub;
+    if (anonymousUserId === realUserId) return;
+
+    // Verify anonymous user exists
+    const [anonUser] = await sql`
+      SELECT id FROM users WHERE id = ${anonymousUserId} AND is_anonymous = TRUE
+    `;
+    if (!anonUser) return;
+
+    // Move all expenses from anonymous user to real user
+    await sql`
+      UPDATE expenses SET user_id = ${realUserId}
+      WHERE user_id = ${anonymousUserId}
+    `;
+
+    // Delete the anonymous user
+    await sql`DELETE FROM users WHERE id = ${anonymousUserId}`;
+
+    console.log(`[auth] Merged anonymous user ${anonymousUserId} into ${realUserId}`);
+  } catch (err) {
+    console.error("[auth] Failed to merge anonymous user:", err);
+  }
+}
 
 // Cached JWKS for Apple Sign-In token verification
 const appleJWKS = createRemoteJWKSet(
@@ -17,7 +49,9 @@ export const authRoutes = new Hono();
 
 authRoutes.get("/google/start", async (c) => {
   const state = crypto.randomUUID();
-  await sql`INSERT INTO oauth_states (state) VALUES (${state})`;
+  const anonymousToken = c.req.query("anonymous_token");
+  // Store anonymous_token alongside state so we can retrieve it in the callback
+  await sql`INSERT INTO oauth_states (state, anonymous_token) VALUES (${state}, ${anonymousToken ?? null})`;
   return c.redirect(buildAuthUrl(state));
 });
 
@@ -27,7 +61,7 @@ authRoutes.get("/google/callback", async (c) => {
   if (!code || !state) return c.text("missing code/state", 400);
 
   const [stored] =
-    await sql`DELETE FROM oauth_states WHERE state = ${state} RETURNING state`;
+    await sql`DELETE FROM oauth_states WHERE state = ${state} RETURNING state, anonymous_token`;
   if (!stored) return c.text("invalid state", 400);
 
   const tokens = await exchangeCode(code);
@@ -54,6 +88,11 @@ authRoutes.get("/google/callback", async (c) => {
 
   const jwt = await signToken({ sub: user.id, email: user.email });
 
+  // Merge anonymous user data if present
+  if (stored.anonymous_token) {
+    await mergeAnonymousUser(stored.anonymous_token, user.id);
+  }
+
   // Send welcome email for brand-new users (fire-and-forget)
   if (user.is_new) {
     sendWelcomeEmail(user.email, profile.name ?? null).catch((err) =>
@@ -68,7 +107,7 @@ authRoutes.get("/google/callback", async (c) => {
 // Sign in with Apple
 authRoutes.post("/apple/callback", async (c) => {
   const body = await c.req.json();
-  const { identityToken, email, fullName } = body;
+  const { identityToken, email, fullName, anonymous_token: anonymousToken } = body;
 
   if (!identityToken) return c.json({ error: "missing identity token" }, 400);
 
@@ -107,6 +146,11 @@ authRoutes.post("/apple/callback", async (c) => {
   `;
 
   const jwt = await signToken({ sub: user.id, email: user.email });
+
+  // Merge anonymous user data if present
+  if (anonymousToken) {
+    await mergeAnonymousUser(anonymousToken, user.id);
+  }
 
   // Send welcome email for brand-new users (fire-and-forget)
   if (user.is_new) {

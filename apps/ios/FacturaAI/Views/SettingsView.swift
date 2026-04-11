@@ -12,6 +12,9 @@ struct SettingsView: View {
     @State private var exportedFileURL: URL?
     @State private var showExportShare = false
     @State private var showExportError = false
+    @State private var restoringPurchases = false
+    @State private var showRestoreResult = false
+    @State private var restoreSuccess = false
     @AppStorage("hasCompletedFirstUse") private var hasCompletedFirstUse = true
 
     var planLabel: String {
@@ -166,10 +169,24 @@ struct SettingsView: View {
                                   systemImage: "sparkles")
                         }
                         Button {
-                            Task { _ = await RevenueCatService.shared.restorePurchases() }
+                            Task {
+                                restoringPurchases = true
+                                restoreSuccess = await RevenueCatService.shared.restorePurchases()
+                                restoringPurchases = false
+                                showRestoreResult = true
+                            }
                         } label: {
-                            Label(NSLocalizedString("settings.restorePurchases", comment: ""), systemImage: "arrow.clockwise")
+                            if restoringPurchases {
+                                HStack {
+                                    Label(NSLocalizedString("settings.restorePurchases", comment: ""), systemImage: "arrow.clockwise")
+                                    Spacer()
+                                    ProgressView()
+                                }
+                            } else {
+                                Label(NSLocalizedString("settings.restorePurchases", comment: ""), systemImage: "arrow.clockwise")
+                            }
                         }
+                        .disabled(restoringPurchases)
                         Link(destination: URL(string: "https://apps.apple.com/account/subscriptions")!) {
                             Label(NSLocalizedString("settings.manageSubscription", comment: ""), systemImage: "creditcard")
                         }
@@ -296,6 +313,18 @@ struct SettingsView: View {
             }
             .alert(NSLocalizedString("settings.downloadData.error", comment: ""), isPresented: $showExportError) {
                 Button(NSLocalizedString("common.ok", comment: "")) {}
+            }
+            .alert(
+                restoreSuccess
+                    ? NSLocalizedString("restore.success.title", comment: "")
+                    : NSLocalizedString("restore.empty.title", comment: ""),
+                isPresented: $showRestoreResult
+            ) {
+                Button(NSLocalizedString("common.ok", comment: "")) {}
+            } message: {
+                Text(restoreSuccess
+                     ? NSLocalizedString("restore.success.message", comment: "")
+                     : NSLocalizedString("restore.empty.message", comment: ""))
             }
         }
     }

@@ -7,6 +7,7 @@ struct ExpensesListView: View {
     @State private var filter: ExpenseStatus? = nil
     @State private var typeFilter: TransactionType? = nil
     @State private var quarterFilter: String? = nil
+    @State private var navigationPath = NavigationPath()
 
     private var availableQuarters: [String] {
         let all = Set(store.expenses.map { $0.quarter })
@@ -28,7 +29,7 @@ struct ExpensesListView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             VStack(spacing: 0) {
                 // Filter chips
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -145,12 +146,16 @@ struct ExpensesListView: View {
                             }
                             .swipeActions(edge: .trailing) {
                                 Button(role: .destructive) {
-                                    store.reject(e)
+                                    withAnimation(.easeInOut(duration: 0.25)) {
+                                        store.reject(e)
+                                    }
                                 } label: { Label(NSLocalizedString("expenses.reject", comment: ""), systemImage: "xmark") }
                             }
                             .swipeActions(edge: .leading) {
                                 Button {
-                                    store.confirm(e)
+                                    withAnimation(.easeInOut(duration: 0.25)) {
+                                        store.confirm(e)
+                                    }
                                 } label: { Label(NSLocalizedString("expenses.confirm", comment: ""), systemImage: "checkmark") }
                                 .tint(.green)
                             }
@@ -162,6 +167,15 @@ struct ExpensesListView: View {
             .searchable(text: $searchText, prompt: NSLocalizedString("expenses.search", comment: ""))
             .navigationTitle(NSLocalizedString("expenses.title", comment: ""))
             .navigationDestination(for: Expense.self) { ExpenseDetailView(expense: $0) }
+            .onReceive(NotificationCenter.default.publisher(for: .navigateToExpense)) { notif in
+                if let expense = notif.object as? Expense {
+                    // Clear any existing path first, then navigate
+                    navigationPath = NavigationPath()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        navigationPath.append(expense)
+                    }
+                }
+            }
         }
     }
 }

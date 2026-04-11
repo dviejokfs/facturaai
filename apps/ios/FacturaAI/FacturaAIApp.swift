@@ -25,7 +25,7 @@ struct InvoScanAIApp: App {
                     guard url.scheme == "invoscanai", url.host == "share" else { return }
                     Task { await SharedInboxService.shared.ingest(from: url, store: expenseStore) }
                 }
-                .onAppear {
+                .onReceive(NotificationCenter.default.publisher(for: .shouldRequestPushPermission)) { _ in
                     requestPushNotifications()
                 }
                 .onChange(of: scenePhase) { _, phase in
@@ -33,10 +33,30 @@ struct InvoScanAIApp: App {
                         Task { await expenseStore.checkActiveSync() }
                     }
                 }
+                .alert(
+                    NSLocalizedString("notifications.permission.title", comment: ""),
+                    isPresented: $showNotificationDialog
+                ) {
+                    Button(NSLocalizedString("notifications.permission.enable", comment: "")) {
+                        performNotificationRequest()
+                    }
+                    Button(NSLocalizedString("notifications.permission.later", comment: ""), role: .cancel) {}
+                } message: {
+                    Text(NSLocalizedString("notifications.permission.message", comment: ""))
+                }
         }
     }
 
+    @AppStorage("hasRequestedNotifications") private var hasRequestedNotifications = false
+    @State private var showNotificationDialog = false
+
     private func requestPushNotifications() {
+        guard !hasRequestedNotifications else { return }
+        showNotificationDialog = true
+    }
+
+    private func performNotificationRequest() {
+        hasRequestedNotifications = true
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, _ in
             guard granted else { return }
             DispatchQueue.main.async {

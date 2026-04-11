@@ -40,7 +40,15 @@ final class AuthService: NSObject, ObservableObject, ASWebAuthenticationPresenta
 
     func signInWithGoogle() async {
         errorMessage = nil
-        let authURL = APIClient.shared.startGoogleAuthURL()
+        var authURL = APIClient.shared.startGoogleAuthURL()
+        // Pass anonymous token so backend can merge onboarding data
+        if let anonToken = Keychain.loadAnonymousToken() {
+            var components = URLComponents(url: authURL, resolvingAgainstBaseURL: false)!
+            var items = components.queryItems ?? []
+            items.append(URLQueryItem(name: "anonymous_token", value: anonToken))
+            components.queryItems = items
+            authURL = components.url!
+        }
         let scheme = "invoscanai"
 
         do {
@@ -61,6 +69,7 @@ final class AuthService: NSObject, ObservableObject, ASWebAuthenticationPresenta
             }
 
             Keychain.saveToken(token)
+            Keychain.deleteAnonymousToken()
             isSignedIn = true
             gmailConnected = true
             await refreshProfile()
@@ -112,11 +121,15 @@ final class AuthService: NSObject, ObservableObject, ASWebAuthenticationPresenta
         }
 
         do {
-            let body: [String: Any?] = [
+            var body: [String: Any?] = [
                 "identityToken": identityToken,
                 "email": email as Any,
                 "fullName": fullName as Any,
             ]
+            // Pass anonymous token so backend can merge onboarding data
+            if let anonToken = Keychain.loadAnonymousToken() {
+                body["anonymous_token"] = anonToken
+            }
             let jsonData = try JSONSerialization.data(withJSONObject: body.compactMapValues { $0 })
             let url = APIClient.shared.baseURL.appendingPathComponent("auth/apple/callback")
             var request = URLRequest(url: url)
@@ -133,6 +146,7 @@ final class AuthService: NSObject, ObservableObject, ASWebAuthenticationPresenta
 
             let result = try JSONDecoder().decode(AppleSignInResponse.self, from: data)
             Keychain.saveToken(result.token)
+            Keychain.deleteAnonymousToken()
             isSignedIn = true
             await refreshProfile()
         } catch {
@@ -143,6 +157,7 @@ final class AuthService: NSObject, ObservableObject, ASWebAuthenticationPresenta
     func signOut() {
         Task { await RevenueCatService.shared.signOut() }
         Keychain.deleteToken()
+        Keychain.deleteAnonymousToken()
         isSignedIn = false
         userEmail = nil
         gmailConnected = false

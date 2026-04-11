@@ -5,6 +5,9 @@ struct DashboardView: View {
     @EnvironmentObject var auth: AuthService
     var onScanTap: (() -> Void)? = nil
     @State private var selectedQuarter: String?
+    @AppStorage("hasCompletedOnboardingChecklist") private var hasCompletedOnboardingChecklist = false
+    @State private var showGmailSync = false
+    @State private var showAccountantSetup = false
 
     /// All quarters that have expenses, sorted newest first.
     private var availableQuarters: [String] {
@@ -18,14 +21,35 @@ struct DashboardView: View {
         return availableQuarters.first ?? store.currentQuarter()
     }
 
+    /// Show onboarding checklist when signed in but Gmail or accountant not yet set up
+    private var shouldShowOnboardingChecklist: Bool {
+        guard auth.isSignedIn, !hasCompletedOnboardingChecklist else { return false }
+        let gmailDone = auth.gmailConnected
+        let accountantDone = auth.accountantEmail != nil && !(auth.accountantEmail?.isEmpty ?? true)
+        return !gmailDone || !accountantDone
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
+                    // Onboarding checklist (after sign-up)
+                    if shouldShowOnboardingChecklist {
+                        OnboardingChecklistCard(
+                            gmailDone: auth.gmailConnected,
+                            accountantDone: auth.accountantEmail != nil && !(auth.accountantEmail?.isEmpty ?? true),
+                            onGmail: { showGmailSync = true },
+                            onAccountant: { showAccountantSetup = true },
+                            onDismiss: { withAnimation { hasCompletedOnboardingChecklist = true } }
+                        )
+                    }
+
                     if store.expenses.isEmpty {
                         WelcomeHeader()
                         QuickActions(onScanTap: onScanTap)
-                        GettingStartedChecklist()
+                        if !shouldShowOnboardingChecklist {
+                            GettingStartedChecklist()
+                        }
                     } else {
                         let q = activeQuarter
                         let totals = store.totalsByCurrency(for: q)
@@ -43,7 +67,6 @@ struct DashboardView: View {
 
                         // Main totals per currency
                         if totals.isEmpty {
-                            // Selected quarter has no data (shouldn't happen but just in case)
                             VStack(spacing: 8) {
                                 Image(systemName: "calendar.badge.exclamationmark")
                                     .font(.title)
@@ -91,7 +114,15 @@ struct DashboardView: View {
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle(NSLocalizedString("dashboard.title", comment: ""))
+            .navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: $showGmailSync) {
+                GmailSyncView()
+            }
+            .sheet(isPresented: $showAccountantSetup) {
+                NavigationStack {
+                    AccountantSettingsView()
+                }
+            }
         }
     }
 }
@@ -245,6 +276,88 @@ private struct QuickActionButton: View {
     }
 }
 
+private struct OnboardingChecklistCard: View {
+    let gmailDone: Bool
+    let accountantDone: Bool
+    let onGmail: () -> Void
+    let onAccountant: () -> Void
+    let onDismiss: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                HStack(spacing: 8) {
+                    Image(systemName: "checklist")
+                        .foregroundStyle(.indigo)
+                    Text(NSLocalizedString("onboarding.checklist.title", comment: ""))
+                        .font(.headline)
+                }
+                Spacer()
+                Button {
+                    onDismiss()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Text(NSLocalizedString("onboarding.checklist.subtitle", comment: ""))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button(action: onGmail) {
+                HStack(spacing: 12) {
+                    Image(systemName: gmailDone ? "checkmark.circle.fill" : "envelope.fill")
+                        .font(.title3)
+                        .foregroundStyle(gmailDone ? .green : .red)
+                        .frame(width: 28)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(NSLocalizedString("onboarding.checklist.gmail", comment: ""))
+                            .font(.subheadline).fontWeight(.medium)
+                            .foregroundStyle(gmailDone ? .secondary : .primary)
+                            .strikethrough(gmailDone)
+                        Text(NSLocalizedString("onboarding.checklist.gmail.sub", comment: ""))
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    if !gmailDone {
+                        Image(systemName: "chevron.right")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .disabled(gmailDone)
+
+            Button(action: onAccountant) {
+                HStack(spacing: 12) {
+                    Image(systemName: accountantDone ? "checkmark.circle.fill" : "person.text.rectangle.fill")
+                        .font(.title3)
+                        .foregroundStyle(accountantDone ? .green : .teal)
+                        .frame(width: 28)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(NSLocalizedString("onboarding.checklist.accountant", comment: ""))
+                            .font(.subheadline).fontWeight(.medium)
+                            .foregroundStyle(accountantDone ? .secondary : .primary)
+                            .strikethrough(accountantDone)
+                        Text(NSLocalizedString("onboarding.checklist.accountant.sub", comment: ""))
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    if !accountantDone {
+                        Image(systemName: "chevron.right")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .disabled(accountantDone)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemGroupedBackground)))
+    }
+}
+
 private struct GettingStartedChecklist: View {
     @EnvironmentObject var store: ExpenseStore
     @EnvironmentObject var auth: AuthService
@@ -327,6 +440,8 @@ extension Notification.Name {
     static let switchToTab = Notification.Name("switchToTab")
     static let scanAnother = Notification.Name("scanAnother")
     static let upgradeNeeded = Notification.Name("upgradeNeeded")
+    static let shouldRequestPushPermission = Notification.Name("shouldRequestPushPermission")
+    static let navigateToExpense = Notification.Name("navigateToExpense")
 }
 
 // MARK: - Key Metrics

@@ -45,7 +45,7 @@ const schema = z.object({
   APNS_ENVIRONMENT: z.enum(["development", "production"]).default("development"),
 
   // Temps email service
-  TEMPS_API_URL: z.string().url().default(""),
+  TEMPS_API_URL: z.string().url().optional(),
   TEMPS_DEPLOYMENT_TOKEN: z.string().default(""),
 });
 

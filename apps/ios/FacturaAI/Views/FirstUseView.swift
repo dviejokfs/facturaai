@@ -385,10 +385,11 @@ struct FirstUseView: View {
                 guard let url else { return }
                 scanning = true
                 guard url.startAccessingSecurityScopedResource() else { scanning = false; return }
-                defer { url.stopAccessingSecurityScopedResource() }
-                guard let data = try? Data(contentsOf: url) else { scanning = false; return }
                 let filename = url.lastPathComponent
-                Task { await uploadData(data, filename: filename) }
+                Task {
+                    await uploadFile(url, filename: filename)
+                    url.stopAccessingSecurityScopedResource()
+                }
             }
         }
         .alert(NSLocalizedString("scan.camera_unavailable.title", comment: ""), isPresented: $showCameraUnavailable) {
@@ -413,8 +414,26 @@ struct FirstUseView: View {
                 }
                 .padding(.top, 32)
 
-                Text(NSLocalizedString("onboarding.review.title", comment: ""))
+                Text(NSLocalizedString(
+                    scannedExpense?.type == .income
+                        ? "onboarding.review.title.income"
+                        : "onboarding.review.title",
+                    comment: ""))
                     .font(.system(size: 24, weight: .bold, design: .rounded))
+
+                if scannedExpense?.type == .income {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.down.circle.fill")
+                        Text(NSLocalizedString("transaction.income", comment: ""))
+                            .fontWeight(.semibold)
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(.green)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.green.opacity(0.1))
+                    .clipShape(Capsule())
+                }
 
                 Text(NSLocalizedString("onboarding.review.subtitle", comment: ""))
                     .font(.subheadline)
@@ -474,6 +493,12 @@ struct FirstUseView: View {
     @State private var signingIn = false
     @State private var signInError: String?
     @State private var showPaywall = false
+    @State private var showSetupChecklist = false
+    @State private var showGmailSync = false
+    @State private var showAccountantSetup = false
+    @State private var restoringPurchases = false
+    @State private var showRestoreResult = false
+    @State private var restoreSuccess = false
     @StateObject private var revenueCat = RevenueCatService.shared
 
     private var trialStep: some View {
@@ -490,8 +515,72 @@ struct FirstUseView: View {
                         .foregroundStyle(.yellow)
                 }
 
-                if auth.isSignedIn {
-                    // Phase 2: Already signed in → show subscription prompt
+                if auth.isSignedIn && showSetupChecklist {
+                    // Phase 2a: Setup checklist after sign-in
+                    Text(NSLocalizedString("onboarding.checklist.title", comment: ""))
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .multilineTextAlignment(.center)
+
+                    Text(NSLocalizedString("onboarding.checklist.subtitle", comment: ""))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+
+                    VStack(spacing: 12) {
+                        SetupChecklistRow(
+                            icon: "envelope.fill",
+                            title: NSLocalizedString("onboarding.checklist.gmail", comment: ""),
+                            subtitle: NSLocalizedString("onboarding.checklist.gmail.sub", comment: ""),
+                            done: auth.gmailConnected,
+                            color: .red
+                        ) {
+                            showGmailSync = true
+                        }
+
+                        SetupChecklistRow(
+                            icon: "person.text.rectangle.fill",
+                            title: NSLocalizedString("onboarding.checklist.accountant", comment: ""),
+                            subtitle: NSLocalizedString("onboarding.checklist.accountant.sub", comment: ""),
+                            done: auth.accountantEmail != nil && !(auth.accountantEmail?.isEmpty ?? true),
+                            color: .teal
+                        ) {
+                            showAccountantSetup = true
+                        }
+                    }
+                    .padding(.horizontal, 20)
+
+                    Spacer(minLength: 20)
+
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            showSetupChecklist = false
+                        }
+                    } label: {
+                        HStack {
+                            Text(NSLocalizedString("onboarding.checklist.done", comment: "")).fontWeight(.bold)
+                            Image(systemName: "arrow.right")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color.indigo)
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                    }
+                    .padding(.horizontal, 20)
+
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            showSetupChecklist = false
+                        }
+                    } label: {
+                        Text(NSLocalizedString("onboarding.checklist.skip", comment: ""))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+
+                } else if auth.isSignedIn {
+                    // Phase 2b: Already signed in → show subscription prompt
                     Text(NSLocalizedString("onboarding.trial.title", comment: ""))
                         .font(.system(size: 26, weight: .bold, design: .rounded))
                         .multilineTextAlignment(.center)
@@ -530,12 +619,23 @@ struct FirstUseView: View {
                     .padding(.horizontal, 20)
 
                     Button {
-                        Task { _ = await RevenueCatService.shared.restorePurchases() }
+                        Task {
+                            restoringPurchases = true
+                            restoreSuccess = await RevenueCatService.shared.restorePurchases()
+                            restoringPurchases = false
+                            showRestoreResult = true
+                        }
                     } label: {
-                        Text(NSLocalizedString("onboarding.trial.restore", comment: ""))
-                            .font(.subheadline)
-                            .foregroundStyle(.indigo)
+                        if restoringPurchases {
+                            ProgressView()
+                                .tint(.indigo)
+                        } else {
+                            Text(NSLocalizedString("onboarding.trial.restore", comment: ""))
+                                .font(.subheadline)
+                                .foregroundStyle(.indigo)
+                        }
                     }
+                    .disabled(restoringPurchases)
 
                     HStack(spacing: 16) {
                         Link(NSLocalizedString("onboarding.trial.terms", comment: ""), destination: URL(string: "https://invoscanai.com/terms")!)
@@ -583,6 +683,7 @@ struct FirstUseView: View {
                                         await auth.signInWithApple(credential: credential)
                                         await persistCompanyName()
                                         signingIn = false
+                                        if auth.isSignedIn { showSetupChecklist = true }
                                     }
                                 }
                             case .failure(let error):
@@ -604,6 +705,7 @@ struct FirstUseView: View {
                                 await auth.signInWithGoogle()
                                 await persistCompanyName()
                                 signingIn = false
+                                if auth.isSignedIn { showSetupChecklist = true }
                             }
                         } label: {
                             HStack {
@@ -655,6 +757,26 @@ struct FirstUseView: View {
                 hasCompletedFirstUse = true
             }
         }
+        .sheet(isPresented: $showGmailSync) {
+            GmailSyncView()
+        }
+        .sheet(isPresented: $showAccountantSetup) {
+            NavigationStack {
+                AccountantSettingsView()
+            }
+        }
+        .alert(
+            restoreSuccess
+                ? NSLocalizedString("restore.success.title", comment: "")
+                : NSLocalizedString("restore.empty.title", comment: ""),
+            isPresented: $showRestoreResult
+        ) {
+            Button(NSLocalizedString("common.ok", comment: "")) {}
+        } message: {
+            Text(restoreSuccess
+                 ? NSLocalizedString("restore.success.message", comment: "")
+                 : NSLocalizedString("restore.empty.message", comment: ""))
+        }
         .onChange(of: revenueCat.isPro) {
             if revenueCat.isPro {
                 hasCompletedFirstUse = true
@@ -674,13 +796,36 @@ struct FirstUseView: View {
         ]
         if !taxId.isEmpty { fields["tax_id"] = taxId }
         try? await APIClient.shared.updateProfile(fields)
+
+        // Anonymous user expenses are automatically merged on sign-in.
+        // Just reload from server to pick them up.
+        if scannedExpense != nil {
+            await store.reload()
+        }
     }
 
     private func uploadData(_ data: Data, filename: String) async {
         scanning = true
         errorMessage = nil
+        let company = companyNameInput.trimmingCharacters(in: .whitespaces)
         do {
-            let expense = try await store.extractReceipt(data: data, filename: filename)
+            let expense = try await store.extractReceipt(data: data, filename: filename, forceAnonymous: true, companyName: company.isEmpty ? nil : company)
+            scannedExpense = expense
+            scanning = false
+            withAnimation(.easeInOut(duration: 0.35)) { step = .review }
+        } catch {
+            scanning = false
+            withAnimation { errorMessage = error.localizedDescription }
+        }
+    }
+
+    /// File-based upload — streams the file to avoid loading large PDFs into memory.
+    private func uploadFile(_ fileURL: URL, filename: String) async {
+        scanning = true
+        errorMessage = nil
+        let company = companyNameInput.trimmingCharacters(in: .whitespaces)
+        do {
+            let expense = try await store.extractReceiptFromFile(fileURL: fileURL, filename: filename, forceAnonymous: true, companyName: company.isEmpty ? nil : company)
             scannedExpense = expense
             scanning = false
             withAnimation(.easeInOut(duration: 0.35)) { step = .review }
@@ -890,7 +1035,7 @@ struct DocumentPicker: UIViewControllerRepresentable {
 
         func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
             parent.onPick(nil)
-        }
+        } 
     }
 }
 
@@ -902,7 +1047,7 @@ private struct OnboardingPaywallSheet: View {
 
     var body: some View {
         #if canImport(RevenueCatUI)
-        PaywallView(displayCloseButton: true)
+        RevenueCatUI.PaywallView(displayCloseButton: true)
             .onPurchaseCompleted { _ in
                 Task { await RevenueCatService.shared.refresh() }
                 onComplete()
@@ -983,5 +1128,51 @@ private struct ActionCard: View {
             .background(Color(.secondarySystemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: 14))
         }
+    }
+}
+
+// MARK: - Setup Checklist Row
+
+private struct SetupChecklistRow: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let done: Bool
+    let color: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                Image(systemName: done ? "checkmark.circle.fill" : icon)
+                    .font(.title2)
+                    .foregroundStyle(done ? .green : .white)
+                    .frame(width: 48, height: 48)
+                    .background(done ? Color.green.opacity(0.15) : color)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(done ? .secondary : .primary)
+                        .strikethrough(done)
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                if !done {
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(14)
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+        }
+        .disabled(done)
     }
 }

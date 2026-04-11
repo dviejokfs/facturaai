@@ -110,8 +110,8 @@ struct PaywallSheet: View {
     var body: some View {
         #if canImport(RevenueCatUI)
         // RevenueCatUI fetches the offering + paywall layout from your dashboard.
-        // Edit copy/colors/layout in the RevenueCat web editor — no app release needed.
-        PaywallView(displayCloseButton: true)
+        // Configure different paywalls per placement in the RevenueCat dashboard for A/B testing.
+        RevenueCatUI.PaywallView(displayCloseButton: true)
             .onPurchaseCompleted { _ in
                 Task { await RevenueCatService.shared.refresh() }
                 dismiss()

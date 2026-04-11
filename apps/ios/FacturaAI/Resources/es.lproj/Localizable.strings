@@ -109,6 +109,7 @@
 "accountant.name.placeholder" = "Nombre";
 "accountant.email.placeholder" = "Email";
 "accountant.taxid.placeholder" = "NIF / CIF";
+"accountant.email.invalid" = "Introduce un email válido";
 "accountant.save" = "Guardar";
 "accountant.not_configured" = "Sin configurar";
 "accountant.add" = "Añadir datos del gestor";
@@ -235,6 +236,7 @@
 "review.confirm" = "Confirmar y añadir gasto";
 "review.discard" = "Descartar";
 "review.success.title" = "¡Gasto añadido!";
+"review.view_detail" = "Ver detalles del gasto";
 "review.scan_another" = "Escanear otro";
 "review.original.title" = "Documento original";
 "review.original.unavailable" = "No se puede previsualizar este documento";
@@ -376,6 +378,7 @@
 
 /* Onboarding — Review */
 "onboarding.review.title" = "¡Gasto extraído!";
+"onboarding.review.title.income" = "¡Ingreso extraído!";
 "onboarding.review.subtitle" = "Esto es lo que ha encontrado la IA";
 "onboarding.review.field.vendor" = "Proveedor";
 "onboarding.review.field.total" = "Total";
@@ -481,3 +484,25 @@
 "a11y.previous_item" = "Elemento anterior";
 "a11y.next_item" = "Elemento siguiente";
 "a11y.income_indicator" = "Ingreso";
+
+/* Restaurar compras */
+"restore.success.title" = "Compras restauradas";
+"restore.success.message" = "Tu suscripción se ha restaurado correctamente.";
+"restore.empty.title" = "Sin compras anteriores";
+"restore.empty.message" = "No se encontraron compras anteriores para este Apple ID.";
+
+/* Checklist post-registro */
+"onboarding.checklist.title" = "Completa tu configuración";
+"onboarding.checklist.subtitle" = "Unos pasos más para sacarle el máximo partido a InvoScanAI.";
+"onboarding.checklist.gmail" = "Conectar Gmail";
+"onboarding.checklist.gmail.sub" = "Importar facturas automáticamente de tu correo";
+"onboarding.checklist.accountant" = "Configura tu gestor";
+"onboarding.checklist.accountant.sub" = "Pre-dirige los exports para enviarlos directamente";
+"onboarding.checklist.skip" = "Saltar por ahora";
+"onboarding.checklist.done" = "¡Vamos!";
+
+/* Push notification permission dialog */
+"notifications.permission.title" = "Mantente al día";
+"notifications.permission.message" = "Recibe notificaciones cuando tus facturas de Gmail terminen de sincronizarse, cuando las exportaciones estén listas y cuando se detecten nuevas facturas.";
+"notifications.permission.enable" = "Activar notificaciones";
+"notifications.permission.later" = "Ahora no";

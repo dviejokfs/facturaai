@@ -136,6 +136,10 @@ final class ExpenseStore: ObservableObject {
             isSyncing = false
             await reload()
             lastSyncDate = Date()
+            // Prompt for push notifications after Gmail sync
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .shouldRequestPushPermission, object: nil)
+            }
         } catch {
             isSyncing = false
             syncProgress = GmailSyncProgress(status: "failed", messagesProcessed: 0, totalMessages: 0, invoicesFound: 0)
@@ -180,13 +184,26 @@ final class ExpenseStore: ObservableObject {
     }
 
     /// Extract data from a receipt without saving. Returns the expense for user review.
-    func extractReceipt(data: Data, filename: String) async throws -> Expense {
+    /// When signed in, uploads to the server. Otherwise, uses anonymous extraction.
+    func extractReceipt(data: Data, filename: String, forceAnonymous: Bool = false, companyName: String? = nil) async throws -> Expense {
         let mime = Self.mimeType(for: filename)
-        if Keychain.loadToken() != nil {
+        if !forceAnonymous && Keychain.loadToken() != nil {
             let remote = try await APIClient.shared.uploadReceipt(imageData: data, filename: filename, mimeType: mime)
             return remote.toDomain()
         } else {
-            let extracted = try await APIClient.shared.extractOnly(imageData: data, filename: filename, mimeType: mime)
+            let extracted = try await APIClient.shared.extractOnly(imageData: data, filename: filename, mimeType: mime, companyName: companyName)
+            return extracted.toDomain()
+        }
+    }
+
+    /// File-based extraction — avoids loading large PDFs into memory.
+    func extractReceiptFromFile(fileURL: URL, filename: String, forceAnonymous: Bool = false, companyName: String? = nil) async throws -> Expense {
+        let mime = Self.mimeType(for: filename)
+        if !forceAnonymous && Keychain.loadToken() != nil {
+            let remote = try await APIClient.shared.uploadReceiptFromFile(fileURL: fileURL, filename: filename, mimeType: mime)
+            return remote.toDomain()
+        } else {
+            let extracted = try await APIClient.shared.extractOnlyFromFile(fileURL: fileURL, filename: filename, mimeType: mime, companyName: companyName)
             return extracted.toDomain()
         }
     }
@@ -197,6 +214,10 @@ final class ExpenseStore: ObservableObject {
     func uploadReceipt(data: Data, filename: String) async throws -> Expense {
         let expense = try await extractReceipt(data: data, filename: filename)
         expenses.insert(expense, at: 0)
+        // Prompt for push notifications after first invoice
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: .shouldRequestPushPermission, object: nil)
+        }
         return expense
     }
 

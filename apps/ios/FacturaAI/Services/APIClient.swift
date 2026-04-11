@@ -117,39 +117,163 @@ final class APIClient {
     }
 
     func uploadReceipt(imageData: Data, filename: String, mimeType: String) async throws -> RemoteExpense {
-        let boundary = "Boundary-\(UUID().uuidString)"
+        let fileURL = try writeMultipartTempFile(data: imageData, filename: filename, mimeType: mimeType)
+        defer { try? FileManager.default.removeItem(at: fileURL.tempFile) }
+
         var req = try authorizedRequest("POST", path: "api/expenses/upload")
-        req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        req.setValue("multipart/form-data; boundary=\(fileURL.boundary)", forHTTPHeaderField: "Content-Type")
 
-        var body = Data()
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
-        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
-        body.append(imageData)
-        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
-        req.httpBody = body
-
-        return try await send(req)
+        let (data, resp) = try await session.upload(for: req, fromFile: fileURL.tempFile)
+        try validate(resp, data: data)
+        do {
+            return try decoder.decode(RemoteExpense.self, from: data)
+        } catch {
+            throw APIError.decoding(error)
+        }
     }
 
-    /// Public extraction — no auth required. Returns raw extracted data without persisting.
-    func extractOnly(imageData: Data, filename: String, mimeType: String) async throws -> ExtractedResponse {
-        let boundary = "Boundary-\(UUID().uuidString)"
+    /// Upload from a file URL instead of in-memory Data. Avoids loading large PDFs into memory.
+    func uploadReceiptFromFile(fileURL: URL, filename: String, mimeType: String) async throws -> RemoteExpense {
+        let tempFile = try writeMultipartTempFileFromURL(sourceURL: fileURL, filename: filename, mimeType: mimeType)
+        defer { try? FileManager.default.removeItem(at: tempFile.tempFile) }
+
+        var req = try authorizedRequest("POST", path: "api/expenses/upload")
+        req.setValue("multipart/form-data; boundary=\(tempFile.boundary)", forHTTPHeaderField: "Content-Type")
+
+        let (data, resp) = try await session.upload(for: req, fromFile: tempFile.tempFile)
+        try validate(resp, data: data)
+        do {
+            return try decoder.decode(RemoteExpense.self, from: data)
+        } catch {
+            throw APIError.decoding(error)
+        }
+    }
+
+    /// Anonymous extraction — creates/reuses anonymous user. Returns extracted data + anonymous JWT.
+    func extractOnly(imageData: Data, filename: String, mimeType: String, companyName: String? = nil) async throws -> ExtractedResponse {
+        let fileURL = try writeMultipartTempFile(data: imageData, filename: filename, mimeType: mimeType, companyName: companyName)
+        defer { try? FileManager.default.removeItem(at: fileURL.tempFile) }
+
         let url = baseURL.appendingPathComponent("api/extract")
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
-        req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        req.setValue("multipart/form-data; boundary=\(fileURL.boundary)", forHTTPHeaderField: "Content-Type")
         req.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        var body = Data()
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
-        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
-        body.append(imageData)
-        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
-        req.httpBody = body
+        if let anonToken = Keychain.loadAnonymousToken() {
+            req.setValue("Bearer \(anonToken)", forHTTPHeaderField: "Authorization")
+        }
 
-        return try await send(req)
+        let (data, resp) = try await session.upload(for: req, fromFile: fileURL.tempFile)
+
+        // Always try to save the anonymous token, even from error responses
+        if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let anonToken = json["anonymous_token"] as? String {
+            Keychain.saveAnonymousToken(anonToken)
+        }
+
+        try validate(resp, data: data)
+
+        do {
+            return try decoder.decode(ExtractedResponse.self, from: data)
+        } catch {
+            throw APIError.decoding(error)
+        }
+    }
+
+    /// File-based extraction — avoids loading large PDFs into memory entirely.
+    func extractOnlyFromFile(fileURL: URL, filename: String, mimeType: String, companyName: String? = nil) async throws -> ExtractedResponse {
+        let tempFile = try writeMultipartTempFileFromURL(sourceURL: fileURL, filename: filename, mimeType: mimeType, companyName: companyName)
+        defer { try? FileManager.default.removeItem(at: tempFile.tempFile) }
+
+        let url = baseURL.appendingPathComponent("api/extract")
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("multipart/form-data; boundary=\(tempFile.boundary)", forHTTPHeaderField: "Content-Type")
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+
+        if let anonToken = Keychain.loadAnonymousToken() {
+            req.setValue("Bearer \(anonToken)", forHTTPHeaderField: "Authorization")
+        }
+
+        let (data, resp) = try await session.upload(for: req, fromFile: tempFile.tempFile)
+
+        if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let anonToken = json["anonymous_token"] as? String {
+            Keychain.saveAnonymousToken(anonToken)
+        }
+
+        try validate(resp, data: data)
+
+        do {
+            return try decoder.decode(ExtractedResponse.self, from: data)
+        } catch {
+            throw APIError.decoding(error)
+        }
+    }
+
+    // MARK: - Multipart temp file helpers
+
+    private struct MultipartTempFile {
+        let tempFile: URL
+        let boundary: String
+    }
+
+    /// Write in-memory Data to a multipart temp file for streaming upload.
+    private func writeMultipartTempFile(data: Data, filename: String, mimeType: String, companyName: String? = nil) throws -> MultipartTempFile {
+        let boundary = "Boundary-\(UUID().uuidString)"
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+
+        var preamble = ""
+        if let companyName, !companyName.isEmpty {
+            preamble = "--\(boundary)\r\nContent-Disposition: form-data; name=\"company_name\"\r\n\r\n\(companyName)\r\n"
+        }
+        let header = "--\(boundary)\r\nContent-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\nContent-Type: \(mimeType)\r\n\r\n"
+        let footer = "\r\n--\(boundary)--\r\n"
+
+        FileManager.default.createFile(atPath: tempURL.path, contents: nil)
+        let handle = try FileHandle(forWritingTo: tempURL)
+        handle.write(preamble.data(using: .utf8)!)
+        handle.write(header.data(using: .utf8)!)
+        handle.write(data)
+        handle.write(footer.data(using: .utf8)!)
+        handle.closeFile()
+
+        return MultipartTempFile(tempFile: tempURL, boundary: boundary)
+    }
+
+    /// Write a file URL to a multipart temp file — never loads the full file into memory.
+    private func writeMultipartTempFileFromURL(sourceURL: URL, filename: String, mimeType: String, companyName: String? = nil) throws -> MultipartTempFile {
+        let boundary = "Boundary-\(UUID().uuidString)"
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+
+        var preamble = ""
+        if let companyName, !companyName.isEmpty {
+            preamble = "--\(boundary)\r\nContent-Disposition: form-data; name=\"company_name\"\r\n\r\n\(companyName)\r\n"
+        }
+        let header = "--\(boundary)\r\nContent-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\nContent-Type: \(mimeType)\r\n\r\n"
+        let footer = "\r\n--\(boundary)--\r\n"
+
+        FileManager.default.createFile(atPath: tempURL.path, contents: nil)
+        let output = try FileHandle(forWritingTo: tempURL)
+        output.write(preamble.data(using: .utf8)!)
+        output.write(header.data(using: .utf8)!)
+
+        // Stream source file in chunks to avoid loading it all into memory
+        let input = try FileHandle(forReadingFrom: sourceURL)
+        let chunkSize = 64 * 1024 // 64KB chunks
+        while autoreleasepool(invoking: {
+            let chunk = input.readData(ofLength: chunkSize)
+            if chunk.isEmpty { return false }
+            output.write(chunk)
+            return true
+        }) {}
+        input.closeFile()
+
+        output.write(footer.data(using: .utf8)!)
+        output.closeFile()
+
+        return MultipartTempFile(tempFile: tempURL, boundary: boundary)
     }
 
     // MARK: - Gmail
@@ -587,6 +711,16 @@ struct ExtractedResponse: Decodable {
     let category: String
     let confidence: Double
     let isValidInvoice: Bool
+    let isExpense: Bool?
+    let anonymousToken: String?
+
+    // Backend returns camelCase keys; anonymous_token is the only snake_case one
+    enum CodingKeys: String, CodingKey {
+        case vendor, vendorTaxId, client, clientTaxId, cif, date, invoiceNumber
+        case subtotal, ivaRate, ivaAmount, irpfRate, irpfAmount, total
+        case currency, category, confidence, isValidInvoice, isExpense
+        case anonymousToken = "anonymous_token"
+    }
 }
 
 extension ExtractedResponse {
@@ -596,7 +730,9 @@ extension ExtractedResponse {
         fmt.dateFormat = "yyyy-MM-dd"
         fmt.locale = Locale(identifier: "en_US_POSIX")
         let parsedDate = fmt.date(from: date) ?? Date()
+        let txType: TransactionType = (isExpense == false) ? .income : .expense
         return Expense(
+            type: txType,
             vendor: vendor,
             cif: cif,
             date: parsedDate,

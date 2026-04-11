@@ -109,6 +109,7 @@
 "accountant.name.placeholder" = "Name";
 "accountant.email.placeholder" = "Email";
 "accountant.taxid.placeholder" = "Tax ID (VAT number, NIF…)";
+"accountant.email.invalid" = "Please enter a valid email address";
 "accountant.save" = "Save";
 "accountant.not_configured" = "Not configured yet";
 "accountant.add" = "Add accountant details";
@@ -235,6 +236,7 @@
 "review.confirm" = "Confirm & add expense";
 "review.discard" = "Discard";
 "review.success.title" = "Expense added!";
+"review.view_detail" = "View expense details";
 "review.scan_another" = "Scan another";
 "review.original.title" = "Original document";
 "review.original.unavailable" = "Unable to preview this document";
@@ -376,6 +378,7 @@
 
 /* Onboarding — Review */
 "onboarding.review.title" = "Expense extracted!";
+"onboarding.review.title.income" = "Income extracted!";
 "onboarding.review.subtitle" = "Here's what the AI found";
 "onboarding.review.field.vendor" = "Vendor";
 "onboarding.review.field.total" = "Total";
@@ -481,3 +484,25 @@
 "a11y.previous_item" = "Previous item";
 "a11y.next_item" = "Next item";
 "a11y.income_indicator" = "Income";
+
+/* Restore purchases */
+"restore.success.title" = "Purchases restored";
+"restore.success.message" = "Your subscription has been restored successfully.";
+"restore.empty.title" = "No purchases found";
+"restore.empty.message" = "No previous purchases were found for this Apple ID.";
+
+/* Post-signup onboarding checklist */
+"onboarding.checklist.title" = "Complete your setup";
+"onboarding.checklist.subtitle" = "A few more steps to get the most out of InvoScanAI.";
+"onboarding.checklist.gmail" = "Connect Gmail";
+"onboarding.checklist.gmail.sub" = "Automatically import invoices from your inbox";
+"onboarding.checklist.accountant" = "Set up your accountant";
+"onboarding.checklist.accountant.sub" = "Pre-address exports to send directly";
+"onboarding.checklist.skip" = "Skip for now";
+"onboarding.checklist.done" = "Let's go!";
+
+/* Push notification permission dialog */
+"notifications.permission.title" = "Stay up to date";
+"notifications.permission.message" = "Get notified when your Gmail invoices finish syncing, when exports are ready to download, and when new invoices are detected.";
+"notifications.permission.enable" = "Enable notifications";
+"notifications.permission.later" = "Not now";

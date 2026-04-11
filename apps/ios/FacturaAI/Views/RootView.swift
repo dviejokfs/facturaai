@@ -83,6 +83,10 @@ struct MainTabView: View {
                     }
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToExpense)) { _ in
+            // Dismiss scan cover if open so the invoice detail can be shown
+            showScan = false
+        }
         .onReceive(NotificationCenter.default.publisher(for: .upgradeNeeded)) { notif in
             if let reason = notif.object as? UpgradeReason {
                 auth.handleUpgradeNeeded(reason)

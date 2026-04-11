@@ -34,7 +34,7 @@
     <key>API_BASE_URL</key>
     <string>https://invoscanai-api-production.temps.kfs.es</string>
     <key>RC_PUBLIC_SDK_KEY_IOS</key>
-    <string>test_SKkVnhCLoPUTvKrZKxlFtRGQAeb</string>
+    <string>appl_nKNkUgaWzJFgHDKTdMrIDNLSOcJ</string>
     <key>NSAppTransportSecurity</key>
     <dict>
         <key>NSAllowsLocalNetworking</key>

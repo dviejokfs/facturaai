@@ -6,8 +6,14 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A2000010000000000000001 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = A2000020000000000000001 /* RevenueCat */; };
+		A2000030000000000000001 /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = A2000040000000000000001 /* RevenueCatUI */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		A1000050000000000000001 /* FacturaAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FacturaAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A3C3D6B22F8A818300EA2DF7 /* InvoScanAIStoreKit.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = InvoScanAIStoreKit.storekit; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -23,6 +29,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A2000010000000000000001 /* RevenueCat in Frameworks */,
+				A2000030000000000000001 /* RevenueCatUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -32,6 +40,7 @@
 		A1000030000000000000001 = {
 			isa = PBXGroup;
 			children = (
+				A3C3D6B22F8A818300EA2DF7 /* InvoScanAIStoreKit.storekit */,
 				A1000010000000000000001 /* FacturaAI */,
 				A1000040000000000000001 /* Products */,
 			);
@@ -64,6 +73,10 @@
 				A1000010000000000000001 /* FacturaAI */,
 			);
 			name = FacturaAI;
+			packageProductDependencies = (
+				A2000020000000000000001 /* RevenueCat */,
+				A2000040000000000000001 /* RevenueCatUI */,
+			);
 			productName = FacturaAI;
 			productReference = A1000050000000000000001 /* FacturaAI.app */;
 			productType = "com.apple.product-type.application";
@@ -93,6 +106,9 @@
 			);
 			mainGroup = A1000030000000000000001;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A2000050000000000000001 /* XCRemoteSwiftPackageReference "purchases-ios" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A1000040000000000000001 /* Products */;
 			projectDirPath = "";
@@ -307,6 +323,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A2000050000000000000001 /* XCRemoteSwiftPackageReference "purchases-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A2000020000000000000001 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A2000050000000000000001 /* XCRemoteSwiftPackageReference "purchases-ios" */;
+			productName = RevenueCat;
+		};
+		A2000040000000000000001 /* RevenueCatUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A2000050000000000000001 /* XCRemoteSwiftPackageReference "purchases-ios" */;
+			productName = RevenueCatUI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A10000A0000000000000001 /* Project object */;
 }

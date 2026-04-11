@@ -64,6 +64,7 @@ ALTER TABLE gmail_syncs
 
 CREATE TABLE IF NOT EXISTS oauth_states (
     state VARCHAR PRIMARY KEY,
+    anonymous_token TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -220,3 +221,14 @@ ALTER TABLE expenses
 
 CREATE INDEX IF NOT EXISTS idx_expenses_type ON expenses(user_id, type);
 CREATE INDEX IF NOT EXISTS idx_expenses_company ON expenses(company_id) WHERE company_id IS NOT NULL;
+
+-- ── Anonymous user support ──────────────────────────────────
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS is_anonymous BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS anonymous_extractions INT NOT NULL DEFAULT 0;
+
+-- Allow NULL email for anonymous users
+ALTER TABLE users ALTER COLUMN email DROP NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_users_anonymous
+    ON users(is_anonymous, created_at) WHERE is_anonymous = TRUE;

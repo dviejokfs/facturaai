@@ -8,6 +8,7 @@ const AUDIENCE = "invoscanai-ios";
 export type JwtPayload = {
   sub: string; // user id
   email: string;
+  anonymous?: boolean;
 };
 
 export async function signToken(payload: JwtPayload): Promise<string> {
@@ -21,10 +22,26 @@ export async function signToken(payload: JwtPayload): Promise<string> {
     .sign(secret);
 }
 
+/** Sign a short-lived token for anonymous onboarding users (24h). */
+export async function signAnonymousToken(userId: string): Promise<string> {
+  return await new SignJWT({ anonymous: true })
+    .setProtectedHeader({ alg: "HS256" })
+    .setSubject(userId)
+    .setIssuer(ISSUER)
+    .setAudience(AUDIENCE)
+    .setIssuedAt()
+    .setExpirationTime("24h")
+    .sign(secret);
+}
+
 export async function verifyToken(token: string): Promise<JwtPayload> {
   const { payload } = await jwtVerify(token, secret, {
     issuer: ISSUER,
     audience: AUDIENCE,
   });
-  return { sub: payload.sub!, email: payload.email as string };
+  return {
+    sub: payload.sub!,
+    email: payload.email as string,
+    anonymous: payload.anonymous as boolean | undefined,
+  };
 }

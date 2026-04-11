@@ -146,10 +146,8 @@ struct ScanView: View {
                 DocumentPicker { url in
                     guard let url else { return }
                     guard url.startAccessingSecurityScopedResource() else { return }
-                    defer { url.stopAccessingSecurityScopedResource() }
-                    guard let data = try? Data(contentsOf: url) else { return }
                     let filename = url.lastPathComponent
-                    startExtraction(data, filename: filename)
+                    startFileExtraction(url, filename: filename)
                 }
             }
             .sheet(isPresented: $showManual) {
@@ -235,6 +233,37 @@ struct ScanView: View {
             withAnimation { errorMessage = error.localizedDescription }
         }
     }
+
+    /// File-based extraction — streams PDF without loading into memory.
+    private func startFileExtraction(_ fileURL: URL, filename: String) {
+        // Check file size without loading into memory
+        if let attrs = try? FileManager.default.attributesOfItem(atPath: fileURL.path),
+           let size = attrs[.size] as? Int, size > maxUploadBytes {
+            fileURL.stopAccessingSecurityScopedResource()
+            showFileTooLarge = true
+            return
+        }
+        Task {
+            scanning = true
+            errorMessage = nil
+            lastUploadedData = nil
+            do {
+                let expense = try await store.extractReceiptFromFile(fileURL: fileURL, filename: filename)
+                fileURL.stopAccessingSecurityScopedResource()
+                scanning = false
+                extractedExpense = expense
+                showReview = true
+            } catch let APIError.http(code, body) where code == 422 && body.contains("not_an_invoice") {
+                fileURL.stopAccessingSecurityScopedResource()
+                scanning = false
+                showNotInvoice = true
+            } catch {
+                fileURL.stopAccessingSecurityScopedResource()
+                scanning = false
+                withAnimation { errorMessage = error.localizedDescription }
+            }
+        }
+    }
 }
 
 // MARK: - Review Extracted Expense
@@ -297,15 +326,19 @@ struct ReviewExtractedView: View {
 
                         VStack(spacing: 12) {
                             Button {
+                                let exp = expense
                                 dismiss()
-                                // Small delay so the sheet dismisses before triggering scan tab actions
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                                    NotificationCenter.default.post(name: .scanAnother, object: nil)
+                                    // Switch to Invoices tab and navigate to detail
+                                    NotificationCenter.default.post(name: .switchToTab, object: 1)
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                        NotificationCenter.default.post(name: .navigateToExpense, object: exp)
+                                    }
                                 }
                             } label: {
                                 HStack {
-                                    Image(systemName: "doc.viewfinder.fill")
-                                    Text(NSLocalizedString("review.scan_another", comment: "")).fontWeight(.semibold)
+                                    Image(systemName: "doc.text.fill")
+                                    Text(NSLocalizedString("review.view_detail", comment: "")).fontWeight(.semibold)
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
@@ -316,8 +349,11 @@ struct ReviewExtractedView: View {
 
                             Button {
                                 dismiss()
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                                    NotificationCenter.default.post(name: .scanAnother, object: nil)
+                                }
                             } label: {
-                                Text(NSLocalizedString("common.done", comment: ""))
+                                Text(NSLocalizedString("review.scan_another", comment: ""))
                                     .font(.subheadline)
                                     .fontWeight(.medium)
                                     .foregroundStyle(.indigo)

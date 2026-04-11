@@ -8,6 +8,13 @@ struct AccountantSettingsView: View {
     @State private var isSaving = false
     @State private var saved = false
 
+    private var isEmailValid: Bool {
+        let trimmed = accountantEmail.trimmingCharacters(in: .whitespaces)
+        if trimmed.isEmpty { return true } // optional field
+        let regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        return trimmed.wholeMatch(of: regex) != nil
+    }
+
     var body: some View {
         Form {
             Section {
@@ -27,6 +34,11 @@ struct AccountantSettingsView: View {
                     .keyboardType(.emailAddress)
                     .autocapitalization(.none)
                     .autocorrectionDisabled()
+                if !isEmailValid {
+                    Text(NSLocalizedString("accountant.email.invalid", comment: ""))
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
             }
 
             Section(NSLocalizedString("accountant.section.tax", comment: "")) {
@@ -51,7 +63,7 @@ struct AccountantSettingsView: View {
                         }
                     }
                 }
-                .disabled(isSaving)
+                .disabled(isSaving || !isEmailValid)
             }
         }
         .navigationTitle(NSLocalizedString("accountant.title", comment: ""))

@@ -1,0 +1,80 @@
+{
+  "appPolicies": {
+    "eula": "",
+    "policies": [
+      {
+        "locale": "en_US",
+        "policyText": "",
+        "policyURL": "https://invoscanai.com/terms"
+      }
+    ]
+  },
+  "identifier": "A1B2C3D4",
+  "nonRenewingSubscriptions": [],
+  "products": [],
+  "subscriptionGroups": [
+    {
+      "id": "INVOSCANAI_PRO",
+      "localizations": [],
+      "name": "InvoScanAI Pro",
+      "subscriptions": [
+        {
+          "displayPrice": "9.99",
+          "familyShareable": false,
+          "internalID": "PRO_MONTHLY_01",
+          "localizations": [
+            {
+              "description": "Unlimited scanning, AI, Gmail sync and exports",
+              "displayName": "InvoScanAI Pro Monthly",
+              "locale": "en_US"
+            },
+            {
+              "description": "Escaneo ilimitado, IA, Gmail y exportaciones",
+              "displayName": "InvoScanAI Pro Mensual",
+              "locale": "es_ES"
+            }
+          ],
+          "productID": "promonthly",
+          "referenceName": "Pro Monthly",
+          "type": "RecurringSubscription",
+          "adHocOffers": [],
+          "codeOffers": [],
+          "groupNumber": 1,
+          "recurringSubscriptionPeriod": "P1M",
+          "subscriptionGroupID": "INVOSCANAI_PRO",
+          "winbackOffers": []
+        },
+        {
+          "displayPrice": "39.99",
+          "familyShareable": false,
+          "internalID": "PRO_YEARLY_01",
+          "localizations": [
+            {
+              "description": "Unlimited scanning, AI, Gmail sync and exports",
+              "displayName": "InvoScanAI Pro Yearly",
+              "locale": "en_US"
+            },
+            {
+              "description": "Escaneo ilimitado, IA, Gmail y exportaciones",
+              "displayName": "InvoScanAI Pro Anual",
+              "locale": "es_ES"
+            }
+          ],
+          "productID": "proyearly",
+          "referenceName": "Pro Yearly",
+          "type": "RecurringSubscription",
+          "adHocOffers": [],
+          "codeOffers": [],
+          "groupNumber": 1,
+          "recurringSubscriptionPeriod": "P1Y",
+          "subscriptionGroupID": "INVOSCANAI_PRO",
+          "winbackOffers": []
+        }
+      ]
+    }
+  ],
+  "version": {
+    "major": 4,
+    "minor": 0
+  }
+}
