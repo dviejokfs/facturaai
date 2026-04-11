@@ -232,3 +232,8 @@ ALTER TABLE users ALTER COLUMN email DROP NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_users_anonymous
     ON users(is_anonymous, created_at) WHERE is_anonymous = TRUE;
+
+-- ── Gmail Push (Pub/Sub watch) ─────────────────────────────
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS gmail_history_id VARCHAR,
+    ADD COLUMN IF NOT EXISTS gmail_watch_expiry TIMESTAMPTZ;

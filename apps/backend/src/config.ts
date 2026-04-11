@@ -44,6 +44,9 @@ const schema = z.object({
   APNS_KEY_P8: z.string().default(""), // .p8 key content (inline, base64, or raw PEM)
   APNS_ENVIRONMENT: z.enum(["development", "production"]).default("development"),
 
+  // Google Cloud Pub/Sub (Gmail push notifications)
+  GOOGLE_CLOUD_PROJECT: z.string().default(""),
+
   // Temps email service
   TEMPS_API_URL: z.string().url().optional(),
   TEMPS_DEPLOYMENT_TOKEN: z.string().default(""),

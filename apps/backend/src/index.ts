@@ -15,6 +15,8 @@ import { extractRoutes } from "./routes/extract";
 import { companyRoutes } from "./routes/companies";
 import { contactRoutes } from "./routes/contacts";
 import { deviceRoutes } from "./routes/devices";
+import { gmailWebhookRoutes } from "./routes/gmailWebhook";
+import { ensureAllWatches, renewExpiringWatches } from "./services/gmailWatch";
 
 // Run migrations before starting the server
 await runMigrations();
@@ -49,6 +51,7 @@ app.route("/auth", authRoutes);
 
 // Public webhooks (auth via shared secret in the route handler itself)
 app.route("/webhooks/revenuecat", revenuecatRoutes);
+app.route("/webhooks/gmail", gmailWebhookRoutes);
 
 // Public share download (no auth)
 app.route("/e", shareDownloadRoute);
@@ -156,11 +159,18 @@ app.onError((err, c) => {
 // Graceful shutdown
 const shutdown = async () => {
   console.log("[server] Shutting down gracefully...");
+  clearInterval(watchRenewalInterval);
   await sql.close();
   process.exit(0);
 };
 process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
+
+// Gmail Pub/Sub: ensure watches on startup + renew every 6 hours
+ensureAllWatches().catch((err) => console.error("[startup] ensureAllWatches failed:", err));
+const watchRenewalInterval = setInterval(() => {
+  renewExpiringWatches().catch((err) => console.error("[cron] renewExpiringWatches failed:", err));
+}, 6 * 60 * 60 * 1000); // every 6 hours
 
 console.log(`InvoScanAI backend listening on :${config.PORT}`);
 export default {

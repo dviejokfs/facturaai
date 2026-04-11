@@ -57,6 +57,7 @@ struct ExportView: View {
                 }
             }
             .navigationTitle(NSLocalizedString("export.title", comment: ""))
+            .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 if selectedQuarter.isEmpty {
                     selectedQuarter = store.currentQuarter()

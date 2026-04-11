@@ -150,3 +150,74 @@ function isInvoiceFile(filename: string, mimeType: string): boolean {
   if (/invoice|factura|receipt|recibo/i.test(lower)) return true;
   return false;
 }
+
+/**
+ * Incremental sync using history.list().
+ * Given a startHistoryId, returns only NEW message IDs that arrived since then
+ * and match our invoice criteria (have PDF attachments).
+ * Returns { messageIds, latestHistoryId }.
+ */
+export async function listNewMessagesSinceHistory(
+  accessToken: string,
+  refreshToken: string | null,
+  userId: string,
+  startHistoryId: string
+): Promise<{ messageIds: string[]; latestHistoryId: string | null }> {
+  const auth = clientForUser(accessToken, refreshToken, userId);
+  const gmail = google.gmail({ version: "v1", auth });
+
+  const messageIds = new Set<string>();
+  let pageToken: string | undefined;
+  let latestHistoryId: string | null = null;
+
+  do {
+    const res = await withBackoff(() =>
+      gmail.users.history.list({
+        userId: "me",
+        startHistoryId,
+        historyTypes: ["messageAdded"],
+        pageToken,
+      })
+    );
+
+    latestHistoryId = res.data.historyId ?? latestHistoryId;
+
+    for (const h of res.data.history ?? []) {
+      for (const added of h.messagesAdded ?? []) {
+        if (added.message?.id) {
+          messageIds.add(added.message.id);
+        }
+      }
+    }
+
+    pageToken = res.data.nextPageToken ?? undefined;
+  } while (pageToken);
+
+  return { messageIds: Array.from(messageIds), latestHistoryId };
+}
+
+/**
+ * Check if a single message has invoice-like PDF attachments.
+ * Lightweight check — only fetches metadata, not attachment data.
+ */
+export async function messageHasInvoiceAttachments(
+  accessToken: string,
+  refreshToken: string | null,
+  messageId: string,
+  userId?: string
+): Promise<boolean> {
+  const auth = clientForUser(accessToken, refreshToken, userId);
+  const gmail = google.gmail({ version: "v1", auth });
+
+  const msg = await withBackoff(() =>
+    gmail.users.messages.get({
+      userId: "me",
+      id: messageId,
+      format: "metadata",
+      metadataHeaders: ["Subject"],
+    })
+  );
+
+  const parts = flattenParts(msg.data.payload);
+  return parts.some((p) => p.filename && isInvoiceFile(p.filename, p.mimeType ?? ""));
+}

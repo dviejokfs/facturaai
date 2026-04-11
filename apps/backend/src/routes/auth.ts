@@ -7,6 +7,7 @@ import { sql } from "../db/client";
 import { config } from "../config";
 import { deleteFile } from "../services/storage";
 import { sendWelcomeEmail } from "../services/email";
+import { watchGmail } from "../services/gmailWatch";
 
 /**
  * Merge anonymous user's expenses into the real user, then delete the anonymous user.
@@ -97,6 +98,13 @@ authRoutes.get("/google/callback", async (c) => {
   if (user.is_new) {
     sendWelcomeEmail(user.email, profile.name ?? null).catch((err) =>
       console.error("Welcome email failed:", err),
+    );
+  }
+
+  // Start Gmail push notifications (fire-and-forget)
+  if (tokens.access_token) {
+    watchGmail(user.id, tokens.access_token, tokens.refresh_token ?? null).catch((err) =>
+      console.error("[auth] watchGmail failed:", err)
     );
   }
 

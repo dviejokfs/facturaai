@@ -166,6 +166,7 @@ struct ExpensesListView: View {
             }
             .searchable(text: $searchText, prompt: NSLocalizedString("expenses.search", comment: ""))
             .navigationTitle(NSLocalizedString("expenses.title", comment: ""))
+            .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: Expense.self) { ExpenseDetailView(expense: $0) }
             .onReceive(NotificationCenter.default.publisher(for: .navigateToExpense)) { notif in
                 if let expense = notif.object as? Expense {

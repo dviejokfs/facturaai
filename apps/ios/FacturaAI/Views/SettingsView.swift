@@ -297,6 +297,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle(NSLocalizedString("settings.title", comment: ""))
+            .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showSignIn) {
                 SignInPrompt(
                     title: NSLocalizedString("signIn.title", comment: ""),
