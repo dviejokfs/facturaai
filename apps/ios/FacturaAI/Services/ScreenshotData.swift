@@ -8,6 +8,21 @@ enum ScreenshotData {
         ProcessInfo.processInfo.arguments.contains("-UITestScreenshotMode")
     }
 
+    /// Returns the tab index to show, read from `-ScreenshotTab N` launch argument.
+    /// Defaults to 0 (Dashboard) if not specified.
+    static var initialTab: Int {
+        let args = ProcessInfo.processInfo.arguments
+        guard let idx = args.firstIndex(of: "-ScreenshotTab"),
+              idx + 1 < args.count,
+              let tab = Int(args[idx + 1]) else { return 0 }
+        return tab
+    }
+
+    /// Returns true if `-ScreenshotScrollDown` launch argument is present.
+    static var shouldScrollDown: Bool {
+        ProcessInfo.processInfo.arguments.contains("-ScreenshotScrollDown")
+    }
+
     @MainActor
     static func seedAuth(_ auth: AuthService) {
         auth.isSignedIn = true

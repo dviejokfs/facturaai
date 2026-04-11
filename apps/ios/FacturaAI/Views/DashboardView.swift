@@ -31,87 +31,97 @@ struct DashboardView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    // Onboarding checklist (after sign-up)
-                    if shouldShowOnboardingChecklist {
-                        OnboardingChecklistCard(
-                            gmailDone: auth.gmailConnected,
-                            accountantDone: auth.accountantEmail != nil && !(auth.accountantEmail?.isEmpty ?? true),
-                            onGmail: { showGmailSync = true },
-                            onAccountant: { showAccountantSetup = true },
-                            onDismiss: { withAnimation { hasCompletedOnboardingChecklist = true } }
-                        )
-                    }
-
-                    if store.expenses.isEmpty {
-                        WelcomeHeader()
-                        QuickActions(onScanTap: onScanTap)
-                        if !shouldShowOnboardingChecklist {
-                            GettingStartedChecklist()
-                        }
-                    } else {
-                        let q = activeQuarter
-                        let totals = store.totalsByCurrency(for: q)
-
-                        // Quarter picker
-                        if availableQuarters.count > 1 {
-                            QuarterPicker(
-                                quarters: availableQuarters,
-                                selected: Binding(
-                                    get: { activeQuarter },
-                                    set: { selectedQuarter = $0 }
-                                )
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 16) {
+                        // Onboarding checklist (after sign-up)
+                        if shouldShowOnboardingChecklist {
+                            OnboardingChecklistCard(
+                                gmailDone: auth.gmailConnected,
+                                accountantDone: auth.accountantEmail != nil && !(auth.accountantEmail?.isEmpty ?? true),
+                                onGmail: { showGmailSync = true },
+                                onAccountant: { showAccountantSetup = true },
+                                onDismiss: { withAnimation { hasCompletedOnboardingChecklist = true } }
                             )
                         }
 
-                        // Main totals per currency
-                        if totals.isEmpty {
-                            VStack(spacing: 8) {
-                                Image(systemName: "calendar.badge.exclamationmark")
-                                    .font(.title)
-                                    .foregroundStyle(.secondary)
-                                Text(String(format: NSLocalizedString("dashboard.no_expenses_quarter", comment: ""), q))
-                                    .foregroundStyle(.secondary)
+                        if store.expenses.isEmpty {
+                            WelcomeHeader()
+                            QuickActions(onScanTap: onScanTap)
+                            if !shouldShowOnboardingChecklist {
+                                GettingStartedChecklist()
                             }
-                            .frame(maxWidth: .infinity)
-                            .padding(24)
-                            .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemGroupedBackground)))
                         } else {
-                            ForEach(totals) { t in
-                                SummaryCard(quarter: q, totals: t)
+                            let q = activeQuarter
+                            let totals = store.totalsByCurrency(for: q)
+
+                            // Quarter picker
+                            if availableQuarters.count > 1 {
+                                QuarterPicker(
+                                    quarters: availableQuarters,
+                                    selected: Binding(
+                                        get: { activeQuarter },
+                                        set: { selectedQuarter = $0 }
+                                    )
+                                )
                             }
+
+                            // Main totals per currency
+                            if totals.isEmpty {
+                                VStack(spacing: 8) {
+                                    Image(systemName: "calendar.badge.exclamationmark")
+                                        .font(.title)
+                                        .foregroundStyle(.secondary)
+                                    Text(String(format: NSLocalizedString("dashboard.no_expenses_quarter", comment: ""), q))
+                                        .foregroundStyle(.secondary)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(24)
+                                .background(RoundedRectangle(cornerRadius: 16).fill(Color(.secondarySystemGroupedBackground)))
+                            } else {
+                                ForEach(totals) { t in
+                                    SummaryCard(quarter: q, totals: t)
+                                }
+                            }
+
+                            // Income vs Expense breakdown
+                            IncomeExpenseCard(quarter: q)
+
+                            // Pending review alert
+                            let pendingCount = store.expenses.filter { $0.status == .pending }.count
+                            if pendingCount > 0 {
+                                PendingReviewCard(count: pendingCount)
+                            }
+
+                            // Key metrics row
+                            KeyMetricsRow(quarter: q)
+
+                            // Monthly spend chart
+                            MonthlySpendChart()
+                                .id("charts")
+
+                            // Top vendors
+                            TopVendorsCard(quarter: q)
+
+                            // Tax summary
+                            TaxSummaryCard(quarter: q)
+
+                            // Category breakdown
+                            CategoryBreakdown(items: store.byCategory(for: q))
+
+                            // Gmail sync
+                            SyncCard()
                         }
-
-                        // Income vs Expense breakdown
-                        IncomeExpenseCard(quarter: q)
-
-                        // Pending review alert
-                        let pendingCount = store.expenses.filter { $0.status == .pending }.count
-                        if pendingCount > 0 {
-                            PendingReviewCard(count: pendingCount)
+                    }
+                    .padding()
+                }
+                .onAppear {
+                    if ScreenshotData.isScreenshotMode && ScreenshotData.shouldScrollDown {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                            withAnimation { proxy.scrollTo("charts", anchor: .top) }
                         }
-
-                        // Key metrics row
-                        KeyMetricsRow(quarter: q)
-
-                        // Monthly spend chart
-                        MonthlySpendChart()
-
-                        // Top vendors
-                        TopVendorsCard(quarter: q)
-
-                        // Tax summary
-                        TaxSummaryCard(quarter: q)
-
-                        // Category breakdown
-                        CategoryBreakdown(items: store.byCategory(for: q))
-
-                        // Gmail sync
-                        SyncCard()
                     }
                 }
-                .padding()
             }
             .background(Color(.systemGroupedBackground))
             .navigationBarTitleDisplayMode(.inline)

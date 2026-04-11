@@ -27,7 +27,7 @@ struct RootView: View {
 
 struct MainTabView: View {
     @EnvironmentObject var auth: AuthService
-    @State private var selectedTab: Int = 0
+    @State private var selectedTab: Int = ScreenshotData.isScreenshotMode ? ScreenshotData.initialTab : 0
     @State private var showScan = false
 
     var body: some View {

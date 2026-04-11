@@ -2,15 +2,27 @@
 set -euo pipefail
 
 # FacturaAI App Store Screenshot Capture
-# Captures the Dashboard screen across all devices and languages.
-# For full multi-tab screenshots, use Xcode UI tests.
+# Captures all tabs across all devices and languages.
+#
+# Usage:
+#   ./scripts/capture-screenshots.sh [path/to/FacturaAI.app]
+#
+# The app must support these launch arguments:
+#   -UITestScreenshotMode YES    — seeds mock data, skips auth
+#   -ScreenshotTab N             — opens tab N (0=Dashboard, 1=Invoices, 2=Export, 3=Settings)
+#   -ScreenshotScrollDown        — scrolls the view down (for Dashboard charts)
+#
+# To retake screenshots:
+#   1. Edit mock data in ScreenshotData.swift
+#   2. Run: xcodebuild build ... (or use take-screenshots.sh which builds first)
+#   3. Run this script
 
 APP_PATH="${1:-$(find "$(dirname "$0")/../.build/screenshots" -name "FacturaAI.app" -path "*/Debug-iphonesimulator/*" 2>/dev/null | head -1)}"
 OUTPUT_DIR="$(cd "$(dirname "$0")/../../.." && pwd)/marketing/screenshots/raw"
 BUNDLE_ID="ee.blocklyne.invoscanai"
 
 if [ -z "$APP_PATH" ]; then
-  echo "Error: No built app found. Run xcodebuild first."
+  echo "Error: No built app found. Pass path as argument or run xcodebuild first."
   exit 1
 fi
 
@@ -22,17 +34,75 @@ echo ""
 # Device configs: "Name|UDID"
 declare -a DEVICES
 while IFS= read -r line; do
-  NAME=$(echo "$line" | sed 's/ (.*//')
+  NAME=$(echo "$line" | sed 's/^ *//' | sed 's/ (.*//')
   UDID=$(echo "$line" | grep -oE '[A-F0-9-]{36}')
   DEVICES+=("$NAME|$UDID")
 done < <(xcrun simctl list devices available | grep -E "iPhone 17 Pro Max|iPhone 17 Pro |iPad Pro 13-inch")
 
+if [ ${#DEVICES[@]} -eq 0 ]; then
+  echo "Error: No matching simulators found."
+  echo "Available devices:"
+  xcrun simctl list devices available | grep -E "iPhone|iPad" | head -10
+  exit 1
+fi
+
 LANGUAGES=("en" "es")
+
+# Screens: "tab_index:filename" or "tab_index_scroll:filename" for scrolled captures
+SCREENS=(
+  "0:01_Dashboard"
+  "0_scroll:02_Dashboard_Charts"
+  "1:03_Invoices"
+  "2:04_Export"
+  "3:05_Settings"
+)
+
+capture_screen() {
+  local UDID="$1"
+  local LANG="$2"
+  local DIR="$3"
+  local SCREEN_SPEC="$4"
+
+  local SPEC="${SCREEN_SPEC%%:*}"
+  local FILENAME="${SCREEN_SPEC##*:}"
+  local TAB_INDEX="${SPEC%%_*}"
+  local SCROLL=""
+
+  if [[ "$SPEC" == *"_scroll"* ]]; then
+    SCROLL="YES"
+  fi
+
+  # Terminate previous instance
+  xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true
+  sleep 0.5
+
+  # Build launch arguments
+  local LAUNCH_ARGS=(
+    -UITestScreenshotMode YES
+    -ScreenshotTab "$TAB_INDEX"
+    -AppleLanguages "($LANG)"
+    -AppleLocale "${LANG}"
+  )
+
+  if [ -n "$SCROLL" ]; then
+    LAUNCH_ARGS+=(-ScreenshotScrollDown)
+  fi
+
+  # Launch app with arguments
+  xcrun simctl launch "$UDID" "$BUNDLE_ID" "${LAUNCH_ARGS[@]}" 2>/dev/null
+
+  # Wait for app to load and render
+  sleep 4
+
+  # Capture screenshot
+  xcrun simctl io "$UDID" screenshot "$DIR/${FILENAME}.png" 2>/dev/null
+  echo "    ✓ ${FILENAME}"
+}
 
 capture_device() {
   local DEVICE_NAME="$1"
   local UDID="$2"
-  local DEVICE_SAFE=$(echo "$DEVICE_NAME" | tr ' ' '_' | tr -cd 'a-zA-Z0-9_-')
+  local DEVICE_SAFE=$(echo "$DEVICE_NAME" | sed 's/^  *//' | tr ' ' '_' | tr -cd 'a-zA-Z0-9_-')
 
   echo "=== $DEVICE_NAME ==="
 
@@ -56,29 +126,13 @@ capture_device() {
     local DIR="$OUTPUT_DIR/${DEVICE_SAFE}/${LANG}"
     mkdir -p "$DIR"
 
-    echo "  [$LANG] Launching..."
+    echo "  [$LANG]"
 
-    # Kill any previous instance
-    xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true
-    sleep 1
+    for SCREEN in "${SCREENS[@]}"; do
+      capture_screen "$UDID" "$LANG" "$DIR" "$SCREEN"
+    done
 
-    # Launch with screenshot mode + language
-    xcrun simctl launch "$UDID" "$BUNDLE_ID" \
-      -UITestScreenshotMode YES \
-      -AppleLanguages "($LANG)" \
-      -AppleLocale "${LANG}" 2>/dev/null
-
-    # Wait for app to load and render
-    sleep 5
-
-    # Capture Dashboard
-    xcrun simctl io "$UDID" screenshot "$DIR/01_Dashboard.png" 2>/dev/null
-    echo "  [$LANG] ✓ 01_Dashboard"
-
-    sleep 1
-
-    # Terminate for next language
-    xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true
+    echo ""
   done
 
   # Shutdown
@@ -91,8 +145,12 @@ for ENTRY in "${DEVICES[@]}"; do
   capture_device "$NAME" "$UDID"
 done
 
-echo "=== Done! Screenshots in: $OUTPUT_DIR ==="
+# Count total screenshots
+TOTAL=$(find "$OUTPUT_DIR" -name "*.png" 2>/dev/null | wc -l | tr -d ' ')
+
+echo "=== Done! $TOTAL screenshots in: $OUTPUT_DIR ==="
 echo ""
-echo "Note: Only the Dashboard screen was captured automatically."
-echo "For all tabs, open Xcode → Run on simulator with -UITestScreenshotMode"
-echo "and use Cmd+S to screenshot each tab manually."
+echo "Screens captured per device per language:"
+for SCREEN in "${SCREENS[@]}"; do
+  echo "  - ${SCREEN##*:}"
+done
