@@ -282,6 +282,7 @@ struct SettingsView: View {
 
                     Section {
                         Button(role: .destructive) {
+                            hasCompletedFirstUse = false
                             auth.signOut()
                         } label: {
                             Text(NSLocalizedString("settings.signOut", comment: ""))

@@ -2,10 +2,9 @@
 # Run with: bundle exec fastlane snapshot
 
 devices([
-  "iPhone 17 Pro Max",
-  "iPhone 15 Pro Max",
-  "iPhone 8 Plus",
-  "iPad Pro 13-inch (M4)"
+  "iPhone 17 Pro Max",       # 6.9" (required for App Store)
+  "iPhone 17 Pro",           # 6.3"
+  "iPad Pro 13-inch (M5)"
 ])
 
 languages([
@@ -13,7 +12,7 @@ languages([
   "es-ES"
 ])
 
-scheme("InvoScanAI")
+scheme("FacturaAI")
 output_directory("../../marketing/screenshots/raw")
 clear_previous_screenshots(true)
 

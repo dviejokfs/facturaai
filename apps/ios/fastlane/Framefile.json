@@ -15,11 +15,11 @@
     "show_complete_frame": true
   },
   "data": [
-    { "filter": "01_dashboard",  "title": { "text": "Receipts to deductions.\nIn seconds." } },
-    { "filter": "02_scan",       "title": { "text": "Snap it.\nWe handle the rest." } },
-    { "filter": "03_gmail",      "title": { "text": "Gmail invoices,\nauto-imported." } },
-    { "filter": "04_export",     "title": { "text": "One ZIP your\naccountant loves." } },
-    { "filter": "05_multiccy",   "title": { "text": "Every currency.\nNever converted." } },
-    { "filter": "06_trial",      "title": { "text": "14-day free trial.\nNo card." } }
+    { "filter": "01_Dashboard",       "title": { "text": "Your invoices.\nAt a glance." } },
+    { "filter": "02_Dashboard_Charts","title": { "text": "Spending insights.\nAutomatically." } },
+    { "filter": "03_Invoices",        "title": { "text": "Every invoice.\nOrganized." } },
+    { "filter": "04_Export",          "title": { "text": "One ZIP your\naccountant loves." } },
+    { "filter": "05_Settings",        "title": { "text": "Gmail sync.\nConnected." } },
+    { "filter": "06_Dashboard_Top",   "title": { "text": "Income & expenses.\nIn real time." } }
   ]
 }

@@ -304,6 +304,7 @@ private struct OnboardingChecklistCard: View {
             Text(NSLocalizedString("onboarding.checklist.subtitle", comment: ""))
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Button(action: onGmail) {

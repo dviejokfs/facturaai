@@ -31,15 +31,11 @@ final class APIClient {
     /// Reads API base URL from Info.plist (API_BASE_URL).
     /// Falls back to localhost for development.
     var baseURL: URL = {
-        #if DEBUG
-        return URL(string: "http://192.168.1.133:3005")!
-        #else
         guard let urlString = Bundle.main.object(forInfoDictionaryKey: "API_BASE_URL") as? String,
               let url = URL(string: urlString) else {
             fatalError("API_BASE_URL not set in Info.plist for production build")
         }
         return url
-        #endif
     }()
 
     private let session: URLSession = {

@@ -5,13 +5,13 @@ struct RootView: View {
     @EnvironmentObject var store: ExpenseStore
     @AppStorage("hasCompletedFirstUse") private var hasCompletedFirstUse = false
 
-    private var screenshotMode: Bool {
-        ProcessInfo.processInfo.arguments.contains("-UITestScreenshotMode")
-    }
-
     var body: some View {
-        if screenshotMode {
+        if ScreenshotData.isScreenshotMode {
             MainTabView()
+                .onAppear {
+                    ScreenshotData.seedAuth(auth)
+                    ScreenshotData.seedStore(store)
+                }
         } else if !hasCompletedFirstUse {
             FirstUseView()
         } else {

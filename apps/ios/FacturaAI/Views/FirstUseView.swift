@@ -25,6 +25,7 @@ struct FirstUseView: View {
     @State private var taxIdInput: String = ""
     @State private var selectedCountry: TaxCountry = .spain
     @State private var showCountryPicker = false
+    @State private var showWelcomeSignIn = false
 
     enum Step: Int, CaseIterable {
         case welcome = 0
@@ -141,10 +142,19 @@ struct FirstUseView: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 8)
 
-            Text(NSLocalizedString("onboarding.welcome.footer", comment: ""))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .padding(.bottom, 16)
+            Button {
+                showWelcomeSignIn = true
+            } label: {
+                Text(NSLocalizedString("onboarding.welcome.sign_in", comment: ""))
+                    .font(.subheadline)
+                    .foregroundStyle(.indigo)
+            }
+            .padding(.bottom, 16)
+        }
+        .sheet(isPresented: $showWelcomeSignIn) {
+            WelcomeSignInSheet {
+                hasCompletedFirstUse = true
+            }
         }
     }
 
@@ -306,7 +316,8 @@ struct FirstUseView: View {
                     Text(NSLocalizedString("onboarding.upload.subtitle", comment: ""))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 32)
                 }
                 .padding(.top, 32)
@@ -1174,5 +1185,125 @@ private struct SetupChecklistRow: View {
             .clipShape(RoundedRectangle(cornerRadius: 14))
         }
         .disabled(done)
+    }
+}
+
+// MARK: - Welcome Sign In Sheet
+
+private struct WelcomeSignInSheet: View {
+    let onSignedIn: () -> Void
+    @EnvironmentObject var auth: AuthService
+    @Environment(\.dismiss) private var dismiss
+    @State private var signingIn = false
+    @State private var signInError: String?
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                Spacer()
+
+                ZStack {
+                    Circle()
+                        .fill(Color.indigo.opacity(0.12))
+                        .frame(width: 88, height: 88)
+                    Image(systemName: "person.crop.circle.fill")
+                        .font(.system(size: 44))
+                        .foregroundStyle(.indigo)
+                }
+
+                Text(NSLocalizedString("onboarding.welcome.sign_in.title", comment: ""))
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
+
+                Text(NSLocalizedString("onboarding.welcome.sign_in.subtitle", comment: ""))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+
+                Spacer()
+
+                VStack(spacing: 12) {
+                    SignInWithAppleButton(.signIn) { request in
+                        request.requestedScopes = [.email, .fullName]
+                    } onCompletion: { result in
+                        switch result {
+                        case .success(let authorization):
+                            if let credential = authorization.credential as? ASAuthorizationAppleIDCredential {
+                                Task {
+                                    signingIn = true
+                                    signInError = nil
+                                    await auth.signInWithApple(credential: credential)
+                                    signingIn = false
+                                    if auth.isSignedIn {
+                                        onSignedIn()
+                                        dismiss()
+                                    }
+                                }
+                            }
+                        case .failure(let error):
+                            let nsError = error as NSError
+                            if nsError.code != ASAuthorizationError.canceled.rawValue {
+                                signInError = nsError.localizedDescription
+                            }
+                        }
+                    }
+                    .signInWithAppleButtonStyle(.black)
+                    .frame(height: 50)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .disabled(signingIn)
+
+                    Button {
+                        Task {
+                            signingIn = true
+                            signInError = nil
+                            await auth.signInWithGoogle()
+                            signingIn = false
+                            if auth.isSignedIn {
+                                onSignedIn()
+                                dismiss()
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "g.circle.fill")
+                            Text(NSLocalizedString("signIn.google", comment: "")).fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color(.systemGray6))
+                        .foregroundStyle(.primary)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .disabled(signingIn)
+                }
+                .padding(.horizontal, 24)
+
+                if let signInError {
+                    HStack(spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                        Text(signInError)
+                            .font(.caption)
+                            .foregroundStyle(.primary)
+                    }
+                    .padding(12)
+                    .background(Color.orange.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .padding(.horizontal, 24)
+                }
+
+                if signingIn {
+                    ProgressView()
+                        .tint(.indigo)
+                }
+
+                Spacer(minLength: 32)
+            }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(NSLocalizedString("common.close", comment: "")) { dismiss() }
+                }
+            }
+        }
     }
 }

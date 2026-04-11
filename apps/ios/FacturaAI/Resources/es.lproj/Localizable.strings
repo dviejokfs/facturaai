@@ -354,6 +354,9 @@
 "onboarding.welcome.cta_hint" = "Vamos a verlo en acción — sube tu primera factura.";
 "onboarding.welcome.cta" = "Vamos a probarlo";
 "onboarding.welcome.footer" = "Sin cuenta necesaria. Solo 30 segundos.";
+"onboarding.welcome.sign_in" = "Ya tengo una cuenta";
+"onboarding.welcome.sign_in.title" = "Inicia sesión";
+"onboarding.welcome.sign_in.subtitle" = "Accede a tu cuenta para recuperar tus facturas y configuración.";
 
 /* Onboarding — Upload */
 /* Onboarding — Nombre de empresa */

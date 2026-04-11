@@ -1,0 +1,34 @@
+default_platform(:ios)
+
+platform :ios do
+
+  desc "Generate App Store screenshots for all devices and languages"
+  desc "Usage: bundle exec fastlane screenshots"
+  lane :screenshots do
+    snapshot(
+      project: "FacturaAI.xcodeproj",
+      scheme: "FacturaAI",
+      devices: [
+        "iPhone 16 Pro Max",   # 6.7" (required)
+        "iPhone 16 Pro",       # 6.3"
+        "iPad Pro 13-inch (M4)"
+      ],
+      languages: ["en-US", "es-ES"],
+      output_directory: "../marketing/screenshots/raw",
+      clear_previous_screenshots: true,
+      override_status_bar: true,
+      stop_after_first_error: false,
+      launch_arguments: ["-UITestScreenshotMode YES"],
+      testplan: nil,
+      concurrent_simulators: true
+    )
+  end
+
+  desc "Generate screenshots and frame them with device bezels + titles"
+  desc "Usage: bundle exec fastlane framed_screenshots"
+  lane :framed_screenshots do
+    screenshots
+    frame_screenshots(path: "../marketing/screenshots/raw")
+  end
+
+end

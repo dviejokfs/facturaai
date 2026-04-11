@@ -354,6 +354,9 @@
 "onboarding.welcome.cta_hint" = "Let's see it in action — upload your first invoice.";
 "onboarding.welcome.cta" = "Let's try it";
 "onboarding.welcome.footer" = "No account needed. Takes 30 seconds.";
+"onboarding.welcome.sign_in" = "I already have an account";
+"onboarding.welcome.sign_in.title" = "Sign in";
+"onboarding.welcome.sign_in.subtitle" = "Sign in to restore your invoices and settings.";
 
 /* Onboarding — Company Name */
 "onboarding.company.title" = "Tell us about your business";
