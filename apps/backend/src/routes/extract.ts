@@ -3,10 +3,15 @@ import { extractAuto } from "../services/extract";
 import { signAnonymousToken, verifyToken } from "../auth/jwt";
 import { sql } from "../db/client";
 import { MAX_UPLOAD_BYTES, tooLargePayload } from "../services/uploadLimits";
+import { checkRate, clientIp, tooManyRequests } from "../services/rateLimit";
 
 export const extractRoutes = new Hono();
 
 const ANONYMOUS_EXTRACTION_LIMIT = 3;
+
+// Anonymous abuse caps (burns Anthropic tokens — keep tight).
+const IP_LIMIT_PER_MIN = 5;
+const IP_LIMIT_PER_DAY = 30;
 
 /**
  * POST /api/extract
@@ -17,6 +22,13 @@ const ANONYMOUS_EXTRACTION_LIMIT = 3;
  * - Rate limited to 3 extractions per anonymous user.
  */
 extractRoutes.post("/", async (c) => {
+  // IP-based throttle — applies before we do any DB or AI work.
+  const ip = clientIp(c);
+  const perMin = checkRate(`extract:ip:min:${ip}`, IP_LIMIT_PER_MIN, 60_000);
+  if (!perMin.allowed) return tooManyRequests(c, perMin, "ip_per_minute");
+  const perDay = checkRate(`extract:ip:day:${ip}`, IP_LIMIT_PER_DAY, 86_400_000);
+  if (!perDay.allowed) return tooManyRequests(c, perDay, "ip_per_day");
+
   let userId: string;
   let currentExtractions: number;
 

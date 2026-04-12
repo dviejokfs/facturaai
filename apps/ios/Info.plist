@@ -25,6 +25,25 @@
             </array>
         </dict>
     </array>
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>Invoice</string>
+            <key>CFBundleTypeRole</key>
+            <string>Viewer</string>
+            <key>LSHandlerRank</key>
+            <string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>com.adobe.pdf</string>
+                <string>public.image</string>
+                <string>public.jpeg</string>
+                <string>public.png</string>
+                <string>public.heic</string>
+            </array>
+        </dict>
+    </array>
     <key>CFBundleShortVersionString</key>
     <string>1.0</string>
     <key>CFBundleVersion</key>
@@ -32,20 +51,9 @@
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>API_BASE_URL</key>
-    <string>https://invoscanai-api-production.temps.kfs.es</string>
+    <string>https://api.invoscan.ai</string>
     <key>RC_PUBLIC_SDK_KEY_IOS</key>
     <string>appl_nKNkUgaWzJFgHDKTdMrIDNLSOcJ</string>
-    <key>NSAppTransportSecurity</key>
-    <dict>
-        <key>NSAllowsLocalNetworking</key>
-        <true/>
-    </dict>
-    <key>NSLocalNetworkUsageDescription</key>
-    <string>InvoScanAI connects to your local development server for testing.</string>
-    <key>NSBonjourServices</key>
-    <array>
-        <string>_http._tcp</string>
-    </array>
     <key>NSCameraUsageDescription</key>
     <string>InvoScanAI uses the camera to scan paper receipts and invoices.</string>
     <key>NSPhotoLibraryUsageDescription</key>

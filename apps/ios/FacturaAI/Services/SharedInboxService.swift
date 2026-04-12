@@ -39,4 +39,19 @@ final class SharedInboxService {
             }
         }
     }
+
+    /// Handles "Open In InvoScanAI…" opens from Files/Mail/Safari where iOS passes
+    /// a `file://` URL directly. Uses security-scoped access because the file lives
+    /// outside our sandbox (in a document-picker-vended location).
+    func ingestFile(at url: URL, store: ExpenseStore) async {
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+
+        do {
+            let data = try Data(contentsOf: url)
+            await store.uploadSharedFile(data: data, filename: url.lastPathComponent)
+        } catch {
+            print("[SharedInbox] ingestFile failed for \(url.lastPathComponent): \(error)")
+        }
+    }
 }

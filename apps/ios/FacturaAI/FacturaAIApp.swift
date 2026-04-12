@@ -22,8 +22,11 @@ struct InvoScanAIApp: App {
                 .environmentObject(revenueCat)
                 .preferredColorScheme(.light)
                 .onOpenURL { url in
-                    guard url.scheme == "invoscanai", url.host == "share" else { return }
-                    Task { await SharedInboxService.shared.ingest(from: url, store: expenseStore) }
+                    if url.scheme == "invoscanai", url.host == "share" {
+                        Task { await SharedInboxService.shared.ingest(from: url, store: expenseStore) }
+                    } else if url.isFileURL {
+                        Task { await SharedInboxService.shared.ingestFile(at: url, store: expenseStore) }
+                    }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .shouldRequestPushPermission)) { _ in
                     requestPushNotifications()

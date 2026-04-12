@@ -6,11 +6,24 @@ import { uploadFile, keyForUpload } from "../services/storage";
 import { resolveTransaction } from "../services/resolve";
 import { checkScanLimit } from "../services/entitlements";
 import { MAX_UPLOAD_BYTES, tooLargePayload } from "../services/uploadLimits";
+import { checkRate, clientIp, tooManyRequests } from "../services/rateLimit";
 
 export const uploadRoutes = new Hono();
 
+// Authenticated burst protection (monthly scan cap is separate, in checkScanLimit).
+const USER_UPLOADS_PER_MIN = 10;
+const IP_UPLOADS_PER_MIN = 20;
+
 uploadRoutes.post("/", async (c) => {
   const user = c.get("user");
+
+  // Per-user burst throttle.
+  const perUser = checkRate(`upload:user:${user.sub}`, USER_UPLOADS_PER_MIN, 60_000);
+  if (!perUser.allowed) return tooManyRequests(c, perUser, "user_per_minute");
+
+  // Per-IP throttle (defense against one compromised account fanning out across devices).
+  const perIp = checkRate(`upload:ip:${clientIp(c)}`, IP_UPLOADS_PER_MIN, 60_000);
+  if (!perIp.allowed) return tooManyRequests(c, perIp, "ip_per_minute");
 
   // Enforce scan limit for free/trial users
   const scanCheck = await checkScanLimit(user.sub);
