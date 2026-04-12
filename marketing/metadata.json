@@ -1,0 +1,77 @@
+{
+  "// App-level (shared across all versions)": "",
+  "app": {
+    "primaryCategory": "FINANCE",
+    "secondaryCategory": "BUSINESS",
+    "contentRightsDeclaration": "DOES_NOT_USE_THIRD_PARTY_CONTENT"
+  },
+
+  "// Age rating — all answered NONE by default (no sensitive content)": "",
+  "ageRating": {
+    "alcoholTobaccoOrDrugUseOrReferences": "NONE",
+    "contests": "NONE",
+    "gambling": false,
+    "gamblingAndContests": false,
+    "gamblingSimulated": "NONE",
+    "horrorOrFearThemes": "NONE",
+    "kidsAgeBand": null,
+    "matureOrSuggestiveThemes": "NONE",
+    "medicalOrTreatmentInformation": "NONE",
+    "profanityOrCrudeHumor": "NONE",
+    "sexualContentGraphicAndNudity": "NONE",
+    "sexualContentOrNudity": "NONE",
+    "unrestrictedWebAccess": false,
+    "violenceCartoonOrFantasy": "NONE",
+    "violenceRealistic": "NONE",
+    "violenceRealisticProlongedGraphicOrSadistic": "NONE"
+  },
+
+  "// Version + localized copy per locale": "",
+  "version": {
+    "copyright": "© 2026 Kung Fu Software SL",
+    "releaseType": "MANUAL"
+  },
+
+  "localizations": {
+    "en-US": {
+      "// App-level localization (shared across versions)": "",
+      "name": "InvoScanAI: Invoice Scanner",
+      "subtitle": "Scan, organize & export",
+      "privacyPolicyUrl": "https://invoscanai.com/privacy",
+      "privacyChoicesUrl": "https://invoscanai.com/privacy",
+
+      "// Version-level localization (changes per release)": "",
+      "description": "InvoScanAI turns invoice chaos into clean, quarterly reports ready for your accountant.\n\n• SCAN ANY INVOICE\nPoint your camera at a paper receipt or pick a PDF — AI extracts vendor, tax ID, subtotal, VAT and IRPF in seconds. No typing required.\n\n• GMAIL AUTO-SYNC\nConnect your inbox once and we’ll detect, import and categorize every invoice email — in the background, 24/7.\n\n• INCOME & EXPENSES\nTrack both the invoices you receive AND the ones you issue. Real-time dashboards show your quarterly totals, top vendors, and VAT owed.\n\n• ACCOUNTANT-READY EXPORTS\nOne tap generates a ZIP (PDFs + CSV) your gestor will love. Send it by email, WhatsApp, or share to any app.\n\n• BUILT FOR SPANISH FREELANCERS\nIVA, IRPF, Modelo 303 categories and multi-company support included. Works in English and Spanish.\n\n• PRIVATE BY DEFAULT\nYour invoices are encrypted at rest. We never sell or share your data. Sign in with Apple for zero-email setup.\n\nStart free — scan up to 10 invoices, then upgrade to Pro for unlimited AI extraction, Gmail sync, and exports.",
+      "keywords": "invoice,scan,receipt,expense,tax,vat,irpf,accountant,bookkeeping,autonomo,freelance,gmail",
+      "promotionalText": "NEW: Gmail auto-sync — we import invoices the moment they hit your inbox. Try it free today.",
+      "marketingUrl": "https://invoscanai.com",
+      "supportUrl": "https://invoscanai.com/support",
+      "whatsNew": "• Gmail auto-sync: invoices import the moment they arrive\n• Income tracking alongside expenses\n• Multi-company support\n• Post-signup checklist to get you productive in 60 seconds\n• Bug fixes and performance improvements"
+    },
+    "es-ES": {
+      "name": "InvoScanAI: Escáner IA",
+      "subtitle": "Escanea, organiza y exporta",
+      "privacyPolicyUrl": "https://invoscanai.com/es/privacidad",
+      "privacyChoicesUrl": "https://invoscanai.com/es/privacidad",
+
+      "description": "InvoScanAI convierte el caos de facturas en informes trimestrales listos para tu gestor.\n\n• ESCANEA CUALQUIER FACTURA\nApunta la cámara a un ticket o elige un PDF — la IA extrae proveedor, NIF, base, IVA e IRPF en segundos. Sin escribir nada.\n\n• SINCRONIZACIÓN GMAIL AUTOMÁTICA\nConecta tu correo una vez y detectamos, importamos y clasificamos cada email de factura — en segundo plano, 24/7.\n\n• INGRESOS Y GASTOS\nSigue tanto las facturas que recibes COMO las que emites. Los dashboards muestran totales trimestrales, principales proveedores e IVA a ingresar.\n\n• EXPORTACIONES LISTAS PARA TU GESTOR\nUn toque genera un ZIP (PDFs + CSV) que tu gestoría va a adorar. Envíalo por email, WhatsApp o compártelo en cualquier app.\n\n• DISEÑADO PARA AUTÓNOMOS EN ESPAÑA\nIVA, IRPF, categorías del Modelo 303 y soporte multi-empresa incluidos. Funciona en español e inglés.\n\n• PRIVADO POR DEFECTO\nTus facturas están cifradas en reposo. Nunca vendemos ni compartimos tus datos. Inicia sesión con Apple sin dar tu email.\n\nEmpieza gratis — escanea hasta 10 facturas, luego mejora a Pro para extracción IA ilimitada, Gmail y exportaciones.",
+      "keywords": "factura,escanear,ticket,gasto,iva,irpf,gestor,trimestral,contabilidad,autonomo,gmail",
+      "promotionalText": "NUEVO: Sincronización Gmail automática — importamos facturas en cuanto llegan. Pruébalo gratis.",
+      "marketingUrl": "https://invoscanai.com/es",
+      "supportUrl": "https://invoscanai.com/es/soporte",
+      "whatsNew": "• Sincronización Gmail automática: las facturas se importan al instante\n• Seguimiento de ingresos junto a gastos\n• Soporte multi-empresa\n• Checklist post-registro para ser productivo en 60 segundos\n• Correcciones y mejoras de rendimiento"
+    }
+  },
+
+  "// App Review contact info — shown only to Apple's review team": "",
+  "appReviewInfo": {
+    "contactFirstName": "David",
+    "contactLastName": "Viejo",
+    "contactEmail": "david@kungfusoftware.es",
+    "contactPhone": "+34 600 000 000",
+    "demoAccountName": "",
+    "demoAccountPassword": "",
+    "demoAccountRequired": false,
+    "notes": "To explore the app without signing in, the reviewer can use the anonymous/demo mode from the first-use screen. Gmail sync requires a real Google account; it is optional. The Pro subscription uses RevenueCat with a 7-day free trial."
+  }
+}
