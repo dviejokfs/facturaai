@@ -78,12 +78,8 @@ struct PaywallView: View {
                                 .frame(maxWidth: .infinity)
                         }
 
-                        // Auto-renewal disclosure (required by Apple)
-                        Text(NSLocalizedString("paywall.disclosure", comment: ""))
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: .infinity)
+                        // Auto-renewal disclosure + tappable legal links (required by Apple)
+                        LegalLinks()
                             .padding(.top, 4)
                     }
                     .padding(20)

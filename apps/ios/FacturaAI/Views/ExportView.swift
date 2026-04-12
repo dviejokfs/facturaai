@@ -23,6 +23,12 @@ struct ExportView: View {
     @State private var warningReviewExpenses: [Expense] = []
     @State private var warningReviewTitle: String = ""
     @State private var showWarningReview = false
+    @State private var showExportPaywall = false
+    @ObservedObject private var rc = RevenueCatService.shared
+
+    private var isPro: Bool {
+        rc.activeEntitlements.contains("pro") || rc.activeEntitlements.contains("business")
+    }
 
     enum ExportPhase {
         case preview
@@ -103,6 +109,9 @@ struct ExportView: View {
                     title: warningReviewTitle,
                     expenses: warningReviewExpenses
                 )
+            }
+            .sheet(isPresented: $showExportPaywall) {
+                PaywallSheet(placement: .featureGate)
             }
         }
     }
@@ -234,13 +243,23 @@ struct ExportView: View {
                 // Generate button
                 Section {
                     Button {
-                        Task { await generateExport() }
+                        if isPro {
+                            Task { await generateExport() }
+                        } else {
+                            showExportPaywall = true
+                        }
                     } label: {
                         HStack {
                             Spacer()
-                            Label(NSLocalizedString("export.generate", comment: ""),
-                                  systemImage: "square.and.arrow.up.fill")
-                                .fontWeight(.semibold)
+                            if isPro {
+                                Label(NSLocalizedString("export.generate", comment: ""),
+                                      systemImage: "square.and.arrow.up.fill")
+                                    .fontWeight(.semibold)
+                            } else {
+                                Label(NSLocalizedString("export.generate", comment: ""),
+                                      systemImage: "lock.fill")
+                                    .fontWeight(.semibold)
+                            }
                             Spacer()
                         }
                     }

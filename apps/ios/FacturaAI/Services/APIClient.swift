@@ -7,9 +7,18 @@ enum UpgradeReason: String {
     case unknown
 }
 
+/// Structured detail for 413 responses from invoice upload endpoints.
+struct FileTooLargeInfo: Equatable {
+    let receivedMb: Double
+    let limitMb: Double
+}
+
 enum APIError: Error, LocalizedError {
     case notAuthenticated
     case upgradeNeeded(UpgradeReason)
+    case fileTooLarge(FileTooLargeInfo)
+    case notAnInvoice(String)
+    case extractionFailed(String)
     case http(Int, String)
     case decoding(Error)
     case transport(Error)
@@ -18,6 +27,14 @@ enum APIError: Error, LocalizedError {
         switch self {
         case .notAuthenticated: return "Not authenticated"
         case .upgradeNeeded: return "Upgrade required"
+        case .fileTooLarge(let info):
+            let fmt = String(
+                format: NSLocalizedString("upload.error.too_large", comment: ""),
+                info.receivedMb, info.limitMb
+            )
+            return fmt
+        case .notAnInvoice(let msg): return msg
+        case .extractionFailed(let msg): return msg
         case .http(let code, let body): return "HTTP \(code): \(body)"
         case .decoding(let e): return "Decoding: \(e.localizedDescription)"
         case .transport(let e): return "Network: \(e.localizedDescription)"
@@ -391,6 +408,27 @@ final class APIClient {
         let _: EmptyResponse = try await request("DELETE", path: "api/contacts/\(id)")
     }
 
+    /// Counterparties (vendors + clients) aggregated from expenses with stats.
+    /// - role: "vendor" | "client" | nil for both
+    func listCounterparties(role: String? = nil, query: String? = nil) async throws -> [RemoteCounterparty] {
+        var items: [URLQueryItem] = []
+        if let role, !role.isEmpty { items.append(URLQueryItem(name: "role", value: role)) }
+        if let query, !query.isEmpty { items.append(URLQueryItem(name: "q", value: query)) }
+        var comps = URLComponents()
+        comps.queryItems = items.isEmpty ? nil : items
+        let suffix = comps.percentEncodedQuery.map { "?\($0)" } ?? ""
+        return try await request("GET", path: "api/contacts/counterparties\(suffix)")
+    }
+
+    func counterpartyInvoices(name: String, taxId: String?) async throws -> [RemoteExpense] {
+        var items: [URLQueryItem] = [URLQueryItem(name: "name", value: name)]
+        if let taxId, !taxId.isEmpty { items.append(URLQueryItem(name: "taxId", value: taxId)) }
+        var comps = URLComponents()
+        comps.queryItems = items
+        let suffix = comps.percentEncodedQuery.map { "?\($0)" } ?? ""
+        return try await request("GET", path: "api/contacts/counterparties/invoices\(suffix)")
+    }
+
     // MARK: - Devices (Push Notifications)
 
     func registerDevice(token: String, platform: String = "ios") async throws {
@@ -433,7 +471,10 @@ final class APIClient {
     // MARK: - Core
 
     private func authorizedRequest(_ method: String, path: String) throws -> URLRequest {
-        guard let token = Keychain.loadToken() else { throw APIError.notAuthenticated }
+        // Prefer real token, fall back to anonymous token so flows like
+        // first-scan classification keep working before sign-in.
+        let token = Keychain.loadToken() ?? Keychain.loadAnonymousToken()
+        guard let token else { throw APIError.notAuthenticated }
         var url = baseURL.appendingPathComponent(path)
         if path.contains("?") {
             url = URL(string: baseURL.absoluteString + "/" + path)!
@@ -480,12 +521,40 @@ final class APIClient {
         guard let http = resp as? HTTPURLResponse else { return }
         if !(200..<300).contains(http.statusCode) {
             let body = String(data: data, encoding: .utf8) ?? ""
+            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            let errorKey = json?["error"] as? String ?? ""
+            let message = json?["message"] as? String ?? ""
+
+            // 413 — file too large. Backend returns receivedMb + limitMb so the
+            // user sees exactly how much they went over.
+            if http.statusCode == 413 {
+                let received = (json?["receivedMb"] as? Double) ?? 0
+                let limit = (json?["limitMb"] as? Double) ?? 20
+                throw APIError.fileTooLarge(
+                    FileTooLargeInfo(receivedMb: received, limitMb: limit)
+                )
+            }
+
+            // 422 — extraction succeeded but payload isn't usable.
+            if http.statusCode == 422 {
+                if errorKey == "not_an_invoice" {
+                    throw APIError.notAnInvoice(
+                        message.isEmpty
+                            ? NSLocalizedString("upload.error.not_invoice", comment: "")
+                            : message
+                    )
+                }
+                if errorKey == "extraction_failed" {
+                    throw APIError.extractionFailed(
+                        message.isEmpty
+                            ? NSLocalizedString("upload.error.extraction_failed", comment: "")
+                            : message
+                    )
+                }
+            }
 
             // Detect 403 with upgrade payload from the backend
-            if http.statusCode == 403,
-               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               json["upgrade"] as? Bool == true {
-                let errorKey = json["error"] as? String ?? ""
+            if http.statusCode == 403, json?["upgrade"] as? Bool == true {
                 let reason = UpgradeReason(rawValue: errorKey) ?? .unknown
                 // Post notification so the UI can present a paywall automatically
                 DispatchQueue.main.async {
@@ -690,6 +759,8 @@ struct ExportEmailResponse: Decodable {
 }
 
 struct ExtractedResponse: Decodable {
+    let id: String?        // server-side DB id (present since we started persisting anon extracts)
+    let type: String?      // server-decided expense/income (may be reclassified client-side)
     let vendor: String
     let vendorTaxId: String?
     let client: String?
@@ -712,6 +783,7 @@ struct ExtractedResponse: Decodable {
 
     // Backend returns camelCase keys; anonymous_token is the only snake_case one
     enum CodingKeys: String, CodingKey {
+        case id, type
         case vendor, vendorTaxId, client, clientTaxId, cif, date, invoiceNumber
         case subtotal, ivaRate, ivaAmount, irpfRate, irpfAmount, total
         case currency, category, confidence, isValidInvoice, isExpense
@@ -726,8 +798,14 @@ extension ExtractedResponse {
         fmt.dateFormat = "yyyy-MM-dd"
         fmt.locale = Locale(identifier: "en_US_POSIX")
         let parsedDate = fmt.date(from: date) ?? Date()
-        let txType: TransactionType = (isExpense == false) ? .income : .expense
+        // Prefer the server-side type string so PATCH + display stay in sync.
+        let txType: TransactionType = {
+            if let t = type, let parsed = TransactionType(rawValue: t) { return parsed }
+            return (isExpense == false) ? .income : .expense
+        }()
+        let serverId = id.flatMap { UUID(uuidString: $0) }
         return Expense(
+            id: serverId ?? UUID(),
             type: txType,
             vendor: vendor,
             cif: cif,
@@ -781,6 +859,44 @@ struct RemoteContact: Decodable, Identifiable {
     enum CodingKeys: String, CodingKey {
         case id, name, email, phone, address, notes
         case taxId = "tax_id"
+    }
+}
+
+/// Aggregated counterparty (vendor or client) sourced from the expenses table.
+/// Identity is `(name, taxId)` — two suppliers can share a name but never a tax id.
+struct RemoteCounterparty: Decodable, Identifiable {
+    let name: String
+    let taxId: String?
+    /// "vendor" | "client" | "both"
+    let role: String
+    let invoiceCount: Int
+    let expenseCount: Int
+    let incomeCount: Int
+    let totalsByCurrency: [CurrencyTotals]?
+    let lastInvoiceDate: String?
+
+    var id: String { "\(name)|\(taxId ?? "")" }
+
+    struct CurrencyTotals: Decodable, Hashable {
+        let currency: String
+        let expenseTotal: Decimal
+        let incomeTotal: Decimal
+
+        enum CodingKeys: String, CodingKey {
+            case currency
+            case expenseTotal = "expense_total"
+            case incomeTotal = "income_total"
+        }
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case name, role
+        case taxId = "tax_id"
+        case invoiceCount = "invoice_count"
+        case expenseCount = "expense_count"
+        case incomeCount = "income_count"
+        case totalsByCurrency = "totals_by_currency"
+        case lastInvoiceDate = "last_invoice_date"
     }
 }
 

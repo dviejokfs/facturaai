@@ -5,6 +5,7 @@ import { extractAuto } from "../services/extract";
 import { uploadFile, keyForUpload } from "../services/storage";
 import { resolveTransaction } from "../services/resolve";
 import { checkScanLimit } from "../services/entitlements";
+import { MAX_UPLOAD_BYTES, tooLargePayload } from "../services/uploadLimits";
 
 export const uploadRoutes = new Hono();
 
@@ -20,23 +21,24 @@ uploadRoutes.post("/", async (c) => {
     );
   }
 
-  // Reject oversized uploads (20 MB max)
+  // Reject oversized uploads (Content-Length pre-check)
   const contentLength = parseInt(c.req.header("content-length") ?? "0", 10);
-  if (contentLength > 20 * 1024 * 1024) {
-    return c.json({ error: "file_too_large", message: "Maximum upload size is 20 MB" }, 413);
+  if (contentLength > MAX_UPLOAD_BYTES) {
+    return c.json(tooLargePayload(contentLength), 413);
   }
 
   const form = await c.req.formData();
   const file = form.get("file");
   if (!(file instanceof File)) {
-    return c.json({ error: "file field required" }, 400);
+    return c.json({ error: "file_required", message: "No file was attached to the request." }, 400);
   }
 
   const bytes = Buffer.from(await file.arrayBuffer());
 
-  // Double-check actual file size after reading
-  if (bytes.byteLength > 20 * 1024 * 1024) {
-    return c.json({ error: "file_too_large", message: "Maximum upload size is 20 MB" }, 413);
+  // Double-check actual file size after reading (Content-Length can be spoofed
+  // and multipart form boundaries inflate the reported length).
+  if (bytes.byteLength > MAX_UPLOAD_BYTES) {
+    return c.json(tooLargePayload(bytes.byteLength), 413);
   }
   const mime = file.type || "application/octet-stream";
 

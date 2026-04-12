@@ -1,8 +1,15 @@
 import SwiftUI
 
+#if canImport(RevenueCat)
+import RevenueCat
+#endif
 #if canImport(RevenueCatUI)
 import RevenueCatUI
 #endif
+
+/// RevenueCat dashboard offering identifier to render on the paywall sheet.
+/// Must match an offering in app.revenuecat.com → Offerings.
+private let PAYWALL_OFFERING_ID = "invoscanai"
 
 /// Lock state used by the paywall gate modifier.
 enum PaywallEntitlement: String {
@@ -107,19 +114,67 @@ struct PaywallSheet: View {
     let placement: PaywallPlacement
     @Environment(\.dismiss) private var dismiss
 
+    #if canImport(RevenueCat)
+    @State private var offering: Offering?
+    @State private var loadError: Error?
+    #endif
+
     var body: some View {
         #if canImport(RevenueCatUI)
-        // RevenueCatUI fetches the offering + paywall layout from your dashboard.
-        // Configure different paywalls per placement in the RevenueCat dashboard for A/B testing.
-        RevenueCatUI.PaywallView(displayCloseButton: true)
-            .onPurchaseCompleted { _ in
-                Task { await RevenueCatService.shared.refresh() }
-                dismiss()
+        VStack(spacing: 0) {
+            Group {
+                if let offering {
+                    // Pin the paywall to our named offering so the dashboard change
+                    // doesn't accidentally swap the current offering under our feet.
+                    RevenueCatUI.PaywallView(offering: offering, displayCloseButton: true)
+                        .onPurchaseCompleted { _ in
+                            Task { await RevenueCatService.shared.refresh() }
+                            dismiss()
+                        }
+                        .onRestoreCompleted { _ in
+                            Task { await RevenueCatService.shared.refresh() }
+                            dismiss()
+                        }
+                } else if loadError != nil {
+                    // If the named offering is missing in the dashboard, fall back to
+                    // the project's current offering rather than showing a blank sheet.
+                    RevenueCatUI.PaywallView(displayCloseButton: true)
+                        .onPurchaseCompleted { _ in
+                            Task { await RevenueCatService.shared.refresh() }
+                            dismiss()
+                        }
+                        .onRestoreCompleted { _ in
+                            Task { await RevenueCatService.shared.refresh() }
+                            dismiss()
+                        }
+                } else {
+                    ProgressView().controlSize(.large)
+                }
             }
-            .onRestoreCompleted { _ in
-                Task { await RevenueCatService.shared.refresh() }
-                dismiss()
+
+            // Safety net: ensure the auto-renewal disclosure + legal links are
+            // always visible under the paywall, regardless of dashboard config.
+            LegalLinks()
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(Color(UIColor.systemBackground))
+        }
+        .task {
+            do {
+                let offerings = try await Purchases.shared.offerings()
+                if let target = offerings.offering(identifier: PAYWALL_OFFERING_ID) {
+                    self.offering = target
+                } else {
+                    self.loadError = NSError(
+                        domain: "InvoScanAI.Paywall",
+                        code: 404,
+                        userInfo: [NSLocalizedDescriptionKey: "Offering '\(PAYWALL_OFFERING_ID)' not found"],
+                    )
+                }
+            } catch {
+                self.loadError = error
             }
+        }
         #else
         FallbackPaywall(placement: placement) { dismiss() }
         #endif
@@ -152,11 +207,8 @@ private struct FallbackPaywall: View {
                     .padding(.horizontal, 32)
                 Spacer()
 
-                // Auto-renewal disclosure (required by Apple)
-                Text(NSLocalizedString("paywall.disclosure", comment: ""))
-                    .font(.caption2)
-                    .foregroundStyle(.white.opacity(0.7))
-                    .multilineTextAlignment(.center)
+                // Auto-renewal disclosure + legal links (required by Apple)
+                LegalLinks(onDarkBackground: true)
                     .padding(.horizontal, 32)
 
                 Button(action: onClose) {

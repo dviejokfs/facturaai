@@ -68,10 +68,16 @@ export default function TermsPage() {
         </ul>
         <p>
           La suscripcion al Plan Pro se gestiona a traves de Apple In-App Purchase. El precio
-          y las condiciones de renovacion se muestran en la App Store antes de la compra. La
-          suscripcion se renueva automaticamente salvo que el usuario la cancele al menos 24 horas
-          antes de la fecha de renovacion desde los ajustes de su cuenta de Apple.
+          y las condiciones de renovacion se muestran en la App Store antes de la compra.
         </p>
+        <h3>5.3 Renovacion Automatica</h3>
+        <ul>
+          <li>El pago se cargara en la cuenta de Apple ID del usuario en el momento de la confirmacion de la compra.</li>
+          <li>La suscripcion se renueva automaticamente por el mismo periodo salvo que se cancele al menos 24 horas antes del final del periodo en curso.</li>
+          <li>La cuenta sera cargada por la renovacion dentro de las 24 horas previas al final del periodo en curso, al precio de la suscripcion seleccionada.</li>
+          <li>El usuario puede gestionar y cancelar la suscripcion desde los ajustes de su cuenta de Apple (Ajustes &rsaquo; [nombre] &rsaquo; Suscripciones) tras la compra.</li>
+          <li>No se ofrecen reembolsos por periodos ya iniciados; las politicas de reembolso de Apple son las aplicables.</li>
+        </ul>
 
         <h2>6. Obligaciones del Usuario</h2>
         <p>El usuario se compromete a:</p>

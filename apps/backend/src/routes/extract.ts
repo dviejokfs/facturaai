@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { extractAuto } from "../services/extract";
 import { signAnonymousToken, verifyToken } from "../auth/jwt";
 import { sql } from "../db/client";
+import { MAX_UPLOAD_BYTES, tooLargePayload } from "../services/uploadLimits";
 
 export const extractRoutes = new Hono();
 
@@ -62,14 +63,25 @@ extractRoutes.post("/", async (c) => {
     );
   }
 
+  // Reject oversized uploads (Content-Length pre-check)
+  const contentLength = parseInt(c.req.header("content-length") ?? "0", 10);
+  if (contentLength > MAX_UPLOAD_BYTES) {
+    return c.json(tooLargePayload(contentLength), 413);
+  }
+
   // Parse the uploaded file
   const form = await c.req.formData();
   const file = form.get("file");
   if (!(file instanceof File)) {
-    return c.json({ error: "file field required" }, 400);
+    return c.json({ error: "file_required", message: "No file was attached to the request." }, 400);
   }
 
   const bytes = Buffer.from(await file.arrayBuffer());
+
+  // Double-check actual file size after reading
+  if (bytes.byteLength > MAX_UPLOAD_BYTES) {
+    return c.json(tooLargePayload(bytes.byteLength), 413);
+  }
   const mime = file.type || "application/octet-stream";
 
   // Company name hint for expense/income detection (sent by iOS from onboarding)

@@ -275,6 +275,9 @@
 "detail.attachment.share" = "Share / Download";
 "detail.view_original" = "View original document";
 "detail.confirm" = "Confirm expense";
+"detail.confirm.income" = "Confirm income";
+"detail.delete.title" = "Delete invoice?";
+"detail.delete.message" = "This action can't be undone.";
 "detail.edit" = "Edit";
 "detail.save" = "Save";
 "detail.tax_id" = "Tax ID";
@@ -362,7 +365,7 @@
 "onboarding.company.title" = "Tell us about your business";
 "onboarding.company.subtitle" = "We'll use this to tell apart your invoices (income) from bills you receive (expenses).";
 "onboarding.company.name_label" = "Company / business name";
-"onboarding.company.placeholder" = "e.g. Kung Fu Software SL";
+"onboarding.company.placeholder" = "e.g. Acme Innovations, S.L.";
 "onboarding.company.country_label" = "Country";
 "onboarding.company.country_title" = "Select country";
 "onboarding.company.search_country" = "Search countries…";
@@ -392,6 +395,13 @@
 "onboarding.review.tagline" = "Imagine this for every invoice — automatically.";
 "onboarding.review.continue" = "Continue";
 "onboarding.review.scan_another" = "Scan another";
+
+/* Onboarding — Company Choice (after first scan) */
+"onboarding.company_choice.title" = "Which one is your business?";
+"onboarding.company_choice.subtitle" = "Tell us who you are on this invoice so we can classify income and expenses.";
+"onboarding.company_choice.role.vendor" = "Issued the invoice";
+"onboarding.company_choice.role.client" = "Received the invoice";
+"onboarding.company_choice.manual" = "Enter manually";
 
 /* Onboarding — Trial */
 "onboarding.trial.title" = "Start your free trial";
@@ -435,12 +445,24 @@
 "paywall.subscribe" = "Subscribe to Pro";
 "paywall.gate.title" = "Pro feature";
 "paywall.gate.cta" = "Start free trial";
-"paywall.disclosure" = "Subscription auto-renews unless turned off at least 24 hours before the end of the current period. Payment is charged to your iTunes Account at confirmation of purchase. By subscribing you agree to our Terms of Use and Privacy Policy.";
+"paywall.disclosure" = "Subscription auto-renews unless turned off at least 24 hours before the end of the current period. Payment is charged to your iTunes Account at confirmation of purchase.";
+"paywall.legal.agree" = "By subscribing you agree to our";
+"paywall.legal.terms" = "Terms of Use";
+"paywall.legal.and" = "and";
+"paywall.legal.privacy" = "Privacy Policy";
 "paywall.restore.nothing" = "No previous purchases found.";
 "paywall.limit_reached.title" = "Scan limit reached";
 "paywall.limit_reached.message" = "Free plan allows 5 scans per month. Upgrade to Pro for unlimited scans.";
 "paywall.trial_expired.title" = "Trial expired";
 "paywall.trial_expired.message" = "Your free trial has ended. Upgrade to continue using all features.";
+
+/* Upload errors */
+"upload.error.too_large.title" = "File too large";
+"upload.error.too_large" = "This file is %.1f MB. The maximum upload size is %.0f MB. Try cropping or retaking the photo.";
+"upload.error.not_invoice" = "This doesn't look like an invoice or receipt. Try a clearer photo.";
+"upload.error.extraction_failed" = "We couldn't read this invoice. Please try a clearer photo or a different file.";
+"upload.error.generic.title" = "Upload failed";
+"common.retry" = "Retry";
 
 /* Transaction types */
 "transaction.expense" = "Expenses";
@@ -459,15 +481,28 @@
 "company.setup.title" = "Your company name";
 "company.setup.subtitle" = "Tell us your company or business name so we can automatically detect if a scanned invoice is an expense or income.";
 "company.name.section" = "Company name";
-"company.name.placeholder" = "e.g. Kung Fu Software SL";
+"company.name.placeholder" = "e.g. Acme Innovations, S.L.";
 "company.saved" = "Saved!";
 "company.explanation" = "When scanning an invoice, if the vendor matches your company name, it will be classified as income (you issued the invoice). Otherwise, it's an expense.";
 
 /* Contacts */
 "contacts.title" = "Contacts";
 "contacts.empty" = "No contacts yet";
-"contacts.empty.subtitle" = "Contacts are auto-created when scanning invoices with recognized tax IDs.";
+"contacts.empty.subtitle" = "Contacts appear here after you scan invoices — clients you've invoiced and vendors you've bought from.";
 "contacts.search" = "Search contacts";
+"contacts.filter.all" = "All";
+"contacts.filter.clients" = "Clients";
+"contacts.filter.vendors" = "Vendors";
+"contacts.role.client" = "Client";
+"contacts.role.vendor" = "Vendor";
+"contacts.role.both" = "Both";
+"contacts.invoices_count" = "%d invoices";
+"contacts.detail.tax_id" = "Tax ID";
+"contacts.detail.invoices" = "Invoices";
+"contacts.detail.income" = "Income";
+"contacts.detail.expense" = "Expense";
+"contacts.detail.invoices_section" = "All invoices";
+"contacts.detail.no_invoices" = "No invoices found.";
 
 /* GDPR */
 "settings.downloadData" = "Download my data";

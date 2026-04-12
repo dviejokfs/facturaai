@@ -6,6 +6,8 @@ struct SettingsView: View {
     @StateObject private var localeService = LocaleService.shared
     @State private var showSignIn = false
     @State private var showGmailSync = false
+    @State private var showGmailPaywall = false
+    @ObservedObject private var rc = RevenueCatService.shared
     @State private var showDeleteAccountAlert = false
     @State private var isDeletingAccount = false
     @State private var isExportingData = false
@@ -124,12 +126,22 @@ struct SettingsView: View {
 
                     Section(NSLocalizedString("settings.integrations", comment: "")) {
                         Button {
-                            showGmailSync = true
+                            if rc.activeEntitlements.contains("pro") || rc.activeEntitlements.contains("business") {
+                                showGmailSync = true
+                            } else {
+                                showGmailPaywall = true
+                            }
                         } label: {
                             HStack {
                                 Image(systemName: "envelope.fill").foregroundStyle(.red)
                                 Text("Gmail")
                                     .foregroundStyle(.primary)
+                                let isPro = rc.activeEntitlements.contains("pro") || rc.activeEntitlements.contains("business")
+                                if !isPro {
+                                    Image(systemName: "lock.fill")
+                                        .font(.caption)
+                                        .foregroundStyle(.indigo)
+                                }
                                 Spacer()
                                 if store.isSyncing, let progress = store.syncProgress {
                                     GmailSyncBadge(progress: progress)
@@ -307,6 +319,9 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $showGmailSync) {
                 GmailSyncView()
+            }
+            .sheet(isPresented: $showGmailPaywall) {
+                PaywallSheet(placement: .featureGate)
             }
             .sheet(isPresented: $showExportShare) {
                 if let url = exportedFileURL {

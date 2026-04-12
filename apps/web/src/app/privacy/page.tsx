@@ -84,6 +84,7 @@ export default function PrivacyPage() {
           <strong>No vendemos datos personales a terceros.</strong> Los datos solo se comparten con:
         </p>
         <ul>
+          <li><strong>Anthropic (Claude API):</strong> las imagenes y PDFs de facturas se envian a la API de Anthropic para su procesamiento mediante inteligencia artificial (extraccion de importes, fechas, proveedor, etc.). Anthropic no utiliza estos datos para entrenar sus modelos. Consulte la <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">politica de privacidad de Anthropic</a>.</li>
           <li><strong>Amazon Web Services (AWS):</strong> como proveedor de infraestructura (alojamiento de imagenes y bases de datos).</li>
           <li><strong>RevenueCat:</strong> para la gestion de suscripciones.</li>
           <li><strong>Apple:</strong> para la autenticacion (Apple Sign-In) y los pagos (In-App Purchase).</li>

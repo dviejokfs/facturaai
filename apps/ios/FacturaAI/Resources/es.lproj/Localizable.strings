@@ -275,6 +275,9 @@
 "detail.attachment.share" = "Compartir / Descargar";
 "detail.view_original" = "Ver documento original";
 "detail.confirm" = "Confirmar gasto";
+"detail.confirm.income" = "Confirmar ingreso";
+"detail.delete.title" = "¿Eliminar factura?";
+"detail.delete.message" = "Esta acción no se puede deshacer.";
 "detail.edit" = "Editar";
 "detail.save" = "Guardar";
 "detail.tax_id" = "NIF";
@@ -363,7 +366,7 @@
 "onboarding.company.title" = "Cuéntanos sobre tu negocio";
 "onboarding.company.subtitle" = "Lo usaremos para distinguir tus facturas emitidas (ingresos) de las que recibes (gastos).";
 "onboarding.company.name_label" = "Nombre de la empresa / negocio";
-"onboarding.company.placeholder" = "ej. Kung Fu Software SL";
+"onboarding.company.placeholder" = "ej. Acme Innovations, S.L.";
 "onboarding.company.country_label" = "País";
 "onboarding.company.country_title" = "Seleccionar país";
 "onboarding.company.search_country" = "Buscar países…";
@@ -392,6 +395,13 @@
 "onboarding.review.tagline" = "Imagina esto para cada factura — automáticamente.";
 "onboarding.review.continue" = "Continuar";
 "onboarding.review.scan_another" = "Escanear otro";
+
+/* Onboarding — Company Choice (after first scan) */
+"onboarding.company_choice.title" = "¿Cuál de estas es tu empresa?";
+"onboarding.company_choice.subtitle" = "Elige quién eres en esta factura para que podamos clasificar ingresos y gastos.";
+"onboarding.company_choice.role.vendor" = "Emitió la factura";
+"onboarding.company_choice.role.client" = "Recibió la factura";
+"onboarding.company_choice.manual" = "Introducir manualmente";
 
 /* Onboarding — Trial */
 "onboarding.trial.title" = "Empieza tu prueba gratis";
@@ -435,12 +445,24 @@
 "paywall.subscribe" = "Suscribirse a Pro";
 "paywall.gate.title" = "Función Pro";
 "paywall.gate.cta" = "Empezar prueba gratis";
-"paywall.disclosure" = "La suscripción se renueva automáticamente a menos que se desactive al menos 24 horas antes del final del periodo actual. El pago se carga a tu cuenta de iTunes en el momento de la confirmación de la compra. Al suscribirte aceptas nuestros Términos de Uso y Política de Privacidad.";
+"paywall.disclosure" = "La suscripción se renueva automáticamente a menos que se desactive al menos 24 horas antes del final del periodo actual. El pago se carga a tu cuenta de iTunes en el momento de la confirmación de la compra.";
+"paywall.legal.agree" = "Al suscribirte aceptas nuestros";
+"paywall.legal.terms" = "Términos de Uso";
+"paywall.legal.and" = "y";
+"paywall.legal.privacy" = "Política de Privacidad";
 "paywall.restore.nothing" = "No se encontraron compras anteriores.";
 "paywall.limit_reached.title" = "Límite de escaneos alcanzado";
 "paywall.limit_reached.message" = "El plan gratuito permite 5 escaneos al mes. Actualiza a Pro para escaneos ilimitados.";
 "paywall.trial_expired.title" = "Prueba expirada";
 "paywall.trial_expired.message" = "Tu prueba gratuita ha terminado. Actualiza para seguir usando todas las funciones.";
+
+/* Errores de subida */
+"upload.error.too_large.title" = "Archivo demasiado grande";
+"upload.error.too_large" = "Este archivo pesa %.1f MB. El tamaño máximo es de %.0f MB. Prueba recortando o volviendo a hacer la foto.";
+"upload.error.not_invoice" = "Esto no parece una factura o recibo. Prueba con una foto más clara.";
+"upload.error.extraction_failed" = "No hemos podido leer esta factura. Prueba con una foto más clara u otro archivo.";
+"upload.error.generic.title" = "Error al subir";
+"common.retry" = "Reintentar";
 
 /* Tipos de transacción */
 "transaction.expense" = "Gastos";
@@ -459,15 +481,28 @@
 "company.setup.title" = "Nombre de tu empresa";
 "company.setup.subtitle" = "Dinos el nombre de tu empresa o negocio para que podamos detectar automáticamente si una factura escaneada es un gasto o un ingreso.";
 "company.name.section" = "Nombre de la empresa";
-"company.name.placeholder" = "ej. Kung Fu Software SL";
+"company.name.placeholder" = "ej. Acme Innovations, S.L.";
 "company.saved" = "¡Guardado!";
 "company.explanation" = "Al escanear una factura, si el emisor coincide con el nombre de tu empresa, se clasificará como ingreso (tú emitiste la factura). En caso contrario, es un gasto.";
 
 /* Contactos */
 "contacts.title" = "Contactos";
 "contacts.empty" = "Sin contactos aún";
-"contacts.empty.subtitle" = "Los contactos se crean automáticamente al escanear facturas con NIF/CIF reconocidos.";
+"contacts.empty.subtitle" = "Los contactos aparecen al escanear facturas — clientes a los que facturas y proveedores a los que compras.";
 "contacts.search" = "Buscar contactos";
+"contacts.filter.all" = "Todos";
+"contacts.filter.clients" = "Clientes";
+"contacts.filter.vendors" = "Proveedores";
+"contacts.role.client" = "Cliente";
+"contacts.role.vendor" = "Proveedor";
+"contacts.role.both" = "Ambos";
+"contacts.invoices_count" = "%d facturas";
+"contacts.detail.tax_id" = "NIF/CIF";
+"contacts.detail.invoices" = "Facturas";
+"contacts.detail.income" = "Ingresos";
+"contacts.detail.expense" = "Gastos";
+"contacts.detail.invoices_section" = "Todas las facturas";
+"contacts.detail.no_invoices" = "Sin facturas.";
 
 /* GDPR */
 "settings.downloadData" = "Descargar mis datos";

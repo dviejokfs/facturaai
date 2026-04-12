@@ -19,10 +19,22 @@ struct ScanView: View {
     @State private var lastUploadedData: Data?
     @State private var showNotInvoice = false
     @State private var showFileTooLarge = false
+    @State private var tooLargeInfo: FileTooLargeInfo?
     @State private var pendingExtraction: (data: Data, filename: String)?
 
-    /// Maximum upload size: 20 MB
+    /// Maximum upload size: 20 MB. Kept in sync with backend.
     private let maxUploadBytes = 20 * 1024 * 1024
+    private let maxUploadMb: Double = 20
+
+    private var tooLargeMessage: String {
+        if let info = tooLargeInfo {
+            return String(
+                format: NSLocalizedString("upload.error.too_large", comment: ""),
+                info.receivedMb, info.limitMb
+            )
+        }
+        return NSLocalizedString("scan.file_too_large.message", comment: "")
+    }
 
     var body: some View {
             ZStack {
@@ -185,10 +197,12 @@ struct ScanView: View {
             } message: {
                 Text(NSLocalizedString("scan.ai_disclosure.message", comment: ""))
             }
-            .alert(NSLocalizedString("scan.file_too_large.title", comment: ""), isPresented: $showFileTooLarge) {
-                Button(NSLocalizedString("common.ok", comment: "")) {}
+            .alert(NSLocalizedString("upload.error.too_large.title", comment: ""), isPresented: $showFileTooLarge) {
+                Button(NSLocalizedString("common.ok", comment: "")) {
+                    tooLargeInfo = nil
+                }
             } message: {
-                Text(NSLocalizedString("scan.file_too_large.message", comment: ""))
+                Text(tooLargeMessage)
             }
             .onReceive(NotificationCenter.default.publisher(for: .scanAnother)) { _ in
                 // Reset state so user can start a fresh scan
@@ -200,8 +214,12 @@ struct ScanView: View {
 
     /// Gate extraction behind AI disclosure if needed, then proceed.
     private func startExtraction(_ data: Data, filename: String) {
-        // Client-side file size check (20 MB limit)
+        // Client-side file size check (20 MB limit). Pre-empts the round-trip.
         guard data.count <= maxUploadBytes else {
+            tooLargeInfo = FileTooLargeInfo(
+                receivedMb: Double(data.count) / (1024 * 1024),
+                limitMb: maxUploadMb
+            )
             showFileTooLarge = true
             return
         }
@@ -223,7 +241,21 @@ struct ScanView: View {
             scanning = false
             extractedExpense = expense
             showReview = true
+        } catch APIError.fileTooLarge(let info) {
+            scanning = false
+            lastUploadedData = nil
+            tooLargeInfo = info
+            showFileTooLarge = true
+        } catch APIError.notAnInvoice {
+            scanning = false
+            lastUploadedData = nil
+            showNotInvoice = true
+        } catch APIError.extractionFailed(let msg) {
+            scanning = false
+            lastUploadedData = nil
+            withAnimation { errorMessage = msg }
         } catch let APIError.http(code, body) where code == 422 && body.contains("not_an_invoice") {
+            // Fallback for older backend responses.
             scanning = false
             lastUploadedData = nil
             showNotInvoice = true
@@ -236,10 +268,14 @@ struct ScanView: View {
 
     /// File-based extraction — streams PDF without loading into memory.
     private func startFileExtraction(_ fileURL: URL, filename: String) {
-        // Check file size without loading into memory
+        // Check file size without loading into memory.
         if let attrs = try? FileManager.default.attributesOfItem(atPath: fileURL.path),
            let size = attrs[.size] as? Int, size > maxUploadBytes {
             fileURL.stopAccessingSecurityScopedResource()
+            tooLargeInfo = FileTooLargeInfo(
+                receivedMb: Double(size) / (1024 * 1024),
+                limitMb: maxUploadMb
+            )
             showFileTooLarge = true
             return
         }
@@ -253,6 +289,19 @@ struct ScanView: View {
                 scanning = false
                 extractedExpense = expense
                 showReview = true
+            } catch APIError.fileTooLarge(let info) {
+                fileURL.stopAccessingSecurityScopedResource()
+                scanning = false
+                tooLargeInfo = info
+                showFileTooLarge = true
+            } catch APIError.notAnInvoice {
+                fileURL.stopAccessingSecurityScopedResource()
+                scanning = false
+                showNotInvoice = true
+            } catch APIError.extractionFailed(let msg) {
+                fileURL.stopAccessingSecurityScopedResource()
+                scanning = false
+                withAnimation { errorMessage = msg }
             } catch let APIError.http(code, body) where code == 422 && body.contains("not_an_invoice") {
                 fileURL.stopAccessingSecurityScopedResource()
                 scanning = false
