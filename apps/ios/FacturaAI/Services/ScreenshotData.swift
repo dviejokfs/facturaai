@@ -23,6 +23,12 @@ enum ScreenshotData {
         ProcessInfo.processInfo.arguments.contains("-ScreenshotScrollDown")
     }
 
+    /// Returns true if `-UITestPreviewMode` launch argument is present.
+    /// When enabled, the app auto-navigates through tabs to record an App Preview video.
+    static var isPreviewMode: Bool {
+        ProcessInfo.processInfo.arguments.contains("-UITestPreviewMode")
+    }
+
     @MainActor
     static func seedAuth(_ auth: AuthService) {
         auth.isSignedIn = true

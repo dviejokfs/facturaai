@@ -34,6 +34,7 @@ struct DashboardView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(spacing: 16) {
+                        Color.clear.frame(height: 0).id("top")
                         // Onboarding checklist (after sign-up)
                         if shouldShowOnboardingChecklist {
                             OnboardingChecklistCard(
@@ -120,6 +121,16 @@ struct DashboardView: View {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                             withAnimation { proxy.scrollTo("charts", anchor: .top) }
                         }
+                    }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .previewScrollCharts)) { _ in
+                    withAnimation(.easeInOut(duration: 1.2)) {
+                        proxy.scrollTo("charts", anchor: .top)
+                    }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .previewScrollTop)) { _ in
+                    withAnimation(.easeInOut(duration: 1.0)) {
+                        proxy.scrollTo("top", anchor: .top)
                     }
                 }
             }

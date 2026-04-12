@@ -6,7 +6,7 @@ struct RootView: View {
     @AppStorage("hasCompletedFirstUse") private var hasCompletedFirstUse = false
 
     var body: some View {
-        if ScreenshotData.isScreenshotMode {
+        if ScreenshotData.isScreenshotMode || ScreenshotData.isPreviewMode {
             MainTabView()
                 .onAppear {
                     ScreenshotData.seedAuth(auth)
@@ -95,7 +95,50 @@ struct MainTabView: View {
         .sheet(isPresented: $auth.showUpgradePaywall) {
             UpgradePaywallSheet(reason: auth.upgradeReason)
         }
+        .onAppear {
+            if ScreenshotData.isPreviewMode {
+                runPreviewTour()
+            }
+        }
     }
+
+    /// Auto-navigates through tabs to record an App Preview video (~25s).
+    /// Timeline:
+    ///   0.0s  Dashboard top
+    ///   4.0s  Scroll to charts
+    ///   8.0s  Scroll back up
+    ///  10.0s  Switch to Invoices
+    ///  15.0s  Switch to Export
+    ///  19.0s  Switch to Settings
+    ///  24.0s  Back to Dashboard
+    private func runPreviewTour() {
+        let schedule: [(TimeInterval, Int)] = [
+            (0.0, 0),
+            (10.0, 1),
+            (15.0, 2),
+            (19.0, 3),
+            (24.0, 0),
+        ]
+        for (delay, tab) in schedule {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                withAnimation(.easeInOut(duration: 0.4)) {
+                    selectedTab = tab
+                }
+            }
+        }
+        // Dashboard scroll choreography (tab 0 has a ScrollViewReader)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
+            NotificationCenter.default.post(name: .previewScrollCharts, object: nil)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8.0) {
+            NotificationCenter.default.post(name: .previewScrollTop, object: nil)
+        }
+    }
+}
+
+extension Notification.Name {
+    static let previewScrollCharts = Notification.Name("previewScrollCharts")
+    static let previewScrollTop = Notification.Name("previewScrollTop")
 }
 
 /// Sheet presented when the backend returns 403 with `upgrade: true`.
