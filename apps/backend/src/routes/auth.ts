@@ -20,11 +20,25 @@ async function mergeAnonymousUser(anonymousToken: string, realUserId: string) {
     const anonymousUserId = payload.sub;
     if (anonymousUserId === realUserId) return;
 
-    // Verify anonymous user exists
+    // Verify anonymous user exists and pull fields we want to keep
     const [anonUser] = await sql`
-      SELECT id FROM users WHERE id = ${anonymousUserId} AND is_anonymous = TRUE
+      SELECT id, company_name, tax_id, tax_id_type, locale, base_currency
+      FROM users WHERE id = ${anonymousUserId} AND is_anonymous = TRUE
     `;
     if (!anonUser) return;
+
+    // Copy onboarding fields the anon user filled in — but don't overwrite
+    // values the real user already has (e.g. returning Google user).
+    await sql`
+      UPDATE users SET
+        company_name = COALESCE(company_name, ${anonUser.company_name}),
+        tax_id = COALESCE(tax_id, ${anonUser.tax_id}),
+        tax_id_type = COALESCE(tax_id_type, ${anonUser.tax_id_type}),
+        locale = COALESCE(locale, ${anonUser.locale}),
+        base_currency = COALESCE(base_currency, ${anonUser.base_currency}),
+        updated_at = NOW()
+      WHERE id = ${realUserId}
+    `;
 
     // Move all expenses from anonymous user to real user
     await sql`
@@ -183,7 +197,10 @@ authRoutes.get("/me", requireAuth, async (c) => {
            (plan = 'trial' AND trial_ends_at < NOW()) AS trial_expired
     FROM users WHERE id = ${user.sub}
   `;
-  return c.json(row ?? null);
+  // Token was validly signed but the user no longer exists (e.g. DB wipe in
+  // dev, or deleted account). Tell the client to sign out so it clears Keychain.
+  if (!row) return c.json({ error: "user_not_found" }, 401);
+  return c.json(row);
 });
 
 authRoutes.patch("/me", requireAuth, async (c) => {

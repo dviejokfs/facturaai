@@ -112,7 +112,7 @@ extractRoutes.post("/", async (c) => {
 
   // Save the expense to DB so it can be merged later
   const expenseData = extracted as Record<string, any>;
-  await sql`
+  const [inserted] = await sql`
     INSERT INTO expenses (
       user_id, type, vendor, vendor_tax_id, client, client_tax_id, cif,
       date, invoice_number, subtotal, iva_rate, iva_amount,
@@ -140,10 +140,15 @@ extractRoutes.post("/", async (c) => {
       ${"camera"},
       ${"pending"}
     )
+    RETURNING id, type
   `;
 
+  // Return the DB row's id (and its actual type) so the client can PATCH it
+  // later — e.g. to reclassify expense↔income once the user picks their company.
   return c.json({
     ...extracted,
+    id: inserted.id,
+    type: inserted.type,
     anonymous_token: token,
   });
 });

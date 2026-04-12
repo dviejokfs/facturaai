@@ -50,6 +50,7 @@ const PatchSchema = z.object({
   category: z.string().optional(),
   status: z.enum(["pending", "confirmed", "rejected"]).optional(),
   notes: z.string().nullable().optional(),
+  type: z.enum(["expense", "income"]).optional(),
 });
 
 expenseRoutes.patch("/:id", async (c) => {
@@ -69,6 +70,7 @@ expenseRoutes.patch("/:id", async (c) => {
     ivaRate: "iva_rate", ivaAmount: "iva_amount",
     irpfRate: "irpf_rate", irpfAmount: "irpf_amount",
     total: "total", category: "category", status: "status", notes: "notes",
+    type: "type",
   };
 
   const sets: string[] = [];
