@@ -17,9 +17,13 @@ import { contactRoutes } from "./routes/contacts";
 import { deviceRoutes } from "./routes/devices";
 import { gmailWebhookRoutes } from "./routes/gmailWebhook";
 import { ensureAllWatches, renewExpiringWatches } from "./services/gmailWatch";
+import { ensureBucket } from "./services/storage";
 
 // Run migrations before starting the server
 await runMigrations();
+
+// Ensure S3 bucket exists (creates it on Temps blob / MinIO if missing)
+await ensureBucket();
 
 const app = new Hono();
 
